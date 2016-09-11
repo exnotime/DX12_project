@@ -1,5 +1,6 @@
 bin/
 solution/
+AS_DEBUG/
 
 # Compiled Object files
 *.slo

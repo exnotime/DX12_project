@@ -11,6 +11,7 @@
 #include "../core/entity/EntityFactory.h"
 #include "../../../gfx/ModelBank.h"
 #include <glm/gtx/transform.hpp>
+#include <input/Input.h>
 
 //threading test TODO: REMOVE
 #include "../core/threading/JobManager.h"
@@ -41,6 +42,7 @@ void SSGraphics::Update(const float deltaTime) {
 		m_Graphics->PrepareForRender();
 		firstUpdate = false;
 	}
+
 	int flag = CameraComponent::Flag;
 	CameraData cd;
 	for (auto& entity : g_EntityManager.GetEntityList()) {

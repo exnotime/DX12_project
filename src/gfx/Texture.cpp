@@ -14,7 +14,7 @@ void Texture::Init(const std::string& filename, DX12Context* context) {
 		DirectX::ScratchImage scratchImage;
 		DirectX::TexMetadata meta;
 		wchar_t* name = convertCharArrayToLPCWSTR(filename.c_str());
-		HR(DirectX::LoadFromDDSFile(name, 0, &meta, scratchImage),L"Error loading texture");
+		HR(DirectX::LoadFromDDSFile(name, 0, &meta, scratchImage), L"Error loading texture");
 		delete name;
 
 		D3D12_RESOURCE_DESC texDesc = {};

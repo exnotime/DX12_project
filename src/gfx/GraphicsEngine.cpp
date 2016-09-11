@@ -142,6 +142,35 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_FrameIndex].Get(), nullptr), L"Error resetting command list");
 }
 
+void GraphicsEngine::ResizeFrameBuffer(const glm::vec2& screenSize) {
+	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
+	//get window 
+	HWND hWnd;
+	m_SwapChain.SwapChain->GetHwnd(&hWnd);
+	//destroy swapchain
+	m_SwapChain.SwapChain.Reset();
+	m_SwapChain.RenderTargets[0].Reset();
+	m_SwapChain.RenderTargets[1].Reset();
+	m_DSResource.Reset();
+	m_DSVHeap.Reset();
+	//create swapchain
+	CreateSwapChain(hWnd, screenSize);
+	m_ScreenSize = screenSize;
+	m_Viewport.TopLeftX = 0;
+	m_Viewport.TopLeftY = 0;
+	m_Viewport.MinDepth = 0.0f;
+	m_Viewport.Width = screenSize.x;
+	m_Viewport.Height = screenSize.y;
+	m_Viewport.MaxDepth = 1.0f;
+
+	m_ScissorRect.left = 0;
+	m_ScissorRect.top = 0;
+	m_ScissorRect.bottom = screenSize.y;
+	m_ScissorRect.right = screenSize.x;
+
+	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
+}
+
 void GraphicsEngine::PrepareForRender() {
 	//this will transfer textures/models etc to gpu
 	g_ModelBank.BuildBuffers();

@@ -18,6 +18,7 @@ public:
 	~GraphicsEngine();
 
 	void Init(HWND hWnd, const glm::vec2& screenSize);
+	void ResizeFrameBuffer(const glm::vec2& screenSize);
 	void PrepareForRender();
 	void Render();
 	void Swap();
