@@ -39,6 +39,7 @@ ModelHandle ModelBank::LoadModel(const char* filename) {
 			anim.CalcPose(1.2f);
 		} else {
 			LoadMeshes(model, scene);
+			model.Radius = glm::max(model.Max.x, glm::max(model.Max.y, model.Max.z));
 		}
 		model.MaterialHandle = g_MaterialBank.GetMaterialCount();
 		model.Name = std::string(filename);
@@ -69,6 +70,10 @@ void ModelBank::LoadMeshes(Model& model, const aiScene* scene) {
 			pos.x = mesh->mVertices[v].x;
 			pos.y = mesh->mVertices[v].y;
 			pos.z = mesh->mVertices[v].z;
+
+			model.Max = glm::max(pos, model.Max);
+			model.Min = glm::min(pos, model.Min);
+
 			if (mesh->HasNormals()) {
 				normal.x = mesh->mNormals[v].x;
 				normal.y = mesh->mNormals[v].y;
@@ -160,10 +165,10 @@ void ModelBank::LoadRiggedMeshes(Model& model, const aiScene* scene) {
 		}
 		//bones
 		Bone meshBone;
-		for (int b = 0; b < mesh->mNumBones; b++) {
+		for (unsigned b = 0; b < mesh->mNumBones; b++) {
 			aiBone* bone = mesh->mBones[b];
 			//add weight to vertices
-			for (int w = 0; w < bone->mNumWeights; w++) {
+			for (unsigned w = 0; w < bone->mNumWeights; w++) {
 				int id = bone->mWeights[w].mVertexId;
 				for (int i = 0; i < 4; i++) {
 					if (vertices[id].Weights[i] == -1) {
@@ -195,16 +200,16 @@ Skelleton ModelBank::LoadSkelleton(const aiScene* scene) {
 	Skelleton skel;
 	skel.GlobalInvTransform = glm::inverse(glm::mat4(scene->mRootNode->mTransformation[0][0]));
 
-	for (int m = 0; m < scene->mNumMeshes; m++) {
+	for (unsigned m = 0; m < scene->mNumMeshes; m++) {
 		aiMesh* mesh = scene->mMeshes[m];
 		Bone meshBone;
 
-		for (int b = 0; b < mesh->mNumBones; b++) {
+		for (unsigned b = 0; b < mesh->mNumBones; b++) {
 			aiBone* bone = mesh->mBones[b];
-			int index;
+			unsigned index;
 			std::string name = bone->mName.data;
 			if (skel.BoneMapping.find(name) == skel.BoneMapping.end()) {
-				index = skel.Bones.size();
+				index = (unsigned)skel.Bones.size();
 				skel.BoneMapping[name] = index;
 				meshBone.Name = bone->mName.data;
 				meshBone.Offset = glm::mat4(bone->mOffsetMatrix[0][0]);
@@ -235,7 +240,7 @@ Skelleton ModelBank::LoadSkelleton(const aiScene* scene) {
 		else
 			bone->Parent = -1;
 		//find children
-		for (int c = 0; c < node->mNumChildren; c++) {
+		for (unsigned c = 0; c < node->mNumChildren; c++) {
 			const aiNode* child = node->mChildren[c];
 			bone->Children.push_back(skel.BoneMapping[child->mName.data]);
 			readNode(child, bone->FinalTransform);
@@ -264,8 +269,8 @@ ModelHandle ModelBank::CreateCustomModel( std::vector<Vertex>* vertices, std::ve
 	ModelHandle id = ++m_Numerator;
 	Model model;
 	Mesh mesh;
-	mesh.IndexCount = indices->size();
-	mesh.VertexCount = vertices->size();
+	mesh.IndexCount = (unsigned)indices->size();
+	mesh.VertexCount = (unsigned)vertices->size();
 	mesh.MaterialOffset = 0;
 	mesh.IndexBufferOffset = 0;
 	//mesh.VertexBufferOffset = 0;
@@ -273,8 +278,8 @@ ModelHandle ModelBank::CreateCustomModel( std::vector<Vertex>* vertices, std::ve
 	model.MaterialHandle = 0; //make sure there is a default material loaded
 	//model.VertexHandle = (int)m_Vertices.size();
 	model.IndexHandle = 0;
-	model.NumIndices = indices->size();
-	model.NumVertices = vertices->size();
+	model.NumIndices = (unsigned)indices->size();
+	model.NumVertices = (unsigned)vertices->size();
 	//copy and offset indices
 	for (unsigned int i = 0; i < indices->size(); ++i) {
 		m_Indices.push_back(model.VertexHandle + indices->at(i));
@@ -405,21 +410,17 @@ void ModelBank::BuildBuffers() {
 
 	m_IndexBufferView.BufferLocation = m_IndexBufferResource->GetGPUVirtualAddress();
 	m_IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	m_IndexBufferView.SizeInBytes = indexBufferSize;
+	m_IndexBufferView.SizeInBytes = (unsigned)indexBufferSize;
 }
 
 void ModelBank::ApplyBuffers(ID3D12GraphicsCommandList* cmdList) {
 	cmdList->IASetIndexBuffer(&m_IndexBufferView);
-	//cmdList->IASetVertexBuffers(0, 1, &m_VertexBuffer.GetView());
 }
 
-//std::vector<Vertex>& ModelBank::GetVertices() {
-//	return m_Vertices;
-//}
-
-//VertexBuffer& ModelBank::GetVertexBuffer( ) {
-//	return m_VertexBuffer;
-//}
+float ModelBank::GetScaledRadius(ModelHandle model, const glm::vec3& scale) {
+	float radius = m_Models[model].Radius;
+	return radius * glm::max(scale.x, glm::max(scale.y, scale.z));
+}
 
 void ModelBank::FreeUploadHeaps(){
 	m_IndexbufferUpload.Reset();

@@ -142,12 +142,12 @@ void BufferManager::UpdateBuffer(const std::string& name, void* data, UINT size)
 			m_Context->CommandList->ResourceBarrier(1,
 				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
 
-			D3D12_SUBRESOURCE_DATA sub_data = {};
-			sub_data.pData = data;
-			sub_data.RowPitch = size;
-			sub_data.SlicePitch = sub_data.RowPitch;
-			//schedule transfer
-			UpdateSubresources(m_Context->CommandList.Get(), buffer->second->Resource.Get(), buffer->second->UploadHeap.Get(), 0, 0, 1, &sub_data);
+			void* gpuPtr;
+			buffer->second->UploadHeap->Map(0, nullptr, &gpuPtr);
+			memcpy(gpuPtr, data, size);
+			buffer->second->UploadHeap->Unmap(0, nullptr);
+
+			m_Context->CommandList->CopyBufferRegion(buffer->second->Resource.Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
 
 			m_Context->CommandList->ResourceBarrier(1,
 				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));

@@ -35,7 +35,7 @@ void MaterialBank::Initialize(DX12Context* context){
 
 	m_DefaultMaterial->Offset = m_MaterialCount;
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = MAX_MATERIAL_COUNT * 4;
+	srvHeapDesc.NumDescriptors = MAX_MATERIAL_COUNT * MATERIAL_SIZE;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	HR(m_Context->Device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_MaterialHeap)), L"Error creating descriptor heap for material");
@@ -165,5 +165,5 @@ void MaterialBank::FreeResources() {
 }
 
 void MaterialBank::CopyMaterialDescriptors(D3D12_CPU_DESCRIPTOR_HANDLE dest) {
-	m_Context->Device->CopyDescriptorsSimple(m_MaterialCount * 4, dest, m_MaterialHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_Context->Device->CopyDescriptorsSimple(m_MaterialCount * MATERIAL_SIZE, dest, m_MaterialHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }

@@ -52,13 +52,13 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 
 	m_ScissorRect.left = 0;
 	m_ScissorRect.top = 0;
-	m_ScissorRect.bottom = screenSize.y;
-	m_ScissorRect.right = screenSize.x;
+	m_ScissorRect.bottom = (unsigned)screenSize.y;
+	m_ScissorRect.right = (unsigned)screenSize.x;
 
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 	swapChainDesc.BufferCount = g_FrameCount;
-	swapChainDesc.BufferDesc.Width = screenSize.x;
-	swapChainDesc.BufferDesc.Height = screenSize.y;
+	swapChainDesc.BufferDesc.Width = (unsigned)screenSize.x;
+	swapChainDesc.BufferDesc.Height = (unsigned)screenSize.y;
 	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;
 	swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
@@ -81,8 +81,8 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 
 	D3D12_RESOURCE_DESC dsvResDesc = {};
 	dsvResDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	dsvResDesc.Width = screenSize.x;
-	dsvResDesc.Height = screenSize.y;
+	dsvResDesc.Width = (unsigned)screenSize.x;
+	dsvResDesc.Height = (unsigned)screenSize.y;
 	dsvResDesc.DepthOrArraySize = 1;
 	dsvResDesc.MipLevels = 1;
 	dsvResDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -132,6 +132,8 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	m_RenderQueue.Init(&m_Context);
 	m_RenderQueue.CreateBuffer();
 
+	m_Profiler.Init(&m_Context);
+
 	m_Context.CommandList->Close();
 	ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
 	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
@@ -165,8 +167,8 @@ void GraphicsEngine::ResizeFrameBuffer(const glm::vec2& screenSize) {
 
 	m_ScissorRect.left = 0;
 	m_ScissorRect.top = 0;
-	m_ScissorRect.bottom = screenSize.y;
-	m_ScissorRect.right = screenSize.x;
+	m_ScissorRect.bottom = (unsigned)screenSize.y;
+	m_ScissorRect.right = (unsigned)screenSize.x;
 
 	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
 }
@@ -218,18 +220,20 @@ void GraphicsEngine::Render() {
 	perFrame->LightDir = glm::vec3(0.0f, -1.0f, 0.2f);
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
-	m_RenderQueue.UpdateBuffer();
+	//m_RenderQueue.UpdateBuffer();
 
+	
 	const float clearColor[] = { 100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1.0f };
 	m_Context.CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	m_Context.CommandList->ClearDepthStencilView(m_DSVHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0x0, 0, nullptr);
 	m_ProgramState.DescCounter = 0;
 
-	RenderGeometry(m_Context.CommandList.Get(), m_Context.Device.Get(), &m_ProgramState,
-		&m_RenderQueue, 0, m_RenderQueue.GetModelQueue().size());
+	m_Profiler.Start(m_Context.CommandList.Get());
 
-	//HR(m_Context.CommandAllocator[m_FrameIndex]->Reset(), L"Error resetting command allocator");
-	//HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_FrameIndex].Get(), m_ProgramState.PipelineState.Get()), L"Error resetting command list");
+	RenderGeometry(m_Context.CommandList.Get(), m_Context.Device.Get(), &m_ProgramState,
+		&m_RenderQueue, 0, (unsigned)m_RenderQueue.GetModelQueue().size());
+
+	m_Profiler.End(m_Context.CommandList.Get());
 
 	//return to present mode for render target
 	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_FrameIndex].Get(),
@@ -239,7 +243,8 @@ void GraphicsEngine::Render() {
 	ID3D12CommandList* commandLists = { m_Context.CommandList.Get() };
 	m_Context.CommandQueue->ExecuteCommandLists(1, &commandLists);
 
-
+	double rendertime = m_Profiler.GetResults();
+	printf("Rendering Time: %f ms\n", rendertime);
 }
 
 void GraphicsEngine::Swap() {

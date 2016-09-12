@@ -40,6 +40,9 @@ struct Model {
 	unsigned int NumVertices;
 	unsigned int NumIndices;
 	unsigned int NumBones;
+	glm::vec3 Max;
+	glm::vec3 Min;
+	float Radius;
 	std::vector<Mesh> Meshes;
 };
 

@@ -6,7 +6,7 @@ public:
 	~SSScript();
 
 	virtual void Startup();
-	virtual void Update(const float deltaTime);
+	virtual void Update(const double deltaTime);
 	virtual void Shutdown();
 private:
 

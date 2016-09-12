@@ -16,7 +16,7 @@ void SSScript::Startup() {
 	g_ScriptEngine.RunScript("script/spawnLevel.as");
 }
 
-void SSScript::Update(const float deltaTime) {
+void SSScript::Update(const double deltaTime) {
 	if (g_Input.IsKeyPushed(GLFW_KEY_F1)) {
 		printf("Recompiling all scripts\n");
 		g_ScriptEngine.RecompileAllScripts();

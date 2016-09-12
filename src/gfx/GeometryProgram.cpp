@@ -67,7 +67,7 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	state->IBLTex.Init("assets/textures/IBLTex.dds", context);
 
 	D3D12_DESCRIPTOR_HEAP_DESC skyHeapDesc = {};
-	skyHeapDesc.NumDescriptors = 3;
+	skyHeapDesc.NumDescriptors = ENVIRONMENT_MATERIAL_SIZE;
 	skyHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	skyHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	HR(context->Device->CreateDescriptorHeap(&skyHeapDesc, IID_PPV_ARGS(&state->SkyDescHeap)), L"Error creating descriptor heap for SkyTex");
@@ -79,12 +79,12 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	state->IBLTex.CreateSRV(context, skyHandle.Offset(1, state->DescHeapIncSize));
 
 	D3D12_DESCRIPTOR_HEAP_DESC renderHeapDesc = {};
-	renderHeapDesc.NumDescriptors = MAX_RENDER_OBJECTS * MATERIAL_SIZE + 3;
+	renderHeapDesc.NumDescriptors = MAX_RENDER_OBJECTS * MATERIAL_SIZE + ENVIRONMENT_MATERIAL_SIZE;
 	renderHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	renderHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	HR(context->Device->CreateDescriptorHeap(&renderHeapDesc, IID_PPV_ARGS(&state->RenderDescHeap)), L"Error creating descriptor heap for Rendering");
 	//copy enivroment descriptors
-	context->Device->CopyDescriptorsSimple(3, state->RenderDescHeap->GetCPUDescriptorHandleForHeapStart(),
+	context->Device->CopyDescriptorsSimple(ENVIRONMENT_MATERIAL_SIZE, state->RenderDescHeap->GetCPUDescriptorHandleForHeapStart(),
 		state->SkyDescHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	D3D12_INDIRECT_ARGUMENT_DESC argsDesc[7];
@@ -126,7 +126,7 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 
 
 void RenderGeometry(ID3D12GraphicsCommandList* cmdList, ID3D12Device* device,
-	GeometryProgramState* state, RenderQueue* queue, int start, int end) {
+	GeometryProgramState* state, RenderQueue* queue, unsigned start, unsigned end) {
 	cmdList->SetGraphicsRootSignature(state->RootSignature.Get());
 
 	cmdList->SetGraphicsRootConstantBufferView(PER_FRAME_CONST_BUFFER, g_BufferManager.GetGPUHandle("cbPerFrame"));
@@ -139,10 +139,8 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, ID3D12Device* device,
 	//set enviroment
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(state->RenderDescHeap->GetGPUDescriptorHandleForHeapStart());
 	cmdList->SetGraphicsRootDescriptorTable(ENVIROMENT_DESC_TABLE, gpuHandle);
-	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(3 * state->DescHeapIncSize));
-
-	//HR(cmdList->Close(), L"Error closing command list");
-
+	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
+	//draw everything
 	cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(), queue->GetArgumentBuffer(), 0, nullptr, 0);
 
 	//int instanceCounter = 0;

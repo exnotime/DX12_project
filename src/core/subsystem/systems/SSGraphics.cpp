@@ -11,11 +11,6 @@
 #include "../core/entity/EntityFactory.h"
 #include "../../../gfx/ModelBank.h"
 #include <glm/gtx/transform.hpp>
-#include <input/Input.h>
-
-//threading test TODO: REMOVE
-#include "../core/threading/JobManager.h"
-#include <sstream>
 
 
 SSGraphics::SSGraphics(){
@@ -36,7 +31,7 @@ void SSGraphics::Startup() {
 	}
 }
 
-void SSGraphics::Update(const float deltaTime) {
+void SSGraphics::Update(const double deltaTime) {
 	static bool firstUpdate = true;
 	if (firstUpdate) {
 		m_Graphics->PrepareForRender();
@@ -60,7 +55,6 @@ void SSGraphics::Update(const float deltaTime) {
 		if ((entity.ComponentBitfield & flag) == flag) {
 			ModelComponent* mc = (ModelComponent*)g_ComponentManager.GetComponent(entity, ModelComponent::Flag);
 			TransformComponent* tc = (TransformComponent*)g_ComponentManager.GetComponent(entity, TransformComponent::Flag);
-
 			si.Color = mc->Color;
 			si.World = glm::translate(tc->Position) * glm::mat4_cast(tc->Orientation) * glm::scale(tc->Scale);
 			m_RenderQueue->Enqueue(mc->Model, si);

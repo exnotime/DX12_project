@@ -12,11 +12,11 @@ Animation::~Animation() {
 }
 
 void Animation::Load(aiAnimation* animation, Skelleton& bindPose) {
-	m_Duration = animation->mDuration;
-	m_TicksPerSec = animation->mTicksPerSecond;
+	m_Duration = (float)animation->mDuration;
+	m_TicksPerSec = (float)animation->mTicksPerSecond;
 	//each channel represents a bone in the skelleton
 	//every key is part of a keyframe
-	int boneSize = bindPose.Bones.size();
+	unsigned boneSize = (unsigned)bindPose.Bones.size();
 	m_CurrentPose.Joints.resize(boneSize);
 	m_StartPose.Joints.resize(boneSize);
 	m_KeyFrames.resize(animation->mChannels[0]->mNumPositionKeys);
@@ -24,13 +24,13 @@ void Animation::Load(aiAnimation* animation, Skelleton& bindPose) {
 		key.Joints.resize(boneSize);
 	}
 
-	for (int c = 0; c < animation->mNumChannels; c++) {
+	for (unsigned c = 0; c < animation->mNumChannels; c++) {
 		aiNodeAnim* node = animation->mChannels[c];
 		int boneIndex = bindPose.BoneMapping.find(node->mNodeName.data)->second;
 		glm::mat4 translate, rotate, scale;
 
-		for (int i = 0; i < node->mNumPositionKeys; i++) {
-			m_KeyFrames[i].Time = node->mPositionKeys[i].mTime;
+		for (unsigned i = 0; i < node->mNumPositionKeys; i++) {
+			m_KeyFrames[i].Time = (float)node->mPositionKeys[i].mTime;
 			translate = glm::translate(glm::vec3(node->mPositionKeys[i].mValue.x, node->mPositionKeys[i].mValue.y, node->mPositionKeys[i].mValue.z));
 			rotate = glm::mat4_cast( glm::quat(node->mRotationKeys[i].mValue.w, node->mRotationKeys[i].mValue.x, node->mRotationKeys[i].mValue.y, node->mRotationKeys[i].mValue.z));
 			scale = glm::scale(glm::vec3(node->mScalingKeys[i].mValue.x, node->mScalingKeys[i].mValue.y, node->mScalingKeys[i].mValue.z));

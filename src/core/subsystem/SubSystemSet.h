@@ -17,7 +17,7 @@ namespace core {
 
 		void AddSubSystem( SubSystem* ss, uint32_t startUpPrio = -1, uint32_t updatePrio = -1, uint32_t shutdownPrio = -1);
 		void StartSubSystems();
-		void UpdateSubSystems(const float deltaTime);
+		void UpdateSubSystems(const double deltaTime);
 		void ShutdownSubSystems();
 	private:
 		bool m_Updated = false;

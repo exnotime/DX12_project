@@ -30,8 +30,9 @@ namespace GeometryProgram {
 
 	const int MAX_RENDER_OBJECTS = 10000;
 	const int MATERIAL_SIZE = 4;
+	const int ENVIRONMENT_MATERIAL_SIZE = 3;
 };
 
 void InitGeometryState(GeometryProgram::GeometryProgramState* state, DX12Context* context);
 void RenderGeometry(ID3D12GraphicsCommandList*cmdList, ID3D12Device* device,
-	GeometryProgram::GeometryProgramState* state, RenderQueue* queue, int start, int end);
+	GeometryProgram::GeometryProgramState* state, RenderQueue* queue, unsigned start, unsigned end);

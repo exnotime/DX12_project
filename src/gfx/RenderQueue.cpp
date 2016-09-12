@@ -15,10 +15,10 @@ void RenderQueue::Init(DX12Context* context) {
 	m_Context = context;
 	//create indirect args buffer
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(IndirectDrawCall) * 1000), D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_ArgumentBuffer));
+		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(IndirectDrawCall) * MAX_SHADER_INPUT_COUNT), D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_ArgumentBuffer));
 
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(IndirectDrawCall) * 1000), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_ArgumentUpload));
+		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(IndirectDrawCall) * MAX_SHADER_INPUT_COUNT), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_ArgumentUpload));
 	//map buffer
 	D3D12_RANGE range = { 0,0 };
 	m_ArgumentUpload->Map(0, &range, (void**)&m_IndirectStart);
@@ -31,7 +31,7 @@ void RenderQueue::CreateBuffer() {
 }
 
 void RenderQueue::UpdateBuffer() {
-	g_BufferManager.UpdateBuffer("ShaderInputBuffer", m_ShaderInputBuffer.data(), m_ShaderInputBuffer.size() * sizeof(ShaderInput));
+	g_BufferManager.UpdateBuffer("ShaderInputBuffer", m_ShaderInputBuffer.data(), (unsigned)(m_ShaderInputBuffer.size() * sizeof(ShaderInput)));
 
 	D3D12_RANGE range = { 0, m_IndirectCounter * sizeof(IndirectDrawCall) };
 	m_ArgumentUpload->Unmap(0, &range);
@@ -66,7 +66,7 @@ void RenderQueue::Enqueue(ModelHandle model, const std::vector<ShaderInput>& inp
 		drawCall.DrawIndex = m_InstanceCounter;
 		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset;;
 
-		drawCall.DrawArgs.InstanceCount = inputs.size();
+		drawCall.DrawArgs.InstanceCount = (unsigned)inputs.size();
 		drawCall.DrawArgs.IndexCountPerInstance = mesh.IndexCount;
 		drawCall.DrawArgs.StartIndexLocation = mod.IndexHandle + mesh.IndexBufferOffset;
 		drawCall.DrawArgs.BaseVertexLocation = 0;
@@ -76,7 +76,7 @@ void RenderQueue::Enqueue(ModelHandle model, const std::vector<ShaderInput>& inp
 		m_IndirectCounter++;
 	}
 
-	m_InstanceCounter += inputs.size();
+	m_InstanceCounter += (unsigned)inputs.size();
 
 
 }
@@ -96,7 +96,7 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 		drawCall.VBO[3] = mesh.VBOView.TexView;
 
 		drawCall.DrawIndex = m_InstanceCounter;
-		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * 4;
+		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
 
 		drawCall.DrawArgs.InstanceCount = 1;
 		drawCall.DrawArgs.IndexCountPerInstance = mesh.IndexCount;

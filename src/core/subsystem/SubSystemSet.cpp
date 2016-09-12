@@ -32,7 +32,7 @@ void SubSystemSet::StartSubSystems() {
 	}
 }
 
-void SubSystemSet::UpdateSubSystems(const float deltaTime) {
+void SubSystemSet::UpdateSubSystems(const double deltaTime) {
 	if (m_Updated) {
 		auto sortByUpdate = [](const SubSystemEntry& lhs, const SubSystemEntry& rhs) {
 			return lhs.update < rhs.update;

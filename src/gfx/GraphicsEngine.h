@@ -4,6 +4,8 @@
 #include "RenderQueue.h"
 #include "Texture.h"
 #include "GeometryProgram.h"
+#include "GPUProfiler.h"
+
 struct cbPerFrame {
 	glm::mat4 ViewProj;
 	glm::vec3 CamPos;
@@ -44,4 +46,5 @@ private:
 
 	RenderQueue m_RenderQueue;
 	GeometryProgram::GeometryProgramState m_ProgramState;
+	GPUProfiler m_Profiler;
 };

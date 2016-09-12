@@ -9,6 +9,7 @@ struct aiScene;
 typedef unsigned int TextureHandle;
 struct Model;
 #define MAX_MATERIAL_COUNT 1000
+#define MATERIAL_SIZE 4
 
 class MaterialBank {
   public:

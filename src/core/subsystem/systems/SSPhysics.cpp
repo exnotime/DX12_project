@@ -17,7 +17,7 @@ void SSPhysics::Startup() {
 	g_PhysicsEngine.Init();
 }
 
-void SSPhysics::Update(const float deltaTime) {
+void SSPhysics::Update(const double deltaTime) {
 	g_PhysicsEngine.Update(deltaTime);
 	//get translation from the bullet rigid body
 

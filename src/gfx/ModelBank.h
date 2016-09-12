@@ -24,8 +24,8 @@ class ModelBank {
 	void DeleteModel();
 	void ApplyBuffers(ID3D12GraphicsCommandList* cmdList);
 	void Clear();
-	std::vector<Vertex>& GetVertices();
-	//VertexBuffer& GetVertexBuffer();
+
+	float GetScaledRadius(ModelHandle model, const glm::vec3& scale);
 	void FreeUploadHeaps();
   private:
 	ModelBank();
@@ -35,7 +35,6 @@ class ModelBank {
 	Skelleton LoadSkelleton(const aiScene* scene);
 
 	Assimp::Importer				m_Importer;
-	//VertexBuffer					m_VertexBuffers[6];
 	ModelHandle						m_Numerator;
 	std::map<ModelHandle, Model>	m_Models;
 	//vertices

@@ -18,7 +18,7 @@ void SSStartup::Startup() {
 
 }
 
-void SSStartup::Update(const float deltaTime) {
+void SSStartup::Update(const double deltaTime) {
 }
 
 void SSStartup::Shutdown() {

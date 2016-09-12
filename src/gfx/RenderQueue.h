@@ -89,5 +89,5 @@ class RenderQueue {
 	UINT								m_IndirectCounter;
 	UINT								m_InstanceCounter;
 
-	const int MAX_SHADER_INPUT_COUNT = 100;
+	const int MAX_SHADER_INPUT_COUNT = 10000;
 };

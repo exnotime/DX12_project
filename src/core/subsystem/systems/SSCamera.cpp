@@ -18,7 +18,7 @@ void SSCamera::Startup() {
 	
 }
 
-void SSCamera::Update(const float deltaTime) {
+void SSCamera::Update(const double deltaTime) {
 	int flag = CameraComponent::Flag;
 	CameraData cd;
 	for (auto& entity : g_EntityManager.GetEntityList()) {
@@ -57,7 +57,7 @@ void SSCamera::Update(const float deltaTime) {
 			if (g_Input.IsKeyDown(GLFW_KEY_C)) {
 				cc->Camera.MoveWorld(glm::vec3(0, MOVE_SPEED * deltaTime * -1, 0));
 			}
-			cc->Camera.MoveWorld(velocity * deltaTime);
+			cc->Camera.MoveWorld(velocity * (float)deltaTime);
 			cc->Camera.CalculateViewProjection();
 		}
 	}

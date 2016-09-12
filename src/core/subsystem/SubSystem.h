@@ -7,5 +7,5 @@ public:
 
 	virtual void Startup() = 0;
 	virtual void Shutdown() = 0;
-	virtual void Update(const float deltaTime) = 0;
+	virtual void Update(const double deltaTime) = 0;
 };
