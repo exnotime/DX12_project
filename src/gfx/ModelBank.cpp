@@ -40,6 +40,7 @@ ModelHandle ModelBank::LoadModel(const char* filename) {
 		} else {
 			LoadMeshes(model, scene);
 			model.Radius = glm::max(model.Max.x, glm::max(model.Max.y, model.Max.z));
+			model.Radius = glm::max(model.Radius, glm::abs(glm::min(model.Min.x, glm::min(model.Min.y, model.Min.z))));
 		}
 		model.MaterialHandle = g_MaterialBank.GetMaterialCount();
 		model.Name = std::string(filename);
