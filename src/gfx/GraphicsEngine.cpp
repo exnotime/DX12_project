@@ -18,6 +18,8 @@ GraphicsEngine::~GraphicsEngine() {
 }
 
 void GraphicsEngine::CreateContext() {
+
+	int renderdoc = 0;
 #ifdef _DEBUG
 	ComPtr<ID3D12Debug> debugController;
 	HR(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), L"");
@@ -186,10 +188,7 @@ void GraphicsEngine::PrepareForRender() {
 	g_ModelBank.FreeUploadHeaps();
 }
 
-void GraphicsEngine::Render() {
-	if (m_RenderQueue.GetDrawCount() == 0) {
-		return;
-	}
+void GraphicsEngine::TransferFrame() {
 	HR(m_Context.CommandAllocator[m_FrameIndex]->Reset(), L"Error resetting command allocator");
 	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_FrameIndex].Get(), nullptr), L"Error resetting command list");
 
@@ -200,19 +199,42 @@ void GraphicsEngine::Render() {
 	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
 
 	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
+}
 
-	HR(m_Context.CommandAllocator[m_FrameIndex]->Reset(), L"Error resetting command allocator");
-	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_FrameIndex].Get(), m_ProgramState.PipelineState.Get()), L"Error resetting command list");
-
-	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
-	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
-	
+void GraphicsEngine::ClearScreen() {
 	//prepare render target for rendering
 	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
+	const float clearColor[] = { 100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1.0f };
+
+	m_Context.CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	m_Context.CommandList->ClearDepthStencilView(m_DSVHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0x0, 0, nullptr);
+}
+
+void GraphicsEngine::Render() {
+
+	TransferFrame();
+
+	HR(m_Context.CommandAllocator[m_FrameIndex]->Reset(), L"Error resetting command allocator");
+	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_FrameIndex].Get(), m_ProgramState.PipelineState.Get()), L"Error resetting command list");
+
+	ClearScreen();
+
+	if (m_RenderQueue.GetDrawCount() == 0) {
+		m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_FrameIndex].Get(),
+			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+		HR(m_Context.CommandList->Close(), L"Error closing command list");
+		ID3D12CommandList* commandLists = { m_Context.CommandList.Get() };
+		m_Context.CommandQueue->ExecuteCommandLists(1, &commandLists);
+		return;
+	}
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
 	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
+	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
+	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
 	View v = m_RenderQueue.GetViews().at(0);
 	cbPerFrame* perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame");
@@ -220,13 +242,6 @@ void GraphicsEngine::Render() {
 	perFrame->LightDir = glm::vec3(0.0f, -1.0f, 0.2f);
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
-	//m_RenderQueue.UpdateBuffer();
-
-	
-	const float clearColor[] = { 100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1.0f };
-	m_Context.CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-	m_Context.CommandList->ClearDepthStencilView(m_DSVHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0x0, 0, nullptr);
-	m_ProgramState.DescCounter = 0;
 
 	m_Profiler.Start(m_Context.CommandList.Get());
 

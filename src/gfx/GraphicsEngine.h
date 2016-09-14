@@ -22,6 +22,9 @@ public:
 	void Init(HWND hWnd, const glm::vec2& screenSize);
 	void ResizeFrameBuffer(const glm::vec2& screenSize);
 	void PrepareForRender();
+
+	void TransferFrame();
+	void ClearScreen();
 	void Render();
 	void Swap();
 	void Shutdown();
