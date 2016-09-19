@@ -125,7 +125,7 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 
 
 void RenderGeometry(ID3D12GraphicsCommandList* cmdList, ID3D12Device* device,
-	GeometryProgramState* state, RenderQueue* queue, unsigned start, unsigned end) {
+	GeometryProgramState* state, RenderQueue* queue) {
 	cmdList->SetGraphicsRootSignature(state->RootSignature.Get());
 
 	cmdList->SetGraphicsRootConstantBufferView(PER_FRAME_CONST_BUFFER, g_BufferManager.GetGPUHandle("cbPerFrame"));
@@ -141,27 +141,4 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, ID3D12Device* device,
 	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
 	//draw everything
 	cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(), queue->GetArgumentBuffer(), 0, nullptr, 0);
-
-	//int instanceCounter = 0;
-	//for (int i = start; i < end; i++) {
-	//	ModelObject m = queue->GetModelQueue().at(i);
-	//	Model model = g_ModelBank.FetchModel(m.Model);
-	//	cmdList->SetGraphicsRoot32BitConstant(DRAW_INDEX_CONSTANT, i + instanceCounter, 0);
-	//	for (auto& mesh : model.Meshes) {
-	//		D3D12_VERTEX_BUFFER_VIEW views[] = { mesh.VBOView.PosView, mesh.VBOView.NormalView, mesh.VBOView.TangentView, mesh.VBOView.TexView };
-	//		cmdList->IASetVertexBuffers(0, 4, views);
-	//		Material* mat = g_MaterialBank.GetMaterial(model.MaterialHandle + mesh.MaterialOffset);
-	//		//copy in material
-	//		CD3DX12_CPU_DESCRIPTOR_HANDLE heapCPUHandle(state->RenderDescHeap->GetCPUDescriptorHandleForHeapStart(), (state->DescCounter * MATERIAL_SIZE + 3) * state->DescHeapIncSize);
-	//		device->CopyDescriptorsSimple(4, heapCPUHandle, mat->DescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//		//set material
-	//		gpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(state->RenderDescHeap->GetGPUDescriptorHandleForHeapStart(), (state->DescCounter * MATERIAL_SIZE + 3) * state->DescHeapIncSize);
-	//		cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle);
-	//		
-	//		cmdList->DrawIndexedInstanced(mesh.IndexCount, m.InstanceCount, model.IndexHandle + mesh.IndexBufferOffset, 0, 0);
-
-	//		state->DescCounter++;
-	//	}
-	//	if(m.InstanceCount > 1) instanceCounter += m.InstanceCount;
-	//}
 }

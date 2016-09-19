@@ -8,47 +8,50 @@ GPUProfiler::~GPUProfiler() {
 }
 void GPUProfiler::Init(DX12Context* context) {
 	D3D12_QUERY_HEAP_DESC queryHeapDesc;
-	queryHeapDesc.Count = 2;
+	queryHeapDesc.Count = MAX_PROFILER_STEPS;
 	queryHeapDesc.NodeMask = 0;
 	queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
 	context->Device->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&m_QueryHeap));
 
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK), D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(256), D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_ResultBuffer));
+		&CD3DX12_RESOURCE_DESC::Buffer(MAX_PROFILER_STEPS * sizeof(UINT64)), D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_ResultBuffer));
 	m_TimerFreqs = 0;
 	context->Device->SetStablePowerState(true);
 	context->CommandQueue->GetTimestampFrequency(&m_TimerFreqs);
 
-	m_Started = false;
+	m_StepCounter = 0;
 }
-void GPUProfiler::Start(ID3D12GraphicsCommandList* cmdList) {
-	if (!m_Started) {
-		//cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_ResultBuffer.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST));
-
-		cmdList->EndQuery(m_QueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
-		m_Started = true;
-	}
+void GPUProfiler::Step(ID3D12GraphicsCommandList* cmdList) {
+		cmdList->EndQuery(m_QueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_StepCounter++);
 }
 void GPUProfiler::End(ID3D12GraphicsCommandList* cmdList) {
-	if (m_Started) {
-		cmdList->EndQuery(m_QueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
-		cmdList->ResolveQueryData(m_QueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, m_ResultBuffer.Get(), 0);
-		//cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_ResultBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
-		m_Started = false;
-	}
+		cmdList->EndQuery(m_QueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_StepCounter);
+		cmdList->ResolveQueryData(m_QueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, ++m_StepCounter, m_ResultBuffer.Get(), 0);
 }
 
-double GPUProfiler::GetResults() {
+void GPUProfiler::PrintResults() {
 	UINT64* result;
-	D3D12_RANGE range = {0, sizeof(UINT64) * 2};
+	D3D12_RANGE range = { 0, sizeof(UINT64) * m_StepCounter };
 	m_ResultBuffer->Map(0, &range, (void**)&result);
 
-	m_Start = result[0];
-	m_End = result[1];
-	double res = ((m_End - m_Start) / (double)m_TimerFreqs) * 1000.0;
+	
+	UINT64 a, b;
+	for (int i = 0; i < m_StepCounter - 1; i++) {
+		a = result[i];
+		b = result[i + 1];
+
+		double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
+		printf("Step %d: %f ms\n", i + 1, res);
+	}
+
+	a = result[0];
+	b = result[m_StepCounter - 1];
+
+	double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
+	//printf("Entire frame: %f ms\n", res);
 
 	range.End = 0;
 	m_ResultBuffer->Unmap(0, &range);
 
-	return res;
+	m_StepCounter = 0;
 }

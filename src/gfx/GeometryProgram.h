@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "RenderQueue.h"
+#include "GPUProfiler.h"
 #include <atomic>
 namespace GeometryProgram {
 	struct GeometryProgramState {
@@ -35,4 +36,4 @@ namespace GeometryProgram {
 
 void InitGeometryState(GeometryProgram::GeometryProgramState* state, DX12Context* context);
 void RenderGeometry(ID3D12GraphicsCommandList*cmdList, ID3D12Device* device,
-	GeometryProgram::GeometryProgramState* state, RenderQueue* queue, unsigned start, unsigned end);
+	GeometryProgram::GeometryProgramState* state, RenderQueue* queue);

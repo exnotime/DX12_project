@@ -193,7 +193,7 @@ void GraphicsEngine::TransferFrame() {
 	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_FrameIndex].Get(), nullptr), L"Error resetting command list");
 
 	m_RenderQueue.UpdateBuffer();
-	//execute transfers
+
 	m_Context.CommandList->Close();
 	ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
 	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
@@ -214,7 +214,7 @@ void GraphicsEngine::ClearScreen() {
 }
 
 void GraphicsEngine::Render() {
-
+	
 	TransferFrame();
 
 	HR(m_Context.CommandAllocator[m_FrameIndex]->Reset(), L"Error resetting command allocator");
@@ -243,10 +243,9 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
 
-	m_Profiler.Start(m_Context.CommandList.Get());
+	m_Profiler.Step(m_Context.CommandList.Get());
 
-	RenderGeometry(m_Context.CommandList.Get(), m_Context.Device.Get(), &m_ProgramState,
-		&m_RenderQueue, 0, (unsigned)m_RenderQueue.GetModelQueue().size());
+	RenderGeometry(m_Context.CommandList.Get(), m_Context.Device.Get(), &m_ProgramState, &m_RenderQueue);
 
 	m_Profiler.End(m_Context.CommandList.Get());
 
@@ -258,8 +257,7 @@ void GraphicsEngine::Render() {
 	ID3D12CommandList* commandLists = { m_Context.CommandList.Get() };
 	m_Context.CommandQueue->ExecuteCommandLists(1, &commandLists);
 
-	double rendertime = m_Profiler.GetResults();
-	printf("Rendering Time: %f ms\n", rendertime);
+	m_Profiler.PrintResults();
 }
 
 void GraphicsEngine::Swap() {
