@@ -58,8 +58,7 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	std::vector<DXGI_FORMAT> formats;
 	formats.push_back(DXGI_FORMAT_R8G8B8A8_UNORM);
 	pipeStateFact.SetRenderTargetFormats(formats);
-	pipeStateFact.SetShader(state->Shader.GetByteCode(VERTEX_SHADER_BIT), VERTEX_SHADER_BIT);
-	pipeStateFact.SetShader(state->Shader.GetByteCode(PIXEL_SHADER_BIT), PIXEL_SHADER_BIT);
+	pipeStateFact.SetAllShaders(state->Shader);
 	state->PipelineState = pipeStateFact.Create(context->Device.Get());
 
 	state->DiffSkyTex.Init("assets/cubemaps/skybox_irr.dds", context);

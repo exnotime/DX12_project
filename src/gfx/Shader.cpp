@@ -9,6 +9,8 @@ Shader::~Shader() {
 }
 
 void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes) {
+
+	m_ShaderTypes = shaderTypes;
 #ifdef _DEBUG
 	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_WARNINGS_ARE_ERRORS;
 #else
@@ -55,7 +57,7 @@ void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes) {
 	}
 }
 
-D3D12_SHADER_BYTECODE Shader::GetByteCode(UINT shaderType) {
+D3D12_SHADER_BYTECODE Shader::GetByteCode(UINT shaderType) const {
 	UINT index = log2(shaderType);
 	D3D12_SHADER_BYTECODE byteCode;
 	byteCode.pShaderBytecode = reinterpret_cast<UINT8*>(m_ShaderBlobs.at(index)->GetBufferPointer());

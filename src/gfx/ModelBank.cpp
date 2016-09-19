@@ -46,7 +46,8 @@ ModelHandle ModelBank::LoadModel(const char* filename) {
 		model.Name = std::string(filename);
 		g_MaterialBank.LoadMaterials(model, filename, scene);
 	} else if (!scene) {
-		printf("error loading model: %s \n", filename);
+		
+		printf("error loading model: %s\n ASSIMP Error: %s \n", filename, m_Importer.GetErrorString());
 		return -1;
 	}
 	printf("Loaded Model %s\n", filename);

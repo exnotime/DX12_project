@@ -74,14 +74,13 @@ void SSGraphics::Update(const double deltaTime) {
 			TransformComponent* tc = (TransformComponent*)g_ComponentManager.GetComponent(entity, TransformComponent::Flag);
 
 			float r = g_ModelBank.GetScaledRadius(mc->Model, tc->Scale);
-			if (FrustumCheck(frustumPlanes, tc->Position - camPos, r)) {
+			//if (FrustumCheck(frustumPlanes, tc->Position - camPos, 1)) {
 				si.Color = mc->Color;
 				si.World = glm::translate(tc->Position) * glm::mat4_cast(tc->Orientation) * glm::scale(tc->Scale);
 				m_RenderQueue->Enqueue(mc->Model, si);
-			}
+			//}
 		}
 	}
-
 	m_Graphics->Render();
 	m_Graphics->Swap();
 }

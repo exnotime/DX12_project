@@ -19,7 +19,7 @@ void PipelineStateFactory::SetInputLayout(const D3D12_INPUT_ELEMENT_DESC inputLa
 void PipelineStateFactory::SetRootSignature(ID3D12RootSignature* rootSignature) {
 	m_PipelineStateDesc.pRootSignature = rootSignature;
 }
-void PipelineStateFactory::SetShader(const D3D12_SHADER_BYTECODE& byteCode, SHADER_TYPES shaderType) {
+void PipelineStateFactory::SetShader(const D3D12_SHADER_BYTECODE& byteCode, UINT shaderType) {
 	switch (shaderType) {
 		case VERTEX_SHADER_BIT:
 			m_PipelineStateDesc.VS = byteCode;
@@ -38,6 +38,14 @@ void PipelineStateFactory::SetShader(const D3D12_SHADER_BYTECODE& byteCode, SHAD
 			break;
 		default:
 			break;
+	}
+}
+
+void PipelineStateFactory::SetAllShaders(const Shader& shader) {
+	for (UINT i = 0; i < 6; ++i) {
+		UINT flag = 1 << i;
+		if ((shader.GetShaderTypes() & flag) == flag)
+			SetShader(shader.GetByteCode(flag), flag);
 	}
 }
 

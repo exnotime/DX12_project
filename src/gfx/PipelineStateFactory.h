@@ -8,7 +8,8 @@ public:
 
 	void SetInputLayout(const D3D12_INPUT_ELEMENT_DESC inputLayout[], UINT layoutCount);
 	void SetRootSignature(ID3D12RootSignature* rootSignature);
-	void SetShader(const D3D12_SHADER_BYTECODE& byteCode, SHADER_TYPES shaderType);
+	void SetShader(const D3D12_SHADER_BYTECODE& byteCode, UINT shaderType);
+	void SetAllShaders(const Shader& shader);
 	void SetRasterizerState(const CD3DX12_RASTERIZER_DESC& rasterState);
 	void SetBlendState(const CD3DX12_BLEND_DESC& blendState);
 	void SetDepthStencilState(const D3D12_DEPTH_STENCIL_DESC& depthStencilState);

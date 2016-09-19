@@ -15,7 +15,9 @@ public:
 	Shader();
 	~Shader();
 	void LoadFromFile(const std::wstring& filename, UINT shaderTypes);
-	D3D12_SHADER_BYTECODE GetByteCode(UINT shaderTypes);
+	D3D12_SHADER_BYTECODE GetByteCode(UINT shaderTypes) const;
+	UINT GetShaderTypes() const { return m_ShaderTypes; };
 private:
-	std::vector<ID3DBlob*> m_ShaderBlobs;
+	UINT					m_ShaderTypes;
+	std::vector<ID3DBlob*>	m_ShaderBlobs;
 };
