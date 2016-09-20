@@ -86,32 +86,23 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	context->Device->CopyDescriptorsSimple(ENVIRONMENT_MATERIAL_SIZE, state->RenderDescHeap->GetCPUDescriptorHandleForHeapStart(),
 		state->SkyDescHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	D3D12_INDIRECT_ARGUMENT_DESC argsDesc[7];
-	//VBOs
-	argsDesc[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
-	argsDesc[0].VertexBuffer.Slot = 0;
-	argsDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
-	argsDesc[1].VertexBuffer.Slot = 1;
-	argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
-	argsDesc[2].VertexBuffer.Slot = 2;
-	argsDesc[3].Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
-	argsDesc[3].VertexBuffer.Slot = 3;
+	D3D12_INDIRECT_ARGUMENT_DESC argsDesc[3];
 	//draw ID
-	argsDesc[4].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
-	argsDesc[4].Constant.RootParameterIndex = DRAW_INDEX_CONSTANT;
-	argsDesc[4].Constant.Num32BitValuesToSet = 1;
-	argsDesc[4].Constant.DestOffsetIn32BitValues = 0;
+	argsDesc[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
+	argsDesc[0].Constant.RootParameterIndex = DRAW_INDEX_CONSTANT;
+	argsDesc[0].Constant.Num32BitValuesToSet = 1;
+	argsDesc[0].Constant.DestOffsetIn32BitValues = 0;
 	//material ID
-	argsDesc[5].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
-	argsDesc[5].Constant.RootParameterIndex = DRAW_INDEX_CONSTANT;
-	argsDesc[5].Constant.Num32BitValuesToSet = 1;
-	argsDesc[5].Constant.DestOffsetIn32BitValues = 1;
+	argsDesc[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
+	argsDesc[1].Constant.RootParameterIndex = DRAW_INDEX_CONSTANT;
+	argsDesc[1].Constant.Num32BitValuesToSet = 1;
+	argsDesc[1].Constant.DestOffsetIn32BitValues = 1;
 	//draw args
-	argsDesc[6].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+	argsDesc[2].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
 
 	D3D12_COMMAND_SIGNATURE_DESC signDesc;
 	signDesc.ByteStride = sizeof(IndirectDrawCall);
-	signDesc.NumArgumentDescs = 7;
+	signDesc.NumArgumentDescs = 3;
 	signDesc.pArgumentDescs = argsDesc;
 	signDesc.NodeMask = 0;
 	HR(context->Device->CreateCommandSignature(&signDesc, state->RootSignature.Get(), IID_PPV_ARGS(&state->CommandSignature)),L"Error creating Command signature");
@@ -124,8 +115,7 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 }
 
 
-void RenderGeometry(ID3D12GraphicsCommandList* cmdList, ID3D12Device* device,
-	GeometryProgramState* state, RenderQueue* queue) {
+void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* state, RenderQueue* queue) {
 	cmdList->SetGraphicsRootSignature(state->RootSignature.Get());
 
 	cmdList->SetGraphicsRootConstantBufferView(PER_FRAME_CONST_BUFFER, g_BufferManager.GetGPUHandle("cbPerFrame"));

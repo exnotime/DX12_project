@@ -16,5 +16,5 @@ public:
 	ComPtr<ID3D12RootSignature> CreateSignture(ID3D12Device* device);
 private:
 	std::vector<CD3DX12_ROOT_PARAMETER> m_RootParamters;
-	D3D12_STATIC_SAMPLER_DESC m_SamplerDesc;
+	std::vector<D3D12_STATIC_SAMPLER_DESC> m_Samplers;
 };

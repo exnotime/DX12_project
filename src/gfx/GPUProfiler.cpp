@@ -41,7 +41,9 @@ void GPUProfiler::PrintResults() {
 		b = result[i + 1];
 
 		double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
+#ifndef SILENT_PROFILING
 		printf("Step %d: %f ms\n", i + 1, res);
+#endif
 	}
 
 	a = result[0];

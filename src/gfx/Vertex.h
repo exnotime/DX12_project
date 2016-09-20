@@ -17,6 +17,11 @@ const D3D12_INPUT_ELEMENT_DESC VertexLayout[] = {
 	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 3, 0 , D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 };
 
+const int DepthOnlyVertexSize = 1;
+const D3D12_INPUT_ELEMENT_DESC DepthOnlyVertexLayout[] = {
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+};
+
 struct AnimatedVertex {
 	glm::vec3 Position;
 	glm::vec3 Normal;

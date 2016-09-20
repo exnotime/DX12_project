@@ -15,6 +15,7 @@
 #include "entity/EntityFactory.h"
 #include "script/ScriptEngine.h"
 #include "threading/JobManager.h"
+#include "../gfx/ShapeGenerator.h"
 
 using namespace core;
 
@@ -49,6 +50,8 @@ void Engine::Init() {
 	m_SubSystemSet.AddSubSystem( new SSScript() );
 	m_SubSystemSet.StartSubSystems();
 
+	g_ShapeGenerator.LoadAllShapes();
+
 	glfwSetKeyCallback(g_Window.GetWindow(), KeyboardCallBack);
 	glfwSetMouseButtonCallback(g_Window.GetWindow(), MouseButtonCallback);
 	glfwSetCursorPosCallback(g_Window.GetWindow(), MousePosCallback);
@@ -67,7 +70,7 @@ void Engine::Run() {
 		m_SubSystemSet.UpdateSubSystems(deltaTime);
 
 		std::stringstream ss;
-		ss << "A DX12 Window : " << (1.0 / deltaTime);
+		ss << "A DX12 Window : " << ceil(1.0 / deltaTime);
 
 		glfwSetWindowTitle(g_Window.GetWindow(), ss.str().c_str());
 

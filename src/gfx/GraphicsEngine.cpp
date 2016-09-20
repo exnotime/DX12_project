@@ -126,7 +126,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	CreateSwapChain(hWnd, screenSize);
 
 	InitGeometryState(&m_ProgramState, &m_Context);
-
+	InitDepthOnlyState(&m_DepthProgramState, &m_Context);
 	g_BufferManager.Init(&m_Context);
 	g_BufferManager.CreateConstBuffer("cbPerFrame", nullptr, sizeof(cbPerFrame));
 	g_MaterialBank.Initialize(&m_Context);
@@ -242,10 +242,13 @@ void GraphicsEngine::Render() {
 	perFrame->LightDir = glm::vec3(0.0f, -1.0f, 0.2f);
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
+	m_Profiler.Step(m_Context.CommandList.Get());
+
+	DepthOnlyRender(m_Context.CommandList.Get(), &m_DepthProgramState, &m_RenderQueue);
 
 	m_Profiler.Step(m_Context.CommandList.Get());
 
-	RenderGeometry(m_Context.CommandList.Get(), m_Context.Device.Get(), &m_ProgramState, &m_RenderQueue);
+	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue);
 
 	m_Profiler.End(m_Context.CommandList.Get());
 

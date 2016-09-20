@@ -35,7 +35,6 @@ struct View {
 };
 
 struct IndirectDrawCall {
-	D3D12_VERTEX_BUFFER_VIEW VBO[4];
 	UINT DrawIndex;
 	UINT MaterialOffset;
 	D3D12_DRAW_INDEXED_ARGUMENTS DrawArgs;
@@ -71,6 +70,10 @@ class RenderQueue {
 		return m_ArgumentBuffer.Get();
 	}
 
+	ID3D12CommandSignature* GetCommandSignature() const {
+		return m_CommandSignature.Get();
+	}
+
 	UINT GetDrawCount() const {
 		return m_IndirectCounter;
 	}
@@ -83,6 +86,7 @@ class RenderQueue {
 	std::vector<ShaderInput>			m_TransparentShaderInputBuffer;
 	
 	DX12Context*						m_Context;
+	ComPtr<ID3D12CommandSignature>		m_CommandSignature;
 	ComPtr<ID3D12Resource>				m_ArgumentBuffer;
 	ComPtr<ID3D12Resource>				m_ArgumentUpload;
 	IndirectDrawCall*					m_IndirectStart;

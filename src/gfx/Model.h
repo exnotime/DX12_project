@@ -5,20 +5,7 @@
 #include <map>
 #include <d3d12.h>
 
-struct MeshView {
-	D3D12_VERTEX_BUFFER_VIEW PosView;
-	D3D12_VERTEX_BUFFER_VIEW NormalView;
-	D3D12_VERTEX_BUFFER_VIEW TangentView;
-	D3D12_VERTEX_BUFFER_VIEW TexView;
-
-	D3D12_VERTEX_BUFFER_VIEW* GetVBOViews() {
-		D3D12_VERTEX_BUFFER_VIEW views[] = { PosView, NormalView, TangentView, TexView };
-		return views;
-	};
-};
-
 struct Mesh {
-	MeshView VBOView;
 	unsigned int MaterialOffset;
 	unsigned int IndexBufferOffset;
 	unsigned int IndexCount;

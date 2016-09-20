@@ -4,6 +4,7 @@
 #include "RenderQueue.h"
 #include "Texture.h"
 #include "GeometryProgram.h"
+#include "DepthOnlyProgram.h"
 #include "GPUProfiler.h"
 
 struct cbPerFrame {
@@ -49,5 +50,6 @@ private:
 
 	RenderQueue m_RenderQueue;
 	GeometryProgram::GeometryProgramState m_ProgramState;
+	DepthOnlyProgram::DepthOnlyState m_DepthProgramState;
 	GPUProfiler m_Profiler;
 };

@@ -35,5 +35,5 @@ namespace GeometryProgram {
 };
 
 void InitGeometryState(GeometryProgram::GeometryProgramState* state, DX12Context* context);
-void RenderGeometry(ID3D12GraphicsCommandList*cmdList, ID3D12Device* device,
+void RenderGeometry(ID3D12GraphicsCommandList*cmdList,
 	GeometryProgram::GeometryProgramState* state, RenderQueue* queue);

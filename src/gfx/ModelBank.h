@@ -56,6 +56,7 @@ class ModelBank {
 	ComPtr<ID3D12Resource>			m_IndexBufferResource;
 	ComPtr<ID3D12Resource>			m_IndexbufferUpload;
 
+	D3D12_VERTEX_BUFFER_VIEW		m_VertexBufferView[4];
 	ComPtr<ID3D12Resource>			m_VertexBufferResource;
 	ComPtr<ID3D12Resource>			m_VertexBufferUpload;
 

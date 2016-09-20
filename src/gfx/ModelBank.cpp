@@ -38,6 +38,7 @@ ModelHandle ModelBank::LoadModel(const char* filename) {
 			anim.Load(scene->mAnimations[0], skel);
 			anim.CalcPose(1.2f);
 		} else {
+			model.VertexHandle = m_VertexPositions.size();
 			LoadMeshes(model, scene);
 			model.Radius = glm::max(model.Max.x, glm::max(model.Max.y, model.Max.z));
 			model.Radius = glm::max(model.Radius, glm::abs(glm::min(model.Min.x, glm::min(model.Min.y, model.Min.z))));
@@ -58,11 +59,13 @@ ModelHandle ModelBank::LoadModel(const char* filename) {
 
 void ModelBank::LoadMeshes(Model& model, const aiScene* scene) {
 	int size = 0;
-	int indices = 0;
+	int indexCount = 0;
+	int vertexCount = 0;
 	Mesh modelMesh;
 	for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
 		const aiMesh* mesh = scene->mMeshes[i];
 		//modelMesh.VertexBufferOffset = size;
+		std::vector<unsigned int> indices;
 		unsigned int numVertices = 0;
 		unsigned int numIndices = 0;
 		//foreach vertice
@@ -96,27 +99,26 @@ void ModelBank::LoadMeshes(Model& model, const aiScene* scene) {
 			m_VertexNormals.push_back(normal);
 			m_VertexTangents.push_back(tangent);
 			m_VertexTexCoords.push_back(texcoord);
-			
-			//m_Vertices.push_back(vertex);
 		}//end foreach vertice
 		//Indices
 		for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
 			//index = (Num vertices from the already loaded models) + (Size of all the already loaded meshes + mesh->faceindices)
-			m_Indices.push_back(mesh->mFaces[f].mIndices[0]);
-			m_Indices.push_back(mesh->mFaces[f].mIndices[1]);
-			m_Indices.push_back(mesh->mFaces[f].mIndices[2]);
+			indices.push_back(model.VertexHandle + size + mesh->mFaces[f].mIndices[0]);
+			indices.push_back(model.VertexHandle + size + mesh->mFaces[f].mIndices[1]);
+			indices.push_back(model.VertexHandle + size + mesh->mFaces[f].mIndices[2]);
 			numIndices += 3;
 		}
+		m_Indices.insert(m_Indices.end(), indices.begin(), indices.end());
 		modelMesh.MaterialOffset = mesh->mMaterialIndex;
-		modelMesh.IndexBufferOffset = indices;
+		modelMesh.IndexBufferOffset = indexCount;
 		size += numVertices;
-		indices += numIndices;
+		indexCount += numIndices;
 		modelMesh.VertexCount = numVertices;
 		modelMesh.IndexCount = numIndices;
 		model.Meshes.push_back(modelMesh);
 	}//end foreach mesh
 	model.NumVertices = size;
-	model.NumIndices = indices;
+	model.NumIndices = indexCount;
 }
 
 void ModelBank::LoadRiggedMeshes(Model& model, const aiScene* scene) {
@@ -275,10 +277,10 @@ ModelHandle ModelBank::CreateCustomModel( std::vector<Vertex>* vertices, std::ve
 	mesh.VertexCount = (unsigned)vertices->size();
 	mesh.MaterialOffset = 0;
 	mesh.IndexBufferOffset = 0;
-	//mesh.VertexBufferOffset = 0;
+
 	model.Meshes.push_back(mesh);
 	model.MaterialHandle = 0; //make sure there is a default material loaded
-	//model.VertexHandle = (int)m_Vertices.size();
+	model.VertexHandle = m_VertexPositions.size();
 	model.IndexHandle = 0;
 	model.NumIndices = (unsigned)indices->size();
 	model.NumVertices = (unsigned)vertices->size();
@@ -287,7 +289,12 @@ ModelHandle ModelBank::CreateCustomModel( std::vector<Vertex>* vertices, std::ve
 		m_Indices.push_back(model.VertexHandle + indices->at(i));
 	}
 	//copy vertices
-	//m_Vertices.insert(m_Vertices.end(), vertices->begin(), vertices->end());
+	for (int i = 0; i < vertices->size(); ++i) {
+		m_VertexPositions.push_back(vertices->at(i).Position);
+		m_VertexNormals.push_back(vertices->at(i).Normal);
+		m_VertexTangents.push_back(vertices->at(i).Tangent);
+		m_VertexTexCoords.push_back(vertices->at(i).TexCoord);
+	}
 	m_Models[id] = model;
 	return id;
 }
@@ -352,31 +359,49 @@ void ModelBank::BuildBuffers() {
 	offset += size;
 	memcpy(pData, m_VertexTexCoords.data(), size);
 
-	//create views for each mesh
-	int meshOffset = 0;
-	int vec3Size = sizeof(glm::vec3);
-	int vec2Size = sizeof(glm::vec2);
-	for (auto& model : m_Models) {
-		for (auto& mesh : model.second.Meshes) {
-			//pos
-			mesh.VBOView.PosView.BufferLocation = posHandle + (meshOffset * vec3Size);
-			mesh.VBOView.PosView.SizeInBytes = mesh.VertexCount * vec3Size;
-			mesh.VBOView.PosView.StrideInBytes = vec3Size;
-			//normal
-			mesh.VBOView.NormalView.BufferLocation = normalHandle + (meshOffset * vec3Size);
-			mesh.VBOView.NormalView.SizeInBytes = mesh.VertexCount * vec3Size;
-			mesh.VBOView.NormalView.StrideInBytes = vec3Size;
-			//tangent
-			mesh.VBOView.TangentView.BufferLocation = tangentHandle + (meshOffset * vec3Size);
-			mesh.VBOView.TangentView.SizeInBytes = mesh.VertexCount * vec3Size;
-			mesh.VBOView.TangentView.StrideInBytes = vec3Size;
-			//texcoord
-			mesh.VBOView.TexView.BufferLocation = texHandle + (meshOffset * vec2Size);
-			mesh.VBOView.TexView.SizeInBytes = mesh.VertexCount * vec2Size;
-			mesh.VBOView.TexView.StrideInBytes = vec2Size;
-			meshOffset += mesh.VertexCount;
-		}
-	}
+	////create views for each mesh
+	//int meshOffset = 0;
+	//int vec3Size = sizeof(glm::vec3);
+	//int vec2Size = sizeof(glm::vec2);
+	//for (auto& model : m_Models) {
+	//	for (auto& mesh : model.second.Meshes) {
+	//		//pos
+	//		mesh.VBOView.PosView.BufferLocation = posHandle + (meshOffset * vec3Size);
+	//		mesh.VBOView.PosView.SizeInBytes = mesh.VertexCount * vec3Size;
+	//		mesh.VBOView.PosView.StrideInBytes = vec3Size;
+	//		//normal
+	//		mesh.VBOView.NormalView.BufferLocation = normalHandle + (meshOffset * vec3Size);
+	//		mesh.VBOView.NormalView.SizeInBytes = mesh.VertexCount * vec3Size;
+	//		mesh.VBOView.NormalView.StrideInBytes = vec3Size;
+	//		//tangent
+	//		mesh.VBOView.TangentView.BufferLocation = tangentHandle + (meshOffset * vec3Size);
+	//		mesh.VBOView.TangentView.SizeInBytes = mesh.VertexCount * vec3Size;
+	//		mesh.VBOView.TangentView.StrideInBytes = vec3Size;
+	//		//texcoord
+	//		mesh.VBOView.TexView.BufferLocation = texHandle + (meshOffset * vec2Size);
+	//		mesh.VBOView.TexView.SizeInBytes = mesh.VertexCount * vec2Size;
+	//		mesh.VBOView.TexView.StrideInBytes = vec2Size;
+	//		meshOffset += mesh.VertexCount;
+	//	}
+	//}
+	//create vertex buffer view
+	//position
+	m_VertexBufferView[0].BufferLocation = posHandle;
+	m_VertexBufferView[0].SizeInBytes = sizeof(glm::vec3) * m_VertexPositions.size();
+	m_VertexBufferView[0].StrideInBytes = sizeof(glm::vec3);
+	//normal
+	m_VertexBufferView[1].BufferLocation = normalHandle;
+	m_VertexBufferView[1].SizeInBytes = sizeof(glm::vec3) * m_VertexNormals.size();
+	m_VertexBufferView[1].StrideInBytes = sizeof(glm::vec3);
+	//tangent
+	m_VertexBufferView[2].BufferLocation = tangentHandle;
+	m_VertexBufferView[2].SizeInBytes = sizeof(glm::vec3) * m_VertexTangents.size();
+	m_VertexBufferView[2].StrideInBytes = sizeof(glm::vec3);
+	//uv
+	m_VertexBufferView[3].BufferLocation = texHandle;
+	m_VertexBufferView[3].SizeInBytes = sizeof(glm::vec2) * m_VertexTexCoords.size();
+	m_VertexBufferView[3].StrideInBytes = sizeof(glm::vec2);
+
 
 	m_Context->CommandList->CopyResource(m_VertexBufferResource.Get() , m_VertexBufferUpload.Get());
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_VertexBufferResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
@@ -417,6 +442,7 @@ void ModelBank::BuildBuffers() {
 
 void ModelBank::ApplyBuffers(ID3D12GraphicsCommandList* cmdList) {
 	cmdList->IASetIndexBuffer(&m_IndexBufferView);
+	cmdList->IASetVertexBuffers(0, 4, m_VertexBufferView);
 }
 
 float ModelBank::GetScaledRadius(ModelHandle model, const glm::vec3& scale) {

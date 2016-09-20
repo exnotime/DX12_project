@@ -20,6 +20,7 @@ void SpawnPlayer(const glm::vec3& position, const glm::vec3& size) {
 
 	CameraComponent cc;
 	cc.Camera.GetEditableData().Fov = (60.0f / 360.0f) * glm::pi<float>() * 2;
+	cc.Camera.GetEditableData().Far = 1000.0f;
 	g_ComponentManager.CreateComponent(&cc, e, CameraComponent::Flag);
 }
 
@@ -50,6 +51,21 @@ void SpawnLevelObjectM(int model, const glm::vec3& position, const glm::quat& or
 
 	ModelComponent mc;
 	mc.Model = model;
+	mc.Color = color;
+	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
+}
+
+void SpawnLevelObjectS(BASIC_SHAPE shape, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color) {
+	Entity& e = g_EntityManager.CreateEntity();
+	TransformComponent tc;
+	tc.Position = position;
+	tc.Orientation = orientation;
+	tc.Scale = scale;
+	tc.World = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
+	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
+
+	ModelComponent mc;
+	mc.Model = g_ShapeGenerator.GenerateModel(shape);
 	mc.Color = color;
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
 }

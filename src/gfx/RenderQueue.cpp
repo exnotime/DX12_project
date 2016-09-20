@@ -58,11 +58,6 @@ void RenderQueue::Enqueue(ModelHandle model, const std::vector<ShaderInput>& inp
 	IndirectDrawCall drawCall;
 	Model mod = g_ModelBank.FetchModel(model);
 	for (auto& mesh : mod.Meshes) {
-		drawCall.VBO[0] = mesh.VBOView.PosView;
-		drawCall.VBO[1] = mesh.VBOView.NormalView;
-		drawCall.VBO[2] = mesh.VBOView.TangentView;
-		drawCall.VBO[3] = mesh.VBOView.TexView;
-
 		drawCall.DrawIndex = m_InstanceCounter;
 		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset;;
 
@@ -90,11 +85,6 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 	IndirectDrawCall drawCall;
 	Model mod = g_ModelBank.FetchModel(model);
 	for (auto& mesh : mod.Meshes) {
-		drawCall.VBO[0] = mesh.VBOView.PosView;
-		drawCall.VBO[1] = mesh.VBOView.NormalView;
-		drawCall.VBO[2] = mesh.VBOView.TangentView;
-		drawCall.VBO[3] = mesh.VBOView.TexView;
-
 		drawCall.DrawIndex = m_InstanceCounter;
 		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
 
