@@ -29,7 +29,7 @@ Engine::~Engine() {
 }
 
 void Engine::Init() {
-	g_JobManager.Init(3);
+	//g_JobManager.Init(3);
 
 	g_ComponentManager.Init();
 	g_ScriptEngine.Init();

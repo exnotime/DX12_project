@@ -65,9 +65,10 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 	swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;
 	swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 	swapChainDesc.Windowed = true;
 	swapChainDesc.SampleDesc.Count = 1;
+	//swapChainDesc.SampleDesc.Quality = 0;
 	swapChainDesc.OutputWindow = hWnd;
 
 	ComPtr<IDXGISwapChain> swapchain;
@@ -179,6 +180,8 @@ void GraphicsEngine::PrepareForRender() {
 	//this will transfer textures/models etc to gpu
 	g_ModelBank.BuildBuffers();
 	g_MaterialBank.CopyMaterialDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_ProgramState.RenderDescHeap->GetCPUDescriptorHandleForHeapStart()).Offset(3, m_ProgramState.DescHeapIncSize));
+	g_MaterialBank.CopyMaterialDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DepthProgramState.MaterialHeap->GetCPUDescriptorHandleForHeapStart()));
+
 	m_Context.CommandList->Close();
 	ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
 	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);

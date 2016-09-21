@@ -37,7 +37,7 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	D3D12_DEPTH_STENCIL_DESC depthDesc = {};
 	depthDesc.DepthEnable = true;
 	depthDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	depthDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	depthDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	depthDesc.StencilEnable = true;
 	depthDesc.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
 	depthDesc.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
@@ -117,7 +117,7 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 
 void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* state, RenderQueue* queue) {
 	cmdList->SetGraphicsRootSignature(state->RootSignature.Get());
-
+	cmdList->SetPipelineState(state->PipelineState.Get());
 	cmdList->SetGraphicsRootConstantBufferView(PER_FRAME_CONST_BUFFER, g_BufferManager.GetGPUHandle("cbPerFrame"));
 	cmdList->SetGraphicsRootShaderResourceView(SHADER_INPUT_STRUCT_BUFFER, g_BufferManager.GetGPUHandle("ShaderInputBuffer"));
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

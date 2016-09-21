@@ -42,12 +42,12 @@ void RootSignatureFactory::AddStaticSampler(const D3D12_STATIC_SAMPLER_DESC& sam
 
 void RootSignatureFactory::AddDefaultStaticSampler(UINT shaderRegister, UINT registerSpace, D3D12_SHADER_VISIBILITY shaderVisibility) {
 	D3D12_STATIC_SAMPLER_DESC sampDesc;
-	sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.Filter = D3D12_FILTER_ANISOTROPIC;
 	sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	sampDesc.MipLODBias = 0;
-	sampDesc.MaxAnisotropy = 1.0f;
+	sampDesc.MaxAnisotropy = D3D12_MAX_MAXANISOTROPY;
 	sampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	sampDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 	sampDesc.MinLOD = 0.0f;

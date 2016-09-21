@@ -47,7 +47,7 @@ cbuffer cbShaderIndex : register(b2){
 #define M_INV_PI 0.31830988618379067153776752674503
 #define MOD3 float3(443.8975,397.2973, 491.1871)
 #define EPS 0.0001
-#define GAMMA 2.2
+#define GAMMA 1.0
 
 float Visibillity(float roughness, float ndotv, float ndotl){
 	float m2 = sqr(roughness);

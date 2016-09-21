@@ -11,6 +11,8 @@ struct PSIn{
 
 Texture2D g_Materials[4000] : register(t0,space1);
 
+SamplerState g_sampler : register(s0);
+
 cbuffer cbPerFrame : register(b0){
 	float4x4 g_ViewProj;
 	float3 g_CamPos;
@@ -42,5 +44,7 @@ PSIn VSMain(VSIn input) {
 
 float4 PSMain(PSIn input) : SV_TARGET {
 	float4 albedo = g_Materials[NonUniformResourceIndex(g_MaterialIndex)].Sample(g_sampler, input.uv);
-	clip( albedo.a < 0.1f ? -1 : 1 );
+	clip( albedo.a <= 0.1 ? -1 : 1 );
+
+	return float4(0,0,0,0);
 }

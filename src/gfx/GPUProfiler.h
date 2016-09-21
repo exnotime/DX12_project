@@ -1,6 +1,6 @@
 #pragma once
 #include "Common.h"
-#define SILENT_PROFILING
+//#define SILENT_PROFILING
 #define MAX_PROFILER_STEPS 128
 class GPUProfiler{
 public:

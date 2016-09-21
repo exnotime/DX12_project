@@ -44,8 +44,45 @@ int ShapeGenerator::GenerateModel(BASIC_SHAPE shape) {
 		mesh = par_shapes_create_parametric_sphere(32, 8);
 		break;
 	case CYLINDER:
-		mesh = par_shapes_create_cylinder(30, 3);
+	{
+		mesh = par_shapes_create_cylinder(32, 3);
+		par_shapes_translate(mesh, 0, 0, -0.5f);
+		par_shapes_scale(mesh, 1, 1, 2.0f);
+
+		glm::vec3 topNormal = glm::vec3(0, 0, 1);
+		glm::vec3 bottomNormal = glm::vec3(0, 0, -1);
+
+		par_shapes_mesh_s* topDisc = par_shapes_create_disk(1.0f, 32, &topNormal[0], &topNormal[0]);
+		par_shapes_mesh_s* bottomDisc = par_shapes_create_disk(1.0f, 32, &bottomNormal[0], &bottomNormal[0]);
+		par_shapes_merge(mesh, topDisc);
+		par_shapes_merge(mesh, bottomDisc);
+		par_shapes_free_mesh(topDisc);
+		par_shapes_free_mesh(bottomDisc);
 		break;
+	}
+	case CAPSULE:
+	{
+		mesh = par_shapes_create_cylinder(30, 3);
+		par_shapes_translate(mesh, 0, 0, -0.5f);
+		par_shapes_scale(mesh, 1, 1, 2.0f);
+
+		par_shapes_mesh_s* topSphere = par_shapes_create_parametric_sphere(32, 8);
+		par_shapes_mesh_s* bottomSphere = par_shapes_create_parametric_sphere(32, 8);
+
+		glm::vec3 axis = glm::vec3(1, 0, 0);
+		par_shapes_rotate(topSphere, 3.14f, &axis[0]);
+		par_shapes_rotate(bottomSphere, 3.14f, &axis[0]);
+
+		par_shapes_translate(topSphere, 0, 0, 1.0f);
+		par_shapes_translate(bottomSphere, 0, 0, -1.0f);
+
+		par_shapes_merge(mesh, topSphere);
+		par_shapes_merge(mesh, bottomSphere);
+		par_shapes_free_mesh(topSphere);
+		par_shapes_free_mesh(bottomSphere);
+		break;
+	}
+
 	case DONUT:
 		mesh = par_shapes_create_torus(32, 32, 0.5f);
 		break;
@@ -73,11 +110,16 @@ int ShapeGenerator::GenerateModel(BASIC_SHAPE shape) {
 		par_shapes_unweld(mesh, true);
 		par_shapes_compute_normals(mesh);
 		break;
+	case ROCK:
+		mesh = par_shapes_create_rock(1233456789, 4);
+		par_shapes_unweld(mesh, true);
+		par_shapes_compute_normals(mesh);
+		break;
 	default:
 		return -1;
 		break;
 	}
-	//check for normals and texcoords
+	//check for normals
 	if (!mesh->normals) {
 		printf("No normals was generated for the mesh\n");
 		return -1;

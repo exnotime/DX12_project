@@ -15,6 +15,7 @@ enum BASIC_SHAPE {
 	TETRAHEDRON,
 	DODECAHEDRON,
 	ICOSAHEDRON,
+	ROCK,
 	SHAPE_COUNT
 };
 class par_shapes_mesh_s;

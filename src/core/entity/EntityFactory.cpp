@@ -13,7 +13,7 @@ void SpawnPlayer(const glm::vec3& position, const glm::vec3& size) {
 	Entity& e = g_EntityManager.CreateEntity();
 	TransformComponent tc;
 	tc.Position = position;
-	tc.Orientation = glm::quat(1.0f, 0.0f,0.0f,0.0f);
+	tc.Orientation = glm::quat(1.0f,0.0f,0.0f,0.0f);
 	tc.Scale = size;
 	tc.World = glm::translate(tc.Position) * glm::mat4_cast(tc.Orientation) * glm::scale(tc.Scale);
 	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
@@ -55,7 +55,7 @@ void SpawnLevelObjectM(int model, const glm::vec3& position, const glm::quat& or
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
 }
 
-void SpawnLevelObjectS(BASIC_SHAPE shape, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color) {
+void SpawnLevelObjectS(int shape, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color) {
 	Entity& e = g_EntityManager.CreateEntity();
 	TransformComponent tc;
 	tc.Position = position;
@@ -65,7 +65,7 @@ void SpawnLevelObjectS(BASIC_SHAPE shape, const glm::vec3& position, const glm::
 	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
 
 	ModelComponent mc;
-	mc.Model = g_ShapeGenerator.GenerateModel(shape);
+	mc.Model = g_ShapeGenerator.GenerateModel((BASIC_SHAPE)shape);
 	mc.Color = color;
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
 }
@@ -100,6 +100,25 @@ void SpawnPhysicsObjectM(int model, const glm::vec3& position, const glm::quat& 
 
 	ModelComponent mc;
 	mc.Model = model;
+	mc.Color = color;
+	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
+
+	RigidBodyComponent rbc;
+	rbc.Body = g_PhysicsEngine.AddPhysicsObject(mass, position, scale);
+	g_ComponentManager.CreateComponent(&rbc, e, RigidBodyComponent::Flag);
+}
+
+void SpawnPhysicsObjectS(int shape, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color, float mass) {
+	Entity& e = g_EntityManager.CreateEntity();
+	TransformComponent tc;
+	tc.Position = position;
+	tc.Orientation = orientation;
+	tc.Scale = scale;
+	tc.World = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
+	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
+
+	ModelComponent mc;
+	mc.Model = g_ShapeGenerator.GenerateModel((BASIC_SHAPE)shape);;
 	mc.Color = color;
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
 
@@ -150,8 +169,18 @@ void RegisterScriptFunctions() {
 		AngelScript::asCALL_CDECL);
 
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
+		"void SpawnShape(int model, vec3 pos, quat orientation, vec3 scale, vec4 color)",
+		AngelScript::asFUNCTION(SpawnLevelObjectS),
+		AngelScript::asCALL_CDECL);
+
+	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
 		"void SpawnPhysicsObject(int model, vec3 pos, quat orientation, vec3 scale, vec4 color, float mass)",
 		AngelScript::asFUNCTION(SpawnPhysicsObjectM),
+		AngelScript::asCALL_CDECL);
+
+	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
+		"void SpawnPhysicsShape(int shape, vec3 pos, quat orientation, vec3 scale, vec4 color, float mass)",
+		AngelScript::asFUNCTION(SpawnPhysicsObjectS),
 		AngelScript::asCALL_CDECL);
 
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
