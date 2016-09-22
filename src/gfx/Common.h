@@ -9,7 +9,7 @@
 
 using Microsoft::WRL::ComPtr;
 #define HR(x,errorstring) if(x != S_OK) {MessageBox(NULL, errorstring, L"DX12Error", MB_OK);}
-static const UINT g_FrameCount = 2;
+static const UINT g_FrameCount = 3;
 
 struct DX12Context {
 	ComPtr<ID3D12Device> Device;

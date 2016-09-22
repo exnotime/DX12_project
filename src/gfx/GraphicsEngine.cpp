@@ -48,27 +48,26 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
 	m_Viewport.MinDepth = 0.0f;
-	m_Viewport.Width = screenSize.x;
-	m_Viewport.Height = screenSize.y;
+	m_Viewport.Width = m_ScreenSize.x;
+	m_Viewport.Height = m_ScreenSize.y;
 	m_Viewport.MaxDepth = 1.0f;
 
 	m_ScissorRect.left = 0;
 	m_ScissorRect.top = 0;
-	m_ScissorRect.bottom = (unsigned)screenSize.y;
-	m_ScissorRect.right = (unsigned)screenSize.x;
+	m_ScissorRect.bottom = (unsigned)m_ScreenSize.y;
+	m_ScissorRect.right = (unsigned)m_ScreenSize.x;
 
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 	swapChainDesc.BufferCount = g_FrameCount;
-	swapChainDesc.BufferDesc.Width = (unsigned)screenSize.x;
-	swapChainDesc.BufferDesc.Height = (unsigned)screenSize.y;
+	swapChainDesc.BufferDesc.Width = (unsigned)m_ScreenSize.x;
+	swapChainDesc.BufferDesc.Height = (unsigned)m_ScreenSize.y;
 	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;
 	swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.Windowed = true;
 	swapChainDesc.SampleDesc.Count = 1;
-	//swapChainDesc.SampleDesc.Quality = 0;
 	swapChainDesc.OutputWindow = hWnd;
 
 	ComPtr<IDXGISwapChain> swapchain;
@@ -84,8 +83,8 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 
 	D3D12_RESOURCE_DESC dsvResDesc = {};
 	dsvResDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	dsvResDesc.Width = (unsigned)screenSize.x;
-	dsvResDesc.Height = (unsigned)screenSize.y;
+	dsvResDesc.Width = (unsigned)m_ScreenSize.x;
+	dsvResDesc.Height = (unsigned)m_ScreenSize.y;
 	dsvResDesc.DepthOrArraySize = 1;
 	dsvResDesc.MipLevels = 1;
 	dsvResDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -128,6 +127,9 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 
 	InitGeometryState(&m_ProgramState, &m_Context);
 	InitDepthOnlyState(&m_DepthProgramState, &m_Context);
+
+	m_FullscreenPass.Init(&m_Context);
+
 	g_BufferManager.Init(&m_Context);
 	g_BufferManager.CreateConstBuffer("cbPerFrame", nullptr, sizeof(cbPerFrame));
 	g_MaterialBank.Initialize(&m_Context);
@@ -255,6 +257,7 @@ void GraphicsEngine::Render() {
 
 	m_Profiler.End(m_Context.CommandList.Get());
 
+	m_FullscreenPass.Render(m_Context.CommandList.Get(), m_DSVHeap->GetGPUDescriptorHandleForHeapStart());
 	//return to present mode for render target
 	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));

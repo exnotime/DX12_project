@@ -30,10 +30,10 @@ void main(){
 	}
 	print("Spawning Level\n");
 	SpawnPlayer(vec3(0,0,0), vec3(0.5f, 1.8f, 0.3f));
-	SpawnLevelObject(teapot, vec3(50, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(0, 0.2f, 0, 1));
+	SpawnLevelObject(teapot, vec3(70, 20, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(0, 0.2f, 0, 1));
 	SpawnLevelObject(dragon, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(20.0f), vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-	SpawnLevelObject(level, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.1f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	SpawnLevelObject(level, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.2f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 	int CubeShape = CUBE;
 	SpawnShape(10, vec3(50, 0, -20), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f));
@@ -43,7 +43,7 @@ void main(){
 	SpawnPhysicsShape(0, vec3(22, 10, 10), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.1f, 0.1f, 60.0f), vec4(1.0f) , 0.0f);
 
 	for(int i = 0; i < SHAPE_COUNT; ++i){
-		SpawnPhysicsShape(i, vec3( -50 + i * 10, 10, 20), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2), vec4(0.0f, 0.0f, 0.7f, 1.0f), 1.0f);
+		SpawnPhysicsShape(i, vec3( -50 + i * 10, 10, 20), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(4), vec4(0.0f, 0.0f, 0.7f, 1.0f), 1.0f);
 	}
 
 	float size = 5.0f;

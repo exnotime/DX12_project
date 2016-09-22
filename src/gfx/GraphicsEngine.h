@@ -6,6 +6,7 @@
 #include "GeometryProgram.h"
 #include "DepthOnlyProgram.h"
 #include "GPUProfiler.h"
+#include "FullscreenPass.h"
 
 struct cbPerFrame {
 	glm::mat4 ViewProj;
@@ -52,4 +53,6 @@ private:
 	GeometryProgram::GeometryProgramState m_ProgramState;
 	DepthOnlyProgram::DepthOnlyState m_DepthProgramState;
 	GPUProfiler m_Profiler;
+
+	FullscreenPass m_FullscreenPass;
 };
