@@ -25,6 +25,7 @@ class MaterialBank {
 	int GetMaterialCount() {
 		return (int)m_Materials.size();
 	}
+	ID3D12DescriptorHeap* GetDescriptorHeap() { return m_MaterialHeap.Get(); }
 	void FreeResources();
 	void CopyMaterialDescriptors(D3D12_CPU_DESCRIPTOR_HANDLE dest);
 

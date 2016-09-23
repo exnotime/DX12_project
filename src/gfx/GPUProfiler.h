@@ -7,7 +7,7 @@ public:
 	GPUProfiler();
 	~GPUProfiler();
 	void Init(DX12Context* context);
-	void Step(ID3D12GraphicsCommandList* cmdList);
+	void Step(ID3D12GraphicsCommandList* cmdList, const std::string& name);
 	void End(ID3D12GraphicsCommandList* cmdList);
 	void PrintResults();
 private:
@@ -16,4 +16,5 @@ private:
 	bool m_Started;
 	ComPtr<ID3D12QueryHeap> m_QueryHeap;
 	ComPtr<ID3D12Resource> m_ResultBuffer;
+	std::vector<std::string> m_StepNames;
 };

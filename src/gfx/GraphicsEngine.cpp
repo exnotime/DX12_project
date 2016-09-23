@@ -119,6 +119,8 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 		m_Context.Device->CreateRenderTargetView(m_SwapChain.RenderTargets[i].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_SwapChain.RenderTargetHeapSize); //offset with size
 	}
+
+
 }
 
 void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
@@ -129,6 +131,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	InitDepthOnlyState(&m_DepthProgramState, &m_Context);
 
 	m_FullscreenPass.Init(&m_Context);
+	m_FullscreenPass.CreateSRV(&m_Context, m_DSResource.Get());
 
 	g_BufferManager.Init(&m_Context);
 	g_BufferManager.CreateConstBuffer("cbPerFrame", nullptr, sizeof(cbPerFrame));
@@ -237,7 +240,6 @@ void GraphicsEngine::Render() {
 	}
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
-	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
 	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
 	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
@@ -247,17 +249,20 @@ void GraphicsEngine::Render() {
 	perFrame->LightDir = glm::vec3(0.0f, -1.0f, 0.2f);
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
-	m_Profiler.Step(m_Context.CommandList.Get());
+
+	m_Context.CommandList->OMSetRenderTargets(0, nullptr, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
+	m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
 
 	DepthOnlyRender(m_Context.CommandList.Get(), &m_DepthProgramState, &m_RenderQueue);
 
-	m_Profiler.Step(m_Context.CommandList.Get());
+	m_Profiler.Step(m_Context.CommandList.Get(), "Geometry");
+
+	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
 
 	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue);
 
 	m_Profiler.End(m_Context.CommandList.Get());
 
-	m_FullscreenPass.Render(m_Context.CommandList.Get(), m_DSVHeap->GetGPUDescriptorHandleForHeapStart());
 	//return to present mode for render target
 	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));

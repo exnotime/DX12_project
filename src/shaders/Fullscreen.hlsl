@@ -20,6 +20,6 @@ Texture2D g_Tex : register(t0);
 SamplerState g_Sampler : register(s0);
 
 float4 PSMain(VSOut input) : SV_TARGET {
-	return g_Tex.Sample(g_Sampler, input.texcoord);
+	return float4(g_Tex.Sample(g_Sampler, input.texcoord).r, 0, 0, 1) * 1000;
 }
 

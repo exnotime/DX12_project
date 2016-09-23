@@ -38,7 +38,7 @@ void InitDepthOnlyState(DepthOnlyProgram::DepthOnlyState* state, DX12Context* co
 	pipeFact.SetShader(state->Shader.GetByteCode(VERTEX_SHADER_BIT), VERTEX_SHADER_BIT);
 	D3D12_DEPTH_STENCIL_DESC depthDesc = {};
 	depthDesc.DepthEnable = true;
-	depthDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	depthDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	depthDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 	depthDesc.StencilEnable = false;
 	depthDesc.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;

@@ -39,7 +39,7 @@ void main(){
 	SpawnShape(10, vec3(50, 0, -20), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f));
 	SpawnShape(6, vec3(0, 0, -20), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
-	SpawnPhysicsShape(0, vec3(0, -1.3f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(100,1,100), vec4(1.0f), 0.0f);
+	SpawnPhysicsShape(0, vec3(0, -1.7f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(100,1,100), vec4(1.0f), 0.0f);
 	SpawnPhysicsShape(0, vec3(22, 10, 10), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.1f, 0.1f, 60.0f), vec4(1.0f) , 0.0f);
 
 	for(int i = 0; i < SHAPE_COUNT; ++i){

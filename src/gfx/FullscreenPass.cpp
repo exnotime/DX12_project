@@ -1,7 +1,7 @@
 #include "FullscreenPass.h"
 #include "RootSignatureFactory.h"
 #include "PipelineStateFactory.h"
-
+#include "MaterialBank.h"
 FullscreenPass::FullscreenPass() {
 
 }
@@ -58,14 +58,26 @@ void FullscreenPass::Init(DX12Context* context) {
 	context->Device->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&m_DescriptorHeap));
 }
 
-void FullscreenPass::Render(ID3D12GraphicsCommandList* cmdList, D3D12_GPU_DESCRIPTOR_HANDLE texHandle) {
+void FullscreenPass::Render(DX12Context* context, D3D12_GPU_DESCRIPTOR_HANDLE texHandle) {
+	ID3D12GraphicsCommandList* cmdList = context->CommandList.Get();
+
 	cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
 	cmdList->SetPipelineState(m_PipelineState.Get());
 	ID3D12DescriptorHeap* heaps[] = { m_DescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(1, heaps);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-	cmdList->SetComputeRootDescriptorTable(1, texHandle);
+	cmdList->SetGraphicsRootDescriptorTable(0, m_DescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
 	cmdList->DrawInstanced(4, 1, 0, 0);
+}
+
+void FullscreenPass::CreateSRV(DX12Context* context, ID3D12Resource* resource) {
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	context->Device->CreateShaderResourceView(resource, &srvDesc, m_DescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
