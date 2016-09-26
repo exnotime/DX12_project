@@ -2,7 +2,7 @@
 #include "BufferManager.h"
 #include "ModelBank.h"
 #include "MaterialBank.h"
-
+#include <glm/gtc/matrix_access.hpp>
 RenderQueue::RenderQueue() {
 }
 
@@ -48,6 +48,12 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 	IndirectDrawCall drawCall;
 	Model mod = g_ModelBank.FetchModel(model);
 	for (auto& mesh : mod.Meshes) {
+		glm::vec4 max = input.World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
+		glm::vec4 min = input.World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
+
+		if (!AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z)))
+			continue;
+
 		drawCall.DrawIndex = m_InstanceCounter;
 		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
 
@@ -87,4 +93,40 @@ void RenderQueue::Clear() {
 	m_ShaderInputBuffer.clear();
 	m_Views.clear();
 	m_InstanceCounter = 0;
+}
+
+void RenderQueue::AddView(const View& v) {
+	m_Views.push_back(v);
+
+	glm::mat4 vp = v.Camera.ProjView;
+	glm::vec4 row1 = glm::row(vp, 0);
+	glm::vec4 row2 = glm::row(vp, 1);
+	glm::vec4 row3 = glm::row(vp, 2);
+	glm::vec4 row4 = glm::row(vp, 3);
+	m_FrustumPlanes[0] = row4 + row1;
+	m_FrustumPlanes[1] = row4 - row1;
+	m_FrustumPlanes[2] = row4 + row2;
+	m_FrustumPlanes[3] = row4 - row2;
+	m_FrustumPlanes[4] = row4 + row3;
+	m_FrustumPlanes[5] = row4 - row3;
+	for (int i = 0; i < 6; ++i) {
+		m_FrustumPlanes[i] = glm::normalize(m_FrustumPlanes[i]);
+	}
+}
+
+bool RenderQueue::AABBvsFrustum(const glm::vec3& max, const glm::vec3 min) {
+
+	for (int i = 0; i < 6; i++) {
+		int out = 0;
+		out += glm::dot(m_FrustumPlanes[i], glm::vec4(min.x, min.y, min.z, 1.0f)) < 0.0f ? 1 : 0;
+		out += glm::dot(m_FrustumPlanes[i], glm::vec4(max.x, min.y, min.z, 1.0f)) < 0.0f ? 1 : 0;
+		out += glm::dot(m_FrustumPlanes[i], glm::vec4(min.x, max.y, min.z, 1.0f)) < 0.0f ? 1 : 0;
+		out += glm::dot(m_FrustumPlanes[i], glm::vec4(max.x, max.y, min.z, 1.0f)) < 0.0f ? 1 : 0;
+		out += glm::dot(m_FrustumPlanes[i], glm::vec4(min.x, min.y, max.z, 1.0f)) < 0.0f ? 1 : 0;
+		out += glm::dot(m_FrustumPlanes[i], glm::vec4(max.x, min.y, max.z, 1.0f)) < 0.0f ? 1 : 0;
+		out += glm::dot(m_FrustumPlanes[i], glm::vec4(min.x, max.y, max.z, 1.0f)) < 0.0f ? 1 : 0;
+		out += glm::dot(m_FrustumPlanes[i], glm::vec4(max.x, max.y, max.z, 1.0f)) < 0.0f ? 1 : 0;
+		if (out == 8) return false;
+	}
+	return true;
 }

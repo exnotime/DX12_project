@@ -10,12 +10,11 @@ struct Mesh {
 	unsigned int IndexBufferOffset;
 	unsigned int IndexCount;
 	unsigned int VertexCount;
-};
-
-
-struct BoneView {
-	D3D12_VERTEX_BUFFER_VIEW BoneIndexView;
-	D3D12_VERTEX_BUFFER_VIEW BoneWeightView;
+	//bounding volumes
+	float Radius;
+	glm::vec3 Max;
+	glm::vec3 Min;
+	glm::vec3 Offset; //offset from model origin
 };
 
 struct Model {

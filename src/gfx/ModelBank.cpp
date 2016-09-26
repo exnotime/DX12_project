@@ -68,6 +68,8 @@ void ModelBank::LoadMeshes(Model& model, const aiScene* scene) {
 		std::vector<unsigned int> indices;
 		unsigned int numVertices = 0;
 		unsigned int numIndices = 0;
+		modelMesh.Max = glm::vec3(0);
+		modelMesh.Min = glm::vec3(0);
 		//foreach vertice
 		for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
 			glm::vec3 pos, normal, tangent;
@@ -75,9 +77,8 @@ void ModelBank::LoadMeshes(Model& model, const aiScene* scene) {
 			pos.x = mesh->mVertices[v].x;
 			pos.y = mesh->mVertices[v].y;
 			pos.z = mesh->mVertices[v].z;
-
-			model.Max = glm::max(pos, model.Max);
-			model.Min = glm::min(pos, model.Min);
+			modelMesh.Max = glm::max(pos, modelMesh.Max);
+			modelMesh.Min = glm::min(pos, modelMesh.Min);
 
 			if (mesh->HasNormals()) {
 				normal.x = mesh->mNormals[v].x;
@@ -93,7 +94,6 @@ void ModelBank::LoadMeshes(Model& model, const aiScene* scene) {
 				texcoord.x = mesh->mTextureCoords[0][v].x;
 				texcoord.y = mesh->mTextureCoords[0][v].y;
 			}
-
 			numVertices++;
 			m_VertexPositions.push_back(pos);
 			m_VertexNormals.push_back(normal);
@@ -115,8 +115,23 @@ void ModelBank::LoadMeshes(Model& model, const aiScene* scene) {
 		indexCount += numIndices;
 		modelMesh.VertexCount = numVertices;
 		modelMesh.IndexCount = numIndices;
+
+		model.Max = glm::max(modelMesh.Max, model.Max);
+		model.Min = glm::min(modelMesh.Min, model.Min);
+
+		glm::vec3 size = modelMesh.Max - modelMesh.Min;
+
+		modelMesh.Offset = modelMesh.Min + (size * 0.5f);
+
+		modelMesh.Max = size * 0.5f;
+		modelMesh.Min = -size * 0.5f;
+	
+		modelMesh.Radius = glm::max(modelMesh.Max.x, glm::max(modelMesh.Max.y, modelMesh.Max.z));
+		modelMesh.Radius = glm::max(modelMesh.Radius, glm::abs(glm::min(modelMesh.Min.x, glm::min(modelMesh.Min.y, modelMesh.Min.z))));
+
 		model.Meshes.push_back(modelMesh);
 	}//end foreach mesh
+
 	model.NumVertices = size;
 	model.NumIndices = indexCount;
 }
@@ -278,23 +293,32 @@ ModelHandle ModelBank::CreateCustomModel( std::vector<Vertex>* vertices, std::ve
 	mesh.MaterialOffset = 0;
 	mesh.IndexBufferOffset = 0;
 
-	model.Meshes.push_back(mesh);
-	model.MaterialHandle = 0; //make sure there is a default material loaded
 	model.VertexHandle = m_VertexPositions.size();
-	model.IndexHandle = 0;
-	model.NumIndices = (unsigned)indices->size();
-	model.NumVertices = (unsigned)vertices->size();
 	//copy and offset indices
 	for (unsigned int i = 0; i < indices->size(); ++i) {
 		m_Indices.push_back(model.VertexHandle + indices->at(i));
 	}
-	//copy vertices
+	//copy vertices and calc aabb
 	for (int i = 0; i < vertices->size(); ++i) {
 		m_VertexPositions.push_back(vertices->at(i).Position);
 		m_VertexNormals.push_back(vertices->at(i).Normal);
 		m_VertexTangents.push_back(vertices->at(i).Tangent);
 		m_VertexTexCoords.push_back(vertices->at(i).TexCoord);
+
+		mesh.Max = glm::max(vertices->at(i).Position, mesh.Max);
+		mesh.Min = glm::min(vertices->at(i).Position, mesh.Min);
 	}
+
+	mesh.Radius = glm::max(mesh.Max.x, glm::max(mesh.Max.y, mesh.Max.z));
+	mesh.Radius = glm::max(mesh.Radius, glm::abs(glm::min(mesh.Min.x, glm::min(mesh.Min.y, mesh.Min.z))));
+	model.Radius = mesh.Radius;
+
+	model.Meshes.push_back(mesh);
+	model.MaterialHandle = 0; //make sure there is a default material loaded
+	model.IndexHandle = 0;
+	model.NumIndices = (unsigned)indices->size();
+	model.NumVertices = (unsigned)vertices->size();
+
 	m_Models[id] = model;
 	return id;
 }

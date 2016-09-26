@@ -54,9 +54,7 @@ class RenderQueue {
 	void Clear();
 	void UpdateBuffer();
 
-	void AddView(const View& v) {
-		m_Views.push_back(v);
-	}
+	void AddView(const View& v);
 
 	const std::vector<View>& GetViews() const {
 		return m_Views;
@@ -71,7 +69,11 @@ class RenderQueue {
 	}
 
   private:
+	  bool AABBvsFrustum(const glm::vec3& max, const glm::vec3 min);
+
 	std::vector<View>					m_Views;
+	glm::vec4							m_FrustumPlanes[6];
+
 	std::vector<ShaderInput>			m_ShaderInputBuffer;
 	
 	DX12Context*						m_Context;
