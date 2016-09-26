@@ -55,6 +55,22 @@ void SpawnLevelObjectM(int model, const glm::vec3& position, const glm::quat& or
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
 }
 
+void SpawnLevelObjectO(int model, int occluder, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color) {
+	Entity& e = g_EntityManager.CreateEntity();
+	TransformComponent tc;
+	tc.Position = position;
+	tc.Orientation = orientation;
+	tc.Scale = scale;
+	tc.World = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
+	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
+
+	ModelComponent mc;
+	mc.Model = model;
+	mc.Occluder = occluder;
+	mc.Color = color;
+	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
+}
+
 void SpawnLevelObjectS(int shape, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color) {
 	Entity& e = g_EntityManager.CreateEntity();
 	TransformComponent tc;

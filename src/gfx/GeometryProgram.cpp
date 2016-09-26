@@ -130,5 +130,5 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* st
 	cmdList->SetGraphicsRootDescriptorTable(ENVIROMENT_DESC_TABLE, gpuHandle);
 	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
 	//draw everything
-	cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(), queue->GetArgumentBuffer(), 0, nullptr, 0);
+	cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(), g_BufferManager.GetBufferResource("IndirectBuffer"), 0, nullptr, 0);
 }

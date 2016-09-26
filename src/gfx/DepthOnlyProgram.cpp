@@ -6,7 +6,7 @@
 #include "ModelBank.h"
 void InitDepthOnlyState(DepthOnlyProgram::DepthOnlyState* state, DX12Context* context) {
 
-	state->Shader.LoadFromFile(L"src/shaders/DepthOnly.hlsl", VERTEX_SHADER_BIT);
+	state->Shader.LoadFromFile(L"src/shaders/DepthOnly.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT);
 	RootSignatureFactory rootSignFact;
 	rootSignFact.AddDefaultStaticSampler(0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 	std::vector<CD3DX12_DESCRIPTOR_RANGE> ranges;
@@ -40,7 +40,7 @@ void InitDepthOnlyState(DepthOnlyProgram::DepthOnlyState* state, DX12Context* co
 	depthDesc.DepthEnable = true;
 	depthDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	depthDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
-	depthDesc.StencilEnable = false;
+	depthDesc.StencilEnable = true;
 	depthDesc.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
 	depthDesc.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
 	depthDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_REPLACE;
@@ -99,5 +99,5 @@ void DepthOnlyRender(ID3D12GraphicsCommandList*cmdList, DepthOnlyProgram::DepthO
 	cmdList->SetDescriptorHeaps(1, heaps);
 	cmdList->SetGraphicsRootDescriptorTable(DepthOnlyProgram::MATERIAL_DT, state->MaterialHeap->GetGPUDescriptorHandleForHeapStart());
 	//draw everything
-	cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(), queue->GetArgumentBuffer(), 0, nullptr, 0);
+	cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetOccluderCount(), g_BufferManager.GetBufferResource("IndirectOccluderBuffer"), 0, nullptr, 0);
 }

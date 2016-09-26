@@ -29,7 +29,6 @@ public:
 	void ClearScreen();
 	void Render();
 	void Swap();
-	void Shutdown();
 
 	RenderQueue* GetRenderQueue() { return &m_RenderQueue; }
 private:

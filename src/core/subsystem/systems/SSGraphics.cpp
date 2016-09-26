@@ -29,6 +29,9 @@ void SSGraphics::Startup() {
 		m_Graphics->Init(hWnd, glm::vec2(ws.Width, ws.Height));
 		m_RenderQueue = m_Graphics->GetRenderQueue();
 	}
+	int level = g_ModelBank.LoadModel("assets/models/sponza/sponza.obj");
+	int occluder = g_ModelBank.LoadModel("assets/models/sponza/SponzaOccluder.obj");
+	SpawnLevelObjectO(level, occluder, glm::vec3(0), glm::quat(1.0f, 0, 0, 0), glm::vec3(0.2f), glm::vec4(1));
 }
 
 void SSGraphics::Update(const double deltaTime) {
@@ -74,11 +77,13 @@ void SSGraphics::Update(const double deltaTime) {
 			TransformComponent* tc = (TransformComponent*)g_ComponentManager.GetComponent(entity, TransformComponent::Flag);
 
 			float r = g_ModelBank.GetScaledRadius(mc->Model, tc->Scale);
-			//if (FrustumCheck(frustumPlanes, tc->Position - camPos, 1)) {
-				si.Color = mc->Color;
-				si.World = glm::translate(tc->Position) * glm::mat4_cast(tc->Orientation) * glm::scale(tc->Scale);
-				m_RenderQueue->Enqueue(mc->Model, si);
-			//}
+			si.Color = mc->Color;
+			si.World = glm::translate(tc->Position) * glm::mat4_cast(tc->Orientation) * glm::scale(tc->Scale);
+			m_RenderQueue->Enqueue(mc->Model, si);
+
+			if (mc->Occluder != -1) {
+				m_RenderQueue->EnqueueOccluder(mc->Occluder);
+			}
 		}
 	}
 	m_Graphics->Render();

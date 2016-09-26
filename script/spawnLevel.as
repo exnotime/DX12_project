@@ -19,7 +19,7 @@ enum BASIC_SHAPE {
 
 void main(){
 	if(start){
-		level = LoadModel("E:/sponza/sponza.obj");
+		//level = LoadModel("E:/sponza/sponza.obj");
 		teapot = LoadModel("assets/models/teapot/teapot.obj");
 		//cube = LoadModel("assets/models/cube/cube.obj");
 		dragon = LoadModel("assets/models/dragon/dragon.obj");
@@ -31,11 +31,10 @@ void main(){
 	print("Spawning Level\n");
 	SpawnPlayer(vec3(0,0,0), vec3(0.5f, 1.8f, 0.3f));
 	SpawnLevelObject(teapot, vec3(70, 20, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(0, 0.2f, 0, 1));
-	SpawnLevelObject(dragon, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(20.0f), vec4(0.0f, 1.0f, 0.0f, 1.0f));
+	SpawnLevelObject(dragon, vec3(0, 10, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(20.0f), vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-	SpawnLevelObject(level, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.2f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	//SpawnLevelObject(level, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.2f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
-	int CubeShape = CUBE;
 	SpawnShape(10, vec3(50, 0, -20), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f));
 	SpawnShape(6, vec3(0, 0, -20), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
@@ -46,10 +45,10 @@ void main(){
 		SpawnPhysicsShape(i, vec3( -50 + i * 10, 10, 20), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(4), vec4(0.0f, 0.0f, 0.7f, 1.0f), 1.0f);
 	}
 
-	float size = 5.0f;
+	float size = 10.0f;
 	for(int x = 0; x < size; x++){
 		for(int y = 0; y < size; y++){
-			SpawnPhysicsShape(0, vec3(x + 22, 50, y), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(20,0.5f,0.5f), vec4(x / size, 1.0f - (y / size), 1.0f - (y / size) - (x / size), 1.0f), x + y + 1);
+			SpawnPhysicsShape(0, vec3(x + 22 + (x * 0.5f), 50, y + (y * 0.2f)), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(20,0.5f,0.5f), vec4(x / size, 1.0f - (y / size), 1.0f - (y / size) - (x / size), 1.0f), x + y + 1);
 		}
 	}
 }

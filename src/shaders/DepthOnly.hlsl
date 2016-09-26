@@ -38,6 +38,7 @@ PSIn VSMain(VSIn input) {
 	float4x4 world = g_InputBuffer[g_ShaderIndex + input.InstanceID].World;
 	float4x4 wvp = mul(g_ViewProj, world);
 	result.position = mul(wvp,float4(input.Position, 1));
+	result.position.z += 0.001;
 	result.uv = input.TexCoord;
 	return result;
 }

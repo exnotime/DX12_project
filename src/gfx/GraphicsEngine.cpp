@@ -44,7 +44,7 @@ void GraphicsEngine::CreateContext() {
 }
 
 void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
-	m_ScreenSize = screenSize;
+	m_ScreenSize = screenSize * 1.0f;
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
 	m_Viewport.MinDepth = 0.0f;
@@ -138,7 +138,6 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	g_MaterialBank.Initialize(&m_Context);
 	g_ModelBank.Init(&m_Context);
 	m_RenderQueue.Init(&m_Context);
-	m_RenderQueue.CreateBuffer();
 
 	m_Profiler.Init(&m_Context);
 
@@ -240,6 +239,7 @@ void GraphicsEngine::Render() {
 	}
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
+	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
 	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
 	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
@@ -250,14 +250,11 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
 
-	m_Context.CommandList->OMSetRenderTargets(0, nullptr, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
 	m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
 
 	DepthOnlyRender(m_Context.CommandList.Get(), &m_DepthProgramState, &m_RenderQueue);
 
 	m_Profiler.Step(m_Context.CommandList.Get(), "Geometry");
-
-	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
 
 	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue);
 
@@ -287,8 +284,4 @@ void GraphicsEngine::Swap() {
 		WaitForSingleObjectEx(m_Fence.FenceEvent, INFINITE, false);
 	}
 	m_Fence.FenceValues[m_FrameIndex] = currentFenceValue + 1;
-}
-
-void GraphicsEngine::Shutdown() {
-
 }
