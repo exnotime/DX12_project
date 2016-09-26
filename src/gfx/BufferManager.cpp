@@ -190,27 +190,27 @@ void BufferManager::UpdateBuffer(const std::string& name, void* data, UINT size)
 			break;
 		}
 		case STRUCTURED_BUFFER: {
-			m_Context->CommandList->ResourceBarrier(1,
-				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+			m_Context->CopyCommandList->ResourceBarrier(1,
+				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
 			void* gpuPtr;
 			buffer->second->UploadHeap->Map(0, nullptr, &gpuPtr);
 			memcpy(gpuPtr, data, size);
 			buffer->second->UploadHeap->Unmap(0, nullptr);
-			m_Context->CommandList->CopyBufferRegion(buffer->second->Resource.Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
-			m_Context->CommandList->ResourceBarrier(1,
-				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+			m_Context->CopyCommandList->CopyBufferRegion(buffer->second->Resource.Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
+			//m_Context->CommandList->ResourceBarrier(1,
+			//	&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 			break;
 		}
 		case INDIRECT_BUFFER: {
-			m_Context->CommandList->ResourceBarrier(1,
-				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, D3D12_RESOURCE_STATE_COPY_DEST));
+			m_Context->CopyCommandList->ResourceBarrier(1,
+				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
 			void* gpuPtr;
 			buffer->second->UploadHeap->Map(0, nullptr, &gpuPtr);
 			memcpy(gpuPtr, data, size);
 			buffer->second->UploadHeap->Unmap(0, nullptr);
-			m_Context->CommandList->CopyBufferRegion(buffer->second->Resource.Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
-			m_Context->CommandList->ResourceBarrier(1,
-				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
+			m_Context->CopyCommandList->CopyBufferRegion(buffer->second->Resource.Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
+			//m_Context->CommandList->ResourceBarrier(1,
+			//	&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
 			break;
 		}
 		default:

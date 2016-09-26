@@ -18,8 +18,6 @@ GraphicsEngine::~GraphicsEngine() {
 }
 
 void GraphicsEngine::CreateContext() {
-
-	int renderdoc = 0;
 #ifdef _DEBUG
 	ComPtr<ID3D12Debug> debugController;
 	HR(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), L"");
@@ -28,18 +26,34 @@ void GraphicsEngine::CreateContext() {
 
 	HR(CreateDXGIFactory(IID_PPV_ARGS(&m_Context.DXGIFactory)), L"unable to create DXGIFactory");
 	HR(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_Context.Device)), L"Error creating device");
+	//Graphics Queue
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	HR(m_Context.Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_Context.CommandQueue)), L"Error creating command queue");
+	//Copy Queue
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+	HR(m_Context.Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_Context.CopyQueue)), L"Error creating copy queue");
+	//Compute Queue
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+	HR(m_Context.Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_Context.ComputeQueue)), L"Error creating compute queue");
 
 	for (int i = 0; i < g_FrameCount; i++) {
 		HR(m_Context.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_Context.CommandAllocator[i])), L"Error creating command allocator");
+		HR(m_Context.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&m_Context.CopyAllocator[i])), L"Error creating copy allocator");
+		HR(m_Context.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&m_Context.ComputeAllocator[i])), L"Error creating compute allocator");
 	}
 
 	HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_Context.CommandAllocator[m_FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.CommandList)), L"Error creating command list");
+	HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, m_Context.CopyAllocator[m_FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.CopyCommandList)), L"Error creating copy list");
+	HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, m_Context.ComputeAllocator[m_FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.ComputeCommandList)), L"Error creating compute list");
+
+	//m_Context.CommandList->Close();
+	m_Context.CopyCommandList->Close();
+	m_Context.ComputeCommandList->Close();
 
 	HR(m_Context.Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence.Fence)), L"Error creating fence");
+	HR(m_Context.Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Context.CopyFence)), L"Error creating fence");
 	m_Fence.FenceEvent = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
 }
 
@@ -196,16 +210,20 @@ void GraphicsEngine::PrepareForRender() {
 }
 
 void GraphicsEngine::TransferFrame() {
-	HR(m_Context.CommandAllocator[m_FrameIndex]->Reset(), L"Error resetting command allocator");
-	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_FrameIndex].Get(), nullptr), L"Error resetting command list");
+	HR(m_Context.CopyAllocator[m_FrameIndex]->Reset(), L"Error resetting copy allocator");
+	HR(m_Context.CopyCommandList->Reset(m_Context.CopyAllocator[m_FrameIndex].Get(), nullptr), L"Error resetting copy list");
 
 	m_RenderQueue.UpdateBuffer();
 
-	m_Context.CommandList->Close();
-	ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
-	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
+	m_Context.CopyCommandList->Close();
 
-	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
+	m_Context.CopyQueue->Signal(m_Context.CopyFence.Get(), SIGNAL_BEGIN_COPY);
+	ID3D12CommandList* ppCommandList[] = { m_Context.CopyCommandList.Get() };
+	m_Context.CopyQueue->ExecuteCommandLists(1, ppCommandList);
+
+	m_Context.CopyQueue->Signal(m_Context.CopyFence.Get(), SIGNAL_END_COPY);
+
+	m_Context.CommandQueue->Wait(m_Context.CopyFence.Get(), SIGNAL_END_COPY);
 }
 
 void GraphicsEngine::ClearScreen() {

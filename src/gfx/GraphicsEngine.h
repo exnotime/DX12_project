@@ -8,6 +8,9 @@
 #include "GPUProfiler.h"
 #include "FullscreenPass.h"
 
+#define SIGNAL_BEGIN_COPY 0
+#define SIGNAL_END_COPY 1
+
 struct cbPerFrame {
 	glm::mat4 ViewProj;
 	glm::vec3 CamPos;
