@@ -140,7 +140,12 @@ void SpawnPhysicsObjectS(int shape, const glm::vec3& position, const glm::quat& 
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
 
 	RigidBodyComponent rbc;
-	rbc.Body = g_PhysicsEngine.AddPhysicsObject(mass, position, scale);
+	//special special case for special shapes that need special treatment
+	glm::vec3 objectscale = scale;
+	if (shape == CAPSULE)
+		objectscale = glm::vec3(1, 2, 0);
+
+	rbc.Body = g_PhysicsEngine.AddPhysicsObjectS((BASIC_SHAPE)shape, mass, position, objectscale);
 	g_ComponentManager.CreateComponent(&rbc, e, RigidBodyComponent::Flag);
 }
 

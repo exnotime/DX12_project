@@ -32,11 +32,15 @@ int ShapeGenerator::GenerateModel(BASIC_SHAPE shape) {
 		par_shapes_translate(mesh, -1, -1, -1);
 		break;
 	case PLANE:
-		mesh = par_shapes_create_plane(1,1);
+	{
+		mesh = par_shapes_create_plane(1, 1);
+		glm::vec3 axis = glm::vec3(1, 0, 0);
+		par_shapes_rotate(mesh, -3.14f * 0.5f, &axis[0]);
 		//unweld to create per vertex normals
 		par_shapes_unweld(mesh, true);
 		par_shapes_compute_normals(mesh);
 		break;
+	}
 	case SPHERE_SUBDIV:
 		mesh = par_shapes_create_subdivided_sphere(5);
 		break;
@@ -110,9 +114,9 @@ int ShapeGenerator::GenerateModel(BASIC_SHAPE shape) {
 		par_shapes_compute_normals(mesh);
 		break;
 	case ROCK:
-		mesh = par_shapes_create_rock(1233456789, 4);
-		par_shapes_unweld(mesh, true);
-		par_shapes_compute_normals(mesh);
+		mesh = par_shapes_create_rock(rand(), 4);
+		//par_shapes_unweld(mesh, true);
+		//par_shapes_compute_normals(mesh);
 		break;
 	default:
 		return -1;
@@ -141,8 +145,7 @@ int ShapeGenerator::CreateModelFromMesh(par_shapes_mesh_s*  mesh) {
 		glm::vec3 tangent;
 		if (glm::length(c1) > glm::length(c2)) {
 			tangent = c1;
-		}
-		else {
+		} else {
 			tangent = c2;
 		}
 		vertex.Normal = glm::vec3(glm::normalize(normal));
@@ -150,11 +153,10 @@ int ShapeGenerator::CreateModelFromMesh(par_shapes_mesh_s*  mesh) {
 		//most shapes dont have texture coordinates so just create tex coords as if it was a sphere and hope for the best :)
 		if (!mesh->tcoords) {
 			glm::vec2 uv;
-			uv.x = glm::dot(glm::vec3(vertex.Normal), glm::vec3(1, 0, 0)) * 0.5 + 0.5;
-			uv.y = glm::dot(glm::vec3(vertex.Normal), glm::vec3(0, 1, 0)) * 0.5 + 0.5;
+			uv.x = glm::dot(glm::vec3(vertex.Normal), glm::vec3(1, 0, 0)) * 0.5f + 0.5f;
+			uv.y = glm::dot(glm::vec3(vertex.Normal), glm::vec3(0, 1, 0)) * 0.5f + 0.5f;
 			vertex.TexCoord = glm::vec2(uv);
-		}
-		else {
+		} else {
 			vertex.TexCoord = glm::vec2(mesh->tcoords[texIndex], mesh->tcoords[texIndex + 1]);
 			texIndex += 2;
 		}

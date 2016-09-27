@@ -1,5 +1,6 @@
 #include "PhysicsEngine.h"
 #include <Bullet/btBulletCollisionCommon.h>
+#include <par_shapes.h>
 PhysicsEngine::PhysicsEngine() {
 
 }
@@ -32,6 +33,72 @@ btRigidBody* PhysicsEngine::AddPhysicsObject(float mass, glm::vec3 pos, glm::vec
 	btVector3 inertia;
 	object->calculateLocalInertia(mass, inertia);
 	btRigidBody* body = new btRigidBody(mass,state, object, inertia);
+	body->setRestitution(0.0f);
+	m_World->addRigidBody(body);
+	return body;
+}
+
+btRigidBody* PhysicsEngine::AddPhysicsObjectS(BASIC_SHAPE shape, float mass, glm::vec3 pos, glm::vec3 size) {
+	btCollisionShape* object;
+	par_shapes_mesh_s* mesh;
+	switch (shape)
+	{
+	case CUBE:
+		object = new btBoxShape(btVector3(size.x, size.y, size.z));
+		break;
+	case PLANE:
+		object = new btStaticPlaneShape(btVector3(0, 1, 0), 0);
+		break;
+	case SPHERE_SUBDIV:
+		object = new btSphereShape(glm::max(glm::max(size.x, size.y), size.z));
+		break;
+	case SPHERE_PARA:
+		object = new btSphereShape(glm::max(glm::max(size.x, size.y), size.z));
+		break;
+	case CYLINDER:
+		object = new btCylinderShape(btVector3(size.x, size.y, size.z));
+		break;
+	case CAPSULE:
+		object = new btCapsuleShape(size.x, size.y); //size.x is radius and size.y is length/height of capsule
+		break;
+	case DONUT:
+		mesh = par_shapes_create_torus(8, 8, 0.5f);
+		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		par_shapes_free_mesh(mesh);
+		break;
+	case OCTOHEDRON:
+		mesh = par_shapes_create_octohedron();
+		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		par_shapes_free_mesh(mesh);
+		break;
+	case TETRAHEDRON:
+		mesh = par_shapes_create_tetrahedron();
+		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		par_shapes_free_mesh(mesh);
+		break;
+	case DODECAHEDRON:
+		mesh = par_shapes_create_dodecahedron();
+		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		par_shapes_free_mesh(mesh);
+		break;
+	case ICOSAHEDRON:
+		mesh = par_shapes_create_icosahedron();
+		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		par_shapes_free_mesh(mesh);
+		break;
+	default:
+		object = new btBoxShape(btVector3(size.x, size.y, size.z));
+		printf("unknown shape in the physics engine\n");
+		break;
+	}
+	
+	btDefaultMotionState* state = new btDefaultMotionState();
+	btTransform transform(btQuaternion(0, 0, 0, 1), btVector3(pos.x, pos.y, pos.z));
+	state->setWorldTransform(transform);
+
+	btVector3 inertia;
+	object->calculateLocalInertia(mass, inertia);
+	btRigidBody* body = new btRigidBody(mass, state, object, inertia);
 	body->setRestitution(0.0f);
 	m_World->addRigidBody(body);
 	return body;
