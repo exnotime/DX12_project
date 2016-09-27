@@ -12,6 +12,7 @@
 #include "../../../gfx/ModelBank.h"
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_access.hpp>
+#include "../../input/Input.h"
 
 SSGraphics::SSGraphics(){
 
@@ -44,7 +45,7 @@ void SSGraphics::Update(const double deltaTime) {
 	}
 
 	int flag = CameraComponent::Flag;
-	Camera c;
+	static Camera c;
 	c.CalculateViewProjection();
 	for (auto& entity : g_EntityManager.GetEntityList()) {
 		if ((entity.ComponentBitfield & flag) == flag) {
@@ -53,8 +54,7 @@ void SSGraphics::Update(const double deltaTime) {
 			View v;
 			v.Camera = cc->Camera.GetData();
 			m_RenderQueue->AddView(v);
-			v.Camera = c.GetData();
-			m_RenderQueue->AddView(v);
+			
 		}
 	}
 	ShaderInput si;

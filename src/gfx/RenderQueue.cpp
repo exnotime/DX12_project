@@ -29,7 +29,7 @@ void RenderQueue::Enqueue(ModelHandle model, const std::vector<ShaderInput>& inp
 	Model mod = g_ModelBank.FetchModel(model);
 	for (auto& mesh : mod.Meshes) {
 		drawCall.DrawIndex = m_InstanceCounter;
-		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset;;
+		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset;
 
 		drawCall.DrawArgs.InstanceCount = (unsigned)inputs.size();
 		drawCall.DrawArgs.IndexCountPerInstance = mesh.IndexCount;
@@ -70,9 +70,17 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 }
 
 void RenderQueue::EnqueueOccluder(ModelHandle occluderModel) {
+	//occluders always comes directly after the other model
 	IndirectDrawCall drawCall;
 	Model mod = g_ModelBank.FetchModel(occluderModel);
 	for (auto& mesh : mod.Meshes) {
+
+		glm::vec4 max = m_ShaderInputBuffer.back().World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
+		glm::vec4 min = m_ShaderInputBuffer.back().World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
+
+		if (!AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z)))
+			continue;
+
 		drawCall.DrawIndex = m_InstanceCounter - 1;
 		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
 

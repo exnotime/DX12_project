@@ -142,10 +142,11 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	CreateSwapChain(hWnd, screenSize);
 
 	InitGeometryState(&m_ProgramState, &m_Context);
-	InitDepthOnlyState(&m_DepthProgramState, &m_Context);
+	m_DepthProgram.Init(&m_Context, screenSize);
 
 	m_FullscreenPass.Init(&m_Context);
 	m_FullscreenPass.CreateSRV(&m_Context, m_DSResource.Get());
+	m_HiZProgram.Init(&m_Context, m_ScreenSize);
 
 	g_BufferManager.Init(&m_Context);
 	g_BufferManager.CreateConstBuffer("cbPerFrame", nullptr, sizeof(cbPerFrame));
@@ -198,7 +199,7 @@ void GraphicsEngine::PrepareForRender() {
 	//this will transfer textures/models etc to gpu
 	g_ModelBank.BuildBuffers();
 	g_MaterialBank.CopyMaterialDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_ProgramState.RenderDescHeap->GetCPUDescriptorHandleForHeapStart()).Offset(3, m_ProgramState.DescHeapIncSize));
-	g_MaterialBank.CopyMaterialDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DepthProgramState.MaterialHeap->GetCPUDescriptorHandleForHeapStart()));
+	//g_MaterialBank.CopyMaterialDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DepthProgramState.MaterialHeap->GetCPUDescriptorHandleForHeapStart()));
 
 	m_Context.CommandList->Close();
 	ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
@@ -256,11 +257,6 @@ void GraphicsEngine::Render() {
 		return;
 	}
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
-	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
-	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
-	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
-
 	View v = m_RenderQueue.GetViews().at(0);
 	cbPerFrame* perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame");
 	perFrame->CamPos = v.Camera.Position;
@@ -270,9 +266,19 @@ void GraphicsEngine::Render() {
 
 	m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
 
-	DepthOnlyRender(m_Context.CommandList.Get(), &m_DepthProgramState, &m_RenderQueue);
+	m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
+
+	m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
+
+	m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
 
 	m_Profiler.Step(m_Context.CommandList.Get(), "Geometry");
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
+	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
+
+	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
+	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
 	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue);
 

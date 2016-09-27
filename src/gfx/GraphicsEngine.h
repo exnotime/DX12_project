@@ -7,6 +7,7 @@
 #include "DepthOnlyProgram.h"
 #include "GPUProfiler.h"
 #include "FullscreenPass.h"
+#include "HiZProgram.h"
 
 #define SIGNAL_BEGIN_COPY 0
 #define SIGNAL_END_COPY 1
@@ -53,8 +54,10 @@ private:
 
 	RenderQueue m_RenderQueue;
 	GeometryProgram::GeometryProgramState m_ProgramState;
-	DepthOnlyProgram::DepthOnlyState m_DepthProgramState;
+	DepthOnlyProgram m_DepthProgram;
 	GPUProfiler m_Profiler;
 
 	FullscreenPass m_FullscreenPass;
+	HiZProgram m_HiZProgram;
+
 };

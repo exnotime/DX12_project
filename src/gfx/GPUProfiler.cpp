@@ -35,7 +35,6 @@ void GPUProfiler::PrintResults() {
 	D3D12_RANGE range = { 0, sizeof(UINT64) * m_StepCounter };
 	m_ResultBuffer->Map(0, &range, (void**)&result);
 
-	
 	UINT64 a, b;
 	for (int i = 0; i < m_StepCounter - 1; i++) {
 		a = result[i];
@@ -43,7 +42,7 @@ void GPUProfiler::PrintResults() {
 
 		double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
 #ifndef SILENT_PROFILING
-		printf("Step %s: %f ms\n", m_StepNames[i].c_str(), res);
+		printf("Step %s: %2.3f ms\n", m_StepNames[i].c_str(), res);
 #endif
 	}
 
@@ -51,7 +50,7 @@ void GPUProfiler::PrintResults() {
 	b = result[m_StepCounter - 1];
 
 	double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
-	printf("Entire frame: %f ms\n", res);
+	printf("Entire frame: %4.4f ms\n", res);
 
 	range.End = 0;
 	m_ResultBuffer->Unmap(0, &range);

@@ -55,6 +55,7 @@ void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes) {
 			printf("Error compiling compute shader\nErrorLog: %s\n", errorBlob->GetBufferPointer());
 		}
 	}
+	wprintf(L"Compiled shader: %s \n", filename.c_str());
 }
 
 D3D12_SHADER_BYTECODE Shader::GetByteCode(UINT shaderType) const {
