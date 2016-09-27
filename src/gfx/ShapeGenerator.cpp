@@ -45,19 +45,18 @@ int ShapeGenerator::GenerateModel(BASIC_SHAPE shape) {
 		break;
 	case CYLINDER:
 	{
-		mesh = par_shapes_create_cylinder(32, 3);
+		mesh = par_shapes_create_cylinder(64, 1);
 		par_shapes_translate(mesh, 0, 0, -0.5f);
 		par_shapes_scale(mesh, 1, 1, 2.0f);
 
 		glm::vec3 topNormal = glm::vec3(0, 0, 1);
-		glm::vec3 bottomNormal = glm::vec3(0, 0, -1);
+		glm::vec3 axis = glm::vec3(1, 0, 0);
 
-		par_shapes_mesh_s* topDisc = par_shapes_create_disk(1.0f, 32, &topNormal[0], &topNormal[0]);
-		par_shapes_mesh_s* bottomDisc = par_shapes_create_disk(1.0f, 32, &bottomNormal[0], &bottomNormal[0]);
+		par_shapes_mesh_s* topDisc = par_shapes_create_disk(1.0f, 64, &topNormal[0], &topNormal[0]);
 		par_shapes_merge(mesh, topDisc);
-		par_shapes_merge(mesh, bottomDisc);
+		par_shapes_rotate(topDisc, 3.14f, &axis[0]);
+		par_shapes_merge(mesh, topDisc);
 		par_shapes_free_mesh(topDisc);
-		par_shapes_free_mesh(bottomDisc);
 		break;
 	}
 	case CAPSULE:
