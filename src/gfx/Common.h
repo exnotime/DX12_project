@@ -7,9 +7,21 @@
 #include <vector>
 #include <string>
 
+#include <amd_ags.h>
+
+#define AMD_VENDOR_ID 4098
+#define NVIDIA_VENDOR_ID 3333 //TODO: Lookup the actual id
+
 using Microsoft::WRL::ComPtr;
 #define HR(x,errorstring) if(x != S_OK) {MessageBox(NULL, errorstring, L"DX12Error", MB_OK);}
 static const UINT g_FrameCount = 2;
+
+struct ExtensionContext {
+	union {
+		AGSContext* AGSContext;
+	};
+	int Vendor;
+};
 
 struct DX12Context {
 	ComPtr<ID3D12Device> Device;
@@ -27,8 +39,8 @@ struct DX12Context {
 	ComPtr<ID3D12GraphicsCommandList> ComputeCommandList;
 
 	ComPtr<ID3D12Fence> CopyFence;
-
 	ComPtr<IDXGIFactory> DXGIFactory;
+	ExtensionContext Extensions;
 };
 
 struct DX12SwapChain {
@@ -43,6 +55,8 @@ struct DX12Fence {
 	UINT64 FenceValues[g_FrameCount];
 	HANDLE FenceEvent;
 };
+
+
 
 static void WaitForGPU(DX12Fence& fence, DX12Context context, UINT frameIndex) {
 	context.CommandQueue->Signal(fence.Fence.Get(), fence.FenceValues[frameIndex]);

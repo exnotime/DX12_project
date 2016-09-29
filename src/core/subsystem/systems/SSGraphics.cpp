@@ -43,8 +43,6 @@ void SSGraphics::Update(const double deltaTime) {
 	}
 
 	int flag = CameraComponent::Flag;
-	static Camera c;
-	c.CalculateViewProjection();
 	for (auto& entity : g_EntityManager.GetEntityList()) {
 		if ((entity.ComponentBitfield & flag) == flag) {
 			CameraComponent* cc = (CameraComponent*)g_ComponentManager.GetComponent(entity, CameraComponent::Flag);

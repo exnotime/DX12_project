@@ -8,7 +8,7 @@ Shader::~Shader() {
 
 }
 
-void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes) {
+void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes, ExtensionContext* extensions) {
 
 	m_ShaderTypes = shaderTypes;
 #ifdef _DEBUG
@@ -16,6 +16,16 @@ void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes) {
 #else
 	UINT compileFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3 | D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
 #endif
+
+	UINT macroCount = 0;
+	std::vector<D3D_SHADER_MACRO> macros;
+	if (extensions) {
+		//AMD
+		if (extensions->Vendor == AMD_VENDOR_ID) {
+			compileFlags &= ~D3DCOMPILE_SKIP_OPTIMIZATION; //cant skip optimizations
+		}
+	}
+
 
 	ID3DBlob* errorBlob = nullptr;
 	UINT index;

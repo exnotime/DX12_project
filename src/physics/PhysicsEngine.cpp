@@ -64,26 +64,31 @@ btRigidBody* PhysicsEngine::AddPhysicsObjectS(BASIC_SHAPE shape, float mass, glm
 	case DONUT:
 		mesh = par_shapes_create_torus(8, 8, 0.5f);
 		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		object->setLocalScaling(btVector3(size.x, size.y, size.z));
 		par_shapes_free_mesh(mesh);
 		break;
 	case OCTOHEDRON:
 		mesh = par_shapes_create_octohedron();
 		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		object->setLocalScaling(btVector3(size.x, size.y, size.z));
 		par_shapes_free_mesh(mesh);
 		break;
 	case TETRAHEDRON:
 		mesh = par_shapes_create_tetrahedron();
 		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		object->setLocalScaling(btVector3(size.x, size.y, size.z));
 		par_shapes_free_mesh(mesh);
 		break;
 	case DODECAHEDRON:
 		mesh = par_shapes_create_dodecahedron();
 		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		object->setLocalScaling(btVector3(size.x, size.y, size.z));
 		par_shapes_free_mesh(mesh);
 		break;
 	case ICOSAHEDRON:
 		mesh = par_shapes_create_icosahedron();
 		object = new btConvexHullShape(mesh->points, mesh->npoints, sizeof(float) * 3);
+		object->setLocalScaling(btVector3(size.x, size.y, size.z));
 		par_shapes_free_mesh(mesh);
 		break;
 	default:

@@ -51,19 +51,18 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 		glm::vec4 max = input.World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
 		glm::vec4 min = input.World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
 
-		if (!AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z)))
-			continue;
+		if (AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z))) {
+			drawCall.DrawIndex = m_InstanceCounter;
+			drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
 
-		drawCall.DrawIndex = m_InstanceCounter;
-		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
+			drawCall.DrawArgs.InstanceCount = 1;
+			drawCall.DrawArgs.IndexCountPerInstance = mesh.IndexCount;
+			drawCall.DrawArgs.StartIndexLocation = mod.IndexHandle + mesh.IndexBufferOffset;
+			drawCall.DrawArgs.BaseVertexLocation = 0;
+			drawCall.DrawArgs.StartInstanceLocation = 0;
 
-		drawCall.DrawArgs.InstanceCount = 1;
-		drawCall.DrawArgs.IndexCountPerInstance = mesh.IndexCount;
-		drawCall.DrawArgs.StartIndexLocation = mod.IndexHandle + mesh.IndexBufferOffset;
-		drawCall.DrawArgs.BaseVertexLocation = 0;
-		drawCall.DrawArgs.StartInstanceLocation = 0;
-
-		m_DrawCalls.push_back(drawCall);
+			m_DrawCalls.push_back(drawCall);
+		}
 	}
 
 	m_InstanceCounter += 1;

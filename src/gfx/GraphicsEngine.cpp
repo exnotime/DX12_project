@@ -6,6 +6,8 @@
 #include "MaterialBank.h"
 #include "BufferManager.h"
 
+#include <amd_ags.h>
+
 GraphicsEngine::GraphicsEngine() {
 
 }
@@ -17,15 +19,58 @@ GraphicsEngine::~GraphicsEngine() {
 	CloseHandle(m_Fence.FenceEvent);
 }
 
+void GraphicsEngine::CreateExtensionContext() {
+	//find out if we run on Nvidia or AMD
+	IDXGIAdapter* adapter;
+	DXGI_ADAPTER_DESC adapterInfo;
+	m_Context.DXGIFactory->EnumAdapters(0, &adapter);
+	adapter->GetDesc(&adapterInfo);
+
+	if (adapterInfo.VendorId == AMD_VENDOR_ID) {
+		//set up AGS
+		AGSContext* context;
+		if (agsInit(&context, nullptr, nullptr) == AGS_SUCCESS) {
+			m_Context.Extensions.Vendor = AMD_VENDOR_ID;
+			m_Context.Extensions.AGSContext = context;
+		}
+	} else if (adapterInfo.VendorId == NVIDIA_VENDOR_ID) {
+		//set up NVAPI
+	} else {
+		//Cant run this T.T
+		HR(E_FAIL, L"This computer can not run this program");
+		exit(0);
+	}
+}
+
+void GraphicsEngine::CheckExtensions() {
+	//set up extensions
+	if (m_Context.Extensions.Vendor == AMD_VENDOR_ID) {
+		UINT extensions = 0;
+		if (agsDriverExtensionsDX12_Init(m_Context.Extensions.AGSContext, m_Context.Device.Get(), &extensions) == AGS_SUCCESS) {
+			//check so that we support the extensions we want
+			UINT extensionsWeWant = AGS_DX12_EXTENSION_INTRINSIC_BALLOT | AGS_DX12_EXTENSION_INTRINSIC_LANEID |
+				AGS_DX12_EXTENSION_INTRINSIC_MBCOUNT | AGS_DX12_EXTENSION_INTRINSIC_READFIRSTLANE |
+				AGS_DX12_EXTENSION_INTRINSIC_READLANE | AGS_DX12_EXTENSION_INTRINSIC_SWIZZLE;
+
+			if (!(extensions & extensionsWeWant)) {
+				HR(E_FAIL, L"The GPU doesn not support the extentions we want");
+				exit(0);
+			}
+		}
+	}
+}
+
 void GraphicsEngine::CreateContext() {
 #ifdef _DEBUG
 	ComPtr<ID3D12Debug> debugController;
-	HR(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), L"");
+	HR(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), L"debug controller");
 	debugController->EnableDebugLayer();
 #endif
 
 	HR(CreateDXGIFactory(IID_PPV_ARGS(&m_Context.DXGIFactory)), L"unable to create DXGIFactory");
+	CreateExtensionContext();
 	HR(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_Context.Device)), L"Error creating device");
+	CheckExtensions();
 	//Graphics Queue
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;

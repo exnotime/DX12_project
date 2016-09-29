@@ -12,6 +12,7 @@
 #define SIGNAL_BEGIN_COPY 0
 #define SIGNAL_END_COPY 1
 
+
 struct cbPerFrame {
 	glm::mat4 ViewProj;
 	glm::vec3 CamPos;
@@ -36,6 +37,8 @@ public:
 
 	RenderQueue* GetRenderQueue() { return &m_RenderQueue; }
 private:
+	void CreateExtensionContext();
+	void CheckExtensions();
 	void CreateContext();
 	void CreateSwapChain(HWND hWnd, const glm::vec2& screenSize);
 
@@ -59,5 +62,4 @@ private:
 
 	FullscreenPass m_FullscreenPass;
 	HiZProgram m_HiZProgram;
-
 };
