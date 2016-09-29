@@ -14,7 +14,7 @@ DepthOnlyProgram::~DepthOnlyProgram() {
 }
 
 void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
-	m_ScreenSize = screenSize * 0.5f;
+	m_ScreenSize = screenSize * 0.25f;
 
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
@@ -79,7 +79,7 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	pipeFact.SetDepthStencilFormat(DXGI_FORMAT_D32_FLOAT);
 	pipeFact.SetDepthStencilState(depthDesc);
 	pipeFact.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-	pipeFact.SetInputLayout(DepthOnlyVertexLayout, DepthOnlyVertexSize);
+	pipeFact.SetInputLayout(VertexLayout, VertexLayoutSize);
 	pipeFact.SetRootSignature(m_RootSignature.Get());
 
 	m_PipelineState = pipeFact.Create(context->Device.Get());
@@ -117,7 +117,7 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	dsvResDesc.Height = (unsigned)m_ScreenSize.y;
 	dsvResDesc.DepthOrArraySize = 1;
 	dsvResDesc.MipLevels = 1;
-	dsvResDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvResDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	dsvResDesc.SampleDesc.Count = 1;
 	dsvResDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	dsvResDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
@@ -145,6 +145,7 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 
 void DepthOnlyProgram::Render(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue) {
 	cmdList->OMSetRenderTargets(0, nullptr, false, &m_DepthHeap->GetCPUDescriptorHandleForHeapStart());
+	cmdList->ClearDepthStencilView(m_DepthHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0x0, 0, nullptr);
 	cmdList->RSSetViewports(1, &m_Viewport);
 	cmdList->RSSetScissorRects(1, &m_ScissorRect);
 

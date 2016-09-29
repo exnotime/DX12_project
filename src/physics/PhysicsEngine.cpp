@@ -151,9 +151,7 @@ void PhysicsEngine::Shutdown() {
 		delete body;
 	}
 	for (auto& obj : m_PhysicsObjects) {
-		if (obj) {
-			delete obj;
-		}
+		if (obj) delete obj;
 	}
 	m_PhysicsObjects.clear();
 

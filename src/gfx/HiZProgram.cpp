@@ -11,7 +11,7 @@ HiZProgram::~HiZProgram() {
 void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	m_Shader.LoadFromFile(L"src/shaders/HiZGeneration.hlsl", COMPUTE_SHADER_BIT);
 
-	m_ScreenSize = screenSize * 0.5f;
+	m_ScreenSize = screenSize * 0.25f;
 	m_MipCount = log2(glm::max(m_ScreenSize.x, m_ScreenSize.y));
 	m_DescIncSize = context->Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -46,7 +46,7 @@ void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.SampleDesc.Quality = 0;
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	resourceDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	resourceDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
@@ -91,7 +91,7 @@ void HiZProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* sr
 	cmdList->SetDescriptorHeaps(1, heaps);
 
 	glm::uvec2 targetsize = m_ScreenSize;
-	UINT workGroupSize = 8;
+	UINT workGroupSize = 16;
 
 	for (int i = 0; i < m_MipCount - 1; ++i) {
 		cmdList->SetComputeRootDescriptorTable(0, uavHandle);

@@ -30,8 +30,6 @@ void SSGraphics::Startup() {
 		m_Graphics->Init(hWnd, glm::vec2(ws.Width, ws.Height));
 		m_RenderQueue = m_Graphics->GetRenderQueue();
 	}
-
-
 	int level = g_ModelBank.LoadModel("assets/models/sponza/sponza.obj");
 	int occluder = g_ModelBank.LoadModel("assets/models/sponza/SponzaOccluder.obj");
 	SpawnLevelObjectO(level, occluder, glm::vec3(0), glm::quat(1.0f, 0, 0, 0), glm::vec3(0.2f), glm::vec4(1));

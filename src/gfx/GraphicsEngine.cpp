@@ -133,8 +133,6 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 		m_Context.Device->CreateRenderTargetView(m_SwapChain.RenderTargets[i].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_SwapChain.RenderTargetHeapSize); //offset with size
 	}
-
-
 }
 
 void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
@@ -144,9 +142,11 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	InitGeometryState(&m_ProgramState, &m_Context);
 	m_DepthProgram.Init(&m_Context, screenSize);
 
-	m_FullscreenPass.Init(&m_Context);
-	m_FullscreenPass.CreateSRV(&m_Context, m_DSResource.Get());
 	m_HiZProgram.Init(&m_Context, m_ScreenSize);
+
+	m_FullscreenPass.Init(&m_Context);
+
+	m_FullscreenPass.CreateSRV(&m_Context, m_HiZProgram.GetResource(), DXGI_FORMAT_R32_FLOAT, m_HiZProgram.GetMipCount());
 
 	g_BufferManager.Init(&m_Context);
 	g_BufferManager.CreateConstBuffer("cbPerFrame", nullptr, sizeof(cbPerFrame));
@@ -199,7 +199,6 @@ void GraphicsEngine::PrepareForRender() {
 	//this will transfer textures/models etc to gpu
 	g_ModelBank.BuildBuffers();
 	g_MaterialBank.CopyMaterialDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_ProgramState.RenderDescHeap->GetCPUDescriptorHandleForHeapStart()).Offset(3, m_ProgramState.DescHeapIncSize));
-	//g_MaterialBank.CopyMaterialDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DepthProgramState.MaterialHeap->GetCPUDescriptorHandleForHeapStart()));
 
 	m_Context.CommandList->Close();
 	ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
@@ -272,15 +271,25 @@ void GraphicsEngine::Render() {
 
 	m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
 
-	m_Profiler.Step(m_Context.CommandList.Get(), "Geometry");
-
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
 	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
 
 	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
 	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
+	m_Profiler.Step(m_Context.CommandList.Get(), "Geometry");
+
 	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue);
+
+	/*m_Profiler.Step(m_Context.CommandList.Get(), "FullScreen");
+
+	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_HiZProgram.GetResource(),
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+
+	m_FullscreenPass.Render(&m_Context);
+
+	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_HiZProgram.GetResource(),
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));*/
 
 	m_Profiler.End(m_Context.CommandList.Get());
 

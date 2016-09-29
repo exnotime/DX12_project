@@ -1,5 +1,7 @@
 struct VSIn{
 	float3 Position : POSITION;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
 	float2 TexCoord : TEXCOORD;
 	uint InstanceID : SV_InstanceID;
 };
@@ -38,14 +40,13 @@ PSIn VSMain(VSIn input) {
 	float4x4 world = g_InputBuffer[g_ShaderIndex + input.InstanceID].World;
 	float4x4 wvp = mul(g_ViewProj, world);
 	result.position = mul(wvp,float4(input.Position, 1));
-	result.position.z += 0.001;
+	//result.position.z += 0.001;
 	result.uv = input.TexCoord;
 	return result;
 }
 
 float4 PSMain(PSIn input) : SV_TARGET {
-	float4 albedo = g_Materials[NonUniformResourceIndex(g_MaterialIndex)].Sample(g_sampler, input.uv);
-	clip( albedo.a <= 0.1 ? -1 : 1 );
-
-	return float4(0,0,0,0);
+	//float4 albedo = g_Materials[NonUniformResourceIndex(g_MaterialIndex)].Sample(g_sampler, input.uv);
+	//clip( albedo.a <= 0.1 ? -1 : 1 );
+	return float4(0,0,0,1);
 }

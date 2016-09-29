@@ -46,7 +46,7 @@ void FullscreenPass::Init(DX12Context* context) {
 	formats.push_back(DXGI_FORMAT_R8G8B8A8_UNORM);
 	pipeFact.SetRenderTargetFormats(formats);
 	pipeFact.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-
+	pipeFact.SetDepthStencilFormat(DXGI_FORMAT_D24_UNORM_S8_UINT);
 	m_PipelineState = pipeFact.Create(context->Device.Get());
 
 	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
@@ -58,7 +58,7 @@ void FullscreenPass::Init(DX12Context* context) {
 	context->Device->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&m_DescriptorHeap));
 }
 
-void FullscreenPass::Render(DX12Context* context, D3D12_GPU_DESCRIPTOR_HANDLE texHandle) {
+void FullscreenPass::Render(DX12Context* context) {
 	ID3D12GraphicsCommandList* cmdList = context->CommandList.Get();
 
 	cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
@@ -72,12 +72,13 @@ void FullscreenPass::Render(DX12Context* context, D3D12_GPU_DESCRIPTOR_HANDLE te
 	cmdList->DrawInstanced(4, 1, 0, 0);
 }
 
-void FullscreenPass::CreateSRV(DX12Context* context, ID3D12Resource* resource) {
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
+void FullscreenPass::CreateSRV(DX12Context* context, ID3D12Resource* resource, DXGI_FORMAT format, UINT mipCount) {
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Format = format;
+	srvDesc.Texture2D.MipLevels = mipCount;
 	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.PlaneSlice = 0;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	context->Device->CreateShaderResourceView(resource, &srvDesc, m_DescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }

@@ -20,6 +20,7 @@ Texture2D g_Tex : register(t0);
 SamplerState g_Sampler : register(s0);
 
 float4 PSMain(VSOut input) : SV_TARGET {
-	return float4(g_Tex.Sample(g_Sampler, input.texcoord).r, 0, 0, 1) * 1000;
+	float depth = g_Tex.SampleLevel(g_Sampler, input.texcoord, 0).r;
+	return float4( depth, depth, depth, 1);
 }
 

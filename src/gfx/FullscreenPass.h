@@ -6,9 +6,9 @@ public:
 	FullscreenPass();
 	~FullscreenPass();
 	void Init(DX12Context* context);
-	void Render(DX12Context* context, D3D12_GPU_DESCRIPTOR_HANDLE texHandle);
+	void Render(DX12Context* context);
 	//temp maybe
-	void CreateSRV(DX12Context* context, ID3D12Resource* resource);
+	void CreateSRV(DX12Context* context, ID3D12Resource* resource, DXGI_FORMAT format, UINT mipCount = 1);
 
 private:
 	Shader m_Shader;
