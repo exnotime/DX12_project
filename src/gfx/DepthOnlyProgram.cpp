@@ -29,7 +29,7 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	m_ScissorRect.right = (unsigned)m_ScreenSize.x;
 
 
-	m_Shader.LoadFromFile(L"src/shaders/DepthOnly.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT);
+	m_Shader.LoadFromFile(L"src/shaders/DepthOnly.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT, nullptr);
 
 	RootSignatureFactory rootSignFact;
 	rootSignFact.AddDefaultStaticSampler(0, 0, D3D12_SHADER_VISIBILITY_PIXEL);

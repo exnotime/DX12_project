@@ -11,7 +11,7 @@ using namespace GeometryProgram;
 void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	state->DescHeapIncSize = context->Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	state->Shader.LoadFromFile(L"src/shaders/Color.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT);
+	state->Shader.LoadFromFile(L"src/shaders/Color.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT, nullptr);
 	RootSignatureFactory rootSignFactory;
 	rootSignFactory.AddDefaultStaticSampler(0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 	rootSignFactory.AddConstantBufferView(0); //0

@@ -1,5 +1,6 @@
 #include "RootSignatureFactory.h"
 RootSignatureFactory::RootSignatureFactory() {
+	m_ExtensionData = nullptr;
 	m_Samplers.reserve(1);
 }
 RootSignatureFactory::~RootSignatureFactory() {
@@ -59,6 +60,17 @@ void RootSignatureFactory::AddDefaultStaticSampler(UINT shaderRegister, UINT reg
 	m_Samplers.push_back(sampDesc);
 }
 
+void RootSignatureFactory::AddExtensions(ExtensionContext* extensions) {
+	if (extensions->Vendor == AMD_VENDOR_ID) {
+		CD3DX12_ROOT_PARAMETER amdParam;
+		//range must live until the root signature is created
+		m_ExtensionData = malloc(sizeof(CD3DX12_DESCRIPTOR_RANGE));
+		((CD3DX12_DESCRIPTOR_RANGE*)m_ExtensionData)->Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, AGS_DX12_SHADER_INSTRINSICS_SPACE_ID);
+		amdParam.InitAsDescriptorTable(1, (CD3DX12_DESCRIPTOR_RANGE*)m_ExtensionData, D3D12_SHADER_VISIBILITY_ALL);
+		m_RootParamters.push_back(amdParam);
+	}
+}
+
 ComPtr<ID3D12RootSignature> RootSignatureFactory::CreateSignture(ID3D12Device* device) {
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignDesc;
 	rootSignDesc.Init(m_RootParamters.size(), m_RootParamters.data(), m_Samplers.size(), m_Samplers.data(), D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -69,5 +81,8 @@ ComPtr<ID3D12RootSignature> RootSignatureFactory::CreateSignture(ID3D12Device* d
 		printf("Error serializing rootsignature\nErrorLog:%s\n", error->GetBufferPointer());
 	}
 	HR(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)), L"Error creating rootsignature\n");
+
+	if (m_ExtensionData)
+		free(m_ExtensionData);
 	return rootSignature;
 }

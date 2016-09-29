@@ -9,7 +9,7 @@ HiZProgram::~HiZProgram() {
 }
 
 void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
-	m_Shader.LoadFromFile(L"src/shaders/HiZGeneration.hlsl", COMPUTE_SHADER_BIT);
+	m_Shader.LoadFromFile(L"src/shaders/HiZGeneration.hlsl", COMPUTE_SHADER_BIT, nullptr);
 
 	m_ScreenSize = screenSize * 0.25f;
 	m_MipCount = log2(glm::max(m_ScreenSize.x, m_ScreenSize.y));

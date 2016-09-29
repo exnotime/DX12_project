@@ -23,45 +23,49 @@ void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes, Extens
 		//AMD
 		if (extensions->Vendor == AMD_VENDOR_ID) {
 			compileFlags &= ~D3DCOMPILE_SKIP_OPTIMIZATION; //cant skip optimizations
+
+			macros.push_back({"AMD_USE_SHADER_INTRINSICS", "1"});
+			macros.push_back({ nullptr, nullptr });
 		}
 	}
 
+	D3D_SHADER_MACRO* macro = (macros.size() > 0 ? macros.data() : nullptr);
 
 	ID3DBlob* errorBlob = nullptr;
 	UINT index;
 	if (shaderTypes & VERTEX_SHADER_BIT) {
 		index = log2((float)VERTEX_SHADER_BIT);
-		if (D3DCompileFromFile(filename.c_str(), nullptr, nullptr, "VSMain", "vs_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
+		if (D3DCompileFromFile(filename.c_str(), macro, nullptr, "VSMain", "vs_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
 			printf("Error compiling vertex shader\nErrorLog: %s\n", errorBlob->GetBufferPointer());
 		}
 	}
 	if (shaderTypes & PIXEL_SHADER_BIT) {
 		index = log2((float)PIXEL_SHADER_BIT);
-		if (D3DCompileFromFile(filename.c_str(), nullptr, nullptr, "PSMain", "ps_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
+		if (D3DCompileFromFile(filename.c_str(), macro, nullptr, "PSMain", "ps_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
 			printf("Error compiling pixel shader\nErrorLog: %s\n", errorBlob->GetBufferPointer());
 		}
 	}
 	if (shaderTypes & GEOMETRY_SHADER_BIT) {
 		index = log2((float)GEOMETRY_SHADER_BIT);
-		if (D3DCompileFromFile(filename.c_str(), nullptr, nullptr, "GSMain", "gs_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
+		if (D3DCompileFromFile(filename.c_str(), macro, nullptr, "GSMain", "gs_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
 			printf("Error compiling geometry shader\nErrorLog: %s\n", errorBlob->GetBufferPointer());
 		}
 	}
 	if (shaderTypes & HULL_SHADER_BIT) {
 		index = log2((float)HULL_SHADER_BIT);
-		if (D3DCompileFromFile(filename.c_str(), nullptr, nullptr, "HSMain", "hs_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
+		if (D3DCompileFromFile(filename.c_str(), macro, nullptr, "HSMain", "hs_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
 			printf("Error compiling hull shader\nErrorLog: %s\n", errorBlob->GetBufferPointer());
 		}
 	}
 	if (shaderTypes & DOMAIN_SHADER_BIT) {
 		index = log2((float)DOMAIN_SHADER_BIT);
-		if (D3DCompileFromFile(filename.c_str(), nullptr, nullptr, "DSMain", "ds_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
+		if (D3DCompileFromFile(filename.c_str(), macro, nullptr, "DSMain", "ds_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
 			printf("Error compiling domain shader\nErrorLog: %s\n", errorBlob->GetBufferPointer());
 		}
 	}
 	if (shaderTypes & COMPUTE_SHADER_BIT) {
 		index = log2((float)COMPUTE_SHADER_BIT);
-		if (D3DCompileFromFile(filename.c_str(), nullptr, nullptr, "CSMain", "cs_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
+		if (D3DCompileFromFile(filename.c_str(), macro, nullptr, "CSMain", "cs_5_1", compileFlags, 0, &m_ShaderBlobs[index], &errorBlob) != S_OK) {
 			printf("Error compiling compute shader\nErrorLog: %s\n", errorBlob->GetBufferPointer());
 		}
 	}

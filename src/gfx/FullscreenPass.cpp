@@ -11,7 +11,7 @@ FullscreenPass::~FullscreenPass() {
 }
 
 void FullscreenPass::Init(DX12Context* context) {
-	m_Shader.LoadFromFile(L"src/shaders/Fullscreen.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT);
+	m_Shader.LoadFromFile(L"src/shaders/Fullscreen.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT, nullptr);
 
 	RootSignatureFactory rootFact;
 
