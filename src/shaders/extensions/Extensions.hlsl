@@ -44,18 +44,21 @@ uint LaneId(){
 #define NV_SHADER_EXTN_SLOT u1
 #define NV_SHADER_EXTN_REGISTER_SPACE space10
 
-#include "nvHLSLExtns.hlsl"
+#include "extensions/nvHLSLExtns.h"
 
-typedef Predicate int;
-typedef BitMask uint;
+typedef int Predicate;
+typedef uint BitMask;
 
 #define WaveAll(x) NvAll(x)
 #define WaveAny(x) NvAny(x)
 #define WaveBallot(x) NvBallot(x)
-#define LaneId() NvGetLaneId()
 
-Scalar WaveMax(Scalar val){
-	Scalar waveMax = val;
+uint LaneId(){
+	return NvGetLaneId();
+}
+
+float WaveMax(float val){
+	float waveMax = val;
 	waveMax = max(waveMax, NvShflXor(waveMax, 16));
 	waveMax = max(waveMax, NvShflXor(waveMax, 8));
 	waveMax = max(waveMax, NvShflXor(waveMax, 4));
@@ -64,8 +67,18 @@ Scalar WaveMax(Scalar val){
 	return waveMax;
 }
 
-Vector WaveMax(Vector val){
-	Vector waveMax = val;
+uint WaveMax(uint val){
+	uint waveMax = val;
+	waveMax = max(waveMax, NvShflXor(waveMax, 16));
+	waveMax = max(waveMax, NvShflXor(waveMax, 8));
+	waveMax = max(waveMax, NvShflXor(waveMax, 4));
+	waveMax = max(waveMax, NvShflXor(waveMax, 2));
+	waveMax = max(waveMax, NvShflXor(waveMax, 1));
+	return waveMax;
+}
+/*
+uint WaveMax(uint3 val){
+	uint3 waveMax = val;
 	waveMax = max(waveMax, NvShflXor(waveMax, 16));
 	waveMax = max(waveMax, NvShflXor(waveMax, 8));
 	waveMax = max(waveMax, NvShflXor(waveMax, 4));
@@ -74,8 +87,18 @@ Vector WaveMax(Vector val){
 	return waveMax;
 }
 
-Scalar WaveMin(Scalar val){
-	Scalar waveMin = val;
+float WaveMax(float3 val){
+	float3 waveMax = val;
+	waveMax = max(waveMax, NvShflXor(waveMax, 16));
+	waveMax = max(waveMax, NvShflXor(waveMax, 8));
+	waveMax = max(waveMax, NvShflXor(waveMax, 4));
+	waveMax = max(waveMax, NvShflXor(waveMax, 2));
+	waveMax = max(waveMax, NvShflXor(waveMax, 1));
+	return waveMax;
+}
+*/
+float WaveMin(float val){
+	float waveMin = val;
 	waveMin = min(waveMin, NvShflXor(waveMin, 16));
 	waveMin = min(waveMin, NvShflXor(waveMin, 8));
 	waveMin = min(waveMin, NvShflXor(waveMin, 4));
@@ -84,8 +107,18 @@ Scalar WaveMin(Scalar val){
 	return waveMin;
 }
 
-Vector WaveMin(Vector val){
-	Vector waveMin = val;
+uint WaveMin(uint val){
+	uint waveMin = val;
+	waveMin = min(waveMin, NvShflXor(waveMin, 16));
+	waveMin = min(waveMin, NvShflXor(waveMin, 8));
+	waveMin = min(waveMin, NvShflXor(waveMin, 4));
+	waveMin = min(waveMin, NvShflXor(waveMin, 2));
+	waveMin = min(waveMin, NvShflXor(waveMin, 1));
+	return waveMin;
+}
+/*
+float WaveMin(float3 val){
+	float3 waveMin = val;
 	waveMin = min(waveMin, NvShflXor(waveMin, 16));
 	waveMin = min(waveMin, NvShflXor(waveMin, 8));
 	waveMin = min(waveMin, NvShflXor(waveMin, 4));
@@ -94,6 +127,16 @@ Vector WaveMin(Vector val){
 	return waveMin;
 }
 
+uint WaveMin(uint3 val){
+	uint3 waveMin = val;
+	waveMin = min(waveMin, NvShflXor(waveMin, 16));
+	waveMin = min(waveMin, NvShflXor(waveMin, 8));
+	waveMin = min(waveMin, NvShflXor(waveMin, 4));
+	waveMin = min(waveMin, NvShflXor(waveMin, 2));
+	waveMin = min(waveMin, NvShflXor(waveMin, 1));
+	return waveMin;
+}
+*/
 //Naive MBCount think of other method later
 uint MBCount(BitMask bm){
 	//might need to unroll

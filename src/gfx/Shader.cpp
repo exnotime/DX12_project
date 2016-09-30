@@ -23,12 +23,12 @@ void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes, Extens
 		//AMD
 		if (extensions->Vendor == AMD_VENDOR_ID) {
 			compileFlags &= ~D3DCOMPILE_SKIP_OPTIMIZATION; //cant skip optimizations with amd
-
 			macros.push_back({"AMD_USE_SHADER_INTRINSICS", "1"});
 			macros.push_back({ nullptr, nullptr });
 		} //NVIDIA
 		else if (extensions->Vendor == NVIDIA_VENDOR_ID) {
 			macros.push_back({ "NVIDIA_USE_SHADER_INTRINSICS", "1" });
+			macros.push_back({ nullptr, nullptr });
 		}
 	}
 

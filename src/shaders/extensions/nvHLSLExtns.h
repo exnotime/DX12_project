@@ -38,7 +38,7 @@
 // use of nvidia shader extensions
 
 
-#include "nvHLSLExtnsInternal.h"
+#include "extensions/nvHLSLExtnsInternal.h"
 
 //----------------------------------------------------------------------------//
 //------------------------- Warp Shuffle Functions ---------------------------//
