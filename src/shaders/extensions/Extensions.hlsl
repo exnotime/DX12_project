@@ -6,8 +6,8 @@
 typedef bool Predicate;
 typedef uint2 BitMask;
 
-#define ReadFirstLineFloat(x) AmdExtD3DShaderIntrinsics_ReadfirstlaneF(x)
-#define ReadFirstLineUInt(x) AmdExtD3DShaderIntrinsics_ReadfirstlaneU(x)
+#define ReadFirstLaneFloat(x) AmdExtD3DShaderIntrinsics_ReadfirstlaneF(x)
+#define ReadFirstLaneUInt(x) AmdExtD3DShaderIntrinsics_ReadfirstlaneU(x)
 #define ReadLaneFloat(x,y) AmdExtD3DShaderIntrinsics_ReadlaneF(x, y)
 #define ReadLaneUInt(x,y) AmdExtD3DShaderIntrinsics_ReadlaneU(x, y)
 
@@ -37,6 +37,20 @@ uint LaneId(){
 #define WaveAll(x) AmdExtD3DShaderIntrinsics_BallotAll(x)
 #define MBCount(x) AmdExtD3DShaderIntrinsics_MBCnt(x)
 
+//Naive BitCount think of other method later
+uint BitCount(BitMask bm) {
+	//might need to unroll
+	uint count = 0;
+	for(int i = 1; i < NV_WARP_SIZE + 1; i++){
+		//8-bit example
+		// 00110010 << 6
+		// 10000000 >> 7
+		// cnt += 00000001
+		count += ((NV_WARP_SIZE - 1) >> ((NV_WARP_SIZE - i) << bm)) ;
+	}
+	return count;
+}
+
 #endif
 
 #ifdef NVIDIA_USE_SHADER_INTRINSICS
@@ -55,6 +69,14 @@ typedef uint BitMask;
 
 uint LaneId(){
 	return NvGetLaneId();
+}
+
+uint ReadFirstLaneUInt(uint data){
+	return NvShfl(data, 0);
+}
+
+float ReadFirstLaneFloat(float data){
+	return NvShfl(data, 0);
 }
 
 float WaveMax(float val){
@@ -137,11 +159,24 @@ uint WaveMin(uint3 val){
 	return waveMin;
 }
 */
-//Naive MBCount think of other method later
-uint MBCount(BitMask bm){
+//Naive BitCount think of other method later
+uint BitCount(BitMask bm){
 	//might need to unroll
 	uint count = 0;
 	for(int i = 1; i < NV_WARP_SIZE + 1; i++){
+		//8-bit example
+		// 00110010 << 6
+		// 10000000 >> 7
+		// cnt += 00000001
+		count += ((NV_WARP_SIZE - 1) >> ((NV_WARP_SIZE - i) << bm)) ;
+	}
+	return count;
+}
+//Naive MBCount think of other method later
+uint MBCount(uint laneId, BitMask bm){
+	//might need to unroll
+	uint count = 0;
+	for(int i = 1; i < laneId + 1; i++){
 		//8-bit example
 		// 00110010 << 6
 		// 10000000 >> 7

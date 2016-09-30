@@ -3,6 +3,7 @@
 PipelineStateFactory::PipelineStateFactory() {
 	//set default values for some of the variables
 	m_PipelineStateDesc = {};
+	m_PipelineStateDesc.NumRenderTargets = 0;
 	m_PipelineStateDesc.SampleDesc.Count = 1;
 	m_PipelineStateDesc.SampleMask = UINT_MAX;
 	m_PipelineStateDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -79,10 +80,11 @@ void PipelineStateFactory::SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE to
 }
 
 void PipelineStateFactory::SetRenderTargetFormats(const std::vector<DXGI_FORMAT>& formats) {
-	m_PipelineStateDesc.NumRenderTargets = formats.size();
-	for (int i = 0; i < formats.size(); ++i) {
-		m_PipelineStateDesc.RTVFormats[i] = formats[i];
-	}
+	m_RenderTargetFormats.insert(m_RenderTargetFormats.end(), formats.begin(), formats.end());
+}
+
+void PipelineStateFactory::AddRenderTargetFormat(DXGI_FORMAT format) {
+	m_RenderTargetFormats.push_back(format);
 }
 
 void PipelineStateFactory::SetSampleCount(UINT count) {
@@ -91,6 +93,12 @@ void PipelineStateFactory::SetSampleCount(UINT count) {
 
 ComPtr<ID3D12PipelineState> PipelineStateFactory::CreateGraphicsState(DX12Context* context) {
 	ComPtr<ID3D12PipelineState> pipelineState;
+
+	for (int i = 0; i < m_RenderTargetFormats.size(); i++) {
+		m_PipelineStateDesc.RTVFormats[i] = m_RenderTargetFormats[i];
+	}
+	m_PipelineStateDesc.NumRenderTargets = m_RenderTargetFormats.size();
+
 	if (context->Extensions.Vendor == NVIDIA_VENDOR_ID) {
 		NVAPI_D3D12_PSO_SET_SHADER_EXTENSION_SLOT_DESC extensionDesc;
 		extensionDesc.baseVersion = NV_PSO_EXTENSION_DESC_VER;

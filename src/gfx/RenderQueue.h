@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
-#include "Common.h"
+#include "DX12Common.h"
 #include "Camera.h"
 #include "BufferManager.h"
 typedef int ModelHandle;

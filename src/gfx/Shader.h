@@ -1,5 +1,5 @@
 #pragma once
-#include "Common.h"
+#include "DX12Common.h"
 #define SHADER_TYPE_COUNT 6
 enum SHADER_TYPES {
 	VERTEX_SHADER_BIT	 = 1 << 0,

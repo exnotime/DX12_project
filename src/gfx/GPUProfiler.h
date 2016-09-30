@@ -1,5 +1,5 @@
 #pragma once
-#include "Common.h"
+#include "DX12Common.h"
 //#define SILENT_PROFILING
 #define MAX_PROFILER_STEPS 128
 class GPUProfiler{

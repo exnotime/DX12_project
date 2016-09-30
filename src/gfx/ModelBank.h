@@ -2,7 +2,7 @@
 #include "Model.h"
 #include "Vertex.h"
 #include "VertexBuffer.h"
-#include "Common.h"
+#include "DX12Common.h"
 #include <map>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

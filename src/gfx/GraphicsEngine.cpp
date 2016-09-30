@@ -5,6 +5,7 @@
 #include "ModelBank.h"
 #include "MaterialBank.h"
 #include "BufferManager.h"
+
 //shader extensions
 #include <amd_ags.h>
 #include <NVAPI/nvapi.h>
@@ -92,6 +93,7 @@ void GraphicsEngine::CreateContext() {
 
 	HR(CreateDXGIFactory(IID_PPV_ARGS(&m_Context.DXGIFactory)), L"unable to create DXGIFactory");
 	CreateExtensionContext();
+
 	HR(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_Context.Device)), L"Error creating device");
 	CheckExtensions();
 	//Graphics Queue

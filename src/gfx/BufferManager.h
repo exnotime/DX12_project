@@ -1,5 +1,5 @@
 #pragma once
-#include "Common.h"
+#include "DX12Common.h"
 #include <unordered_map>
 #define g_BufferManager BufferManager::GetInstance()
 

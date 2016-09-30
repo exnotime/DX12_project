@@ -1,5 +1,5 @@
 #pragma once
-#include "Common.h"
+#include "DX12Common.h"
 #include "Vertex.h"
 class VertexBuffer {
 public:

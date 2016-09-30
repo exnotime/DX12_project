@@ -1,5 +1,5 @@
 #pragma once
-#include "Common.h"
+#include "DX12Common.h"
 #include "Shader.h"
 class PipelineStateFactory {
 public:
@@ -17,6 +17,7 @@ public:
 	void SetSampleMask(UINT val);
 	void SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE topology);
 	void SetRenderTargetFormats(const std::vector<DXGI_FORMAT>& formats);
+	void AddRenderTargetFormat(DXGI_FORMAT format);
 	void SetSampleCount(UINT count);
 
 	ComPtr<ID3D12PipelineState> CreateGraphicsState(DX12Context* context);
@@ -24,4 +25,5 @@ public:
 private:
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC m_PipelineStateDesc;
 	D3D12_COMPUTE_PIPELINE_STATE_DESC m_ComputeStateDesc;
+	std::vector<DXGI_FORMAT> m_RenderTargetFormats;
 };
