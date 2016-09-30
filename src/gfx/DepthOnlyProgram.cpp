@@ -31,6 +31,9 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 
 	m_Shader.LoadFromFile(L"src/shaders/DepthOnly.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT, nullptr);
 
+	//Shader testShader;
+	//testShader.LoadFromFile(L"src/shaders/ComputeTest.hlsl", COMPUTE_SHADER_BIT, &context->Extensions);
+
 	RootSignatureFactory rootSignFact;
 	rootSignFact.AddDefaultStaticSampler(0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 	std::vector<CD3DX12_DESCRIPTOR_RANGE> ranges;
@@ -82,7 +85,7 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	pipeFact.SetInputLayout(VertexLayout, VertexLayoutSize);
 	pipeFact.SetRootSignature(m_RootSignature.Get());
 
-	m_PipelineState = pipeFact.Create(context->Device.Get());
+	m_PipelineState = pipeFact.CreateGraphicsState(context);
 	//Material desc heap
 	D3D12_DESCRIPTOR_HEAP_DESC renderHeapDesc = {};
 	renderHeapDesc.NumDescriptors = 4000;

@@ -19,7 +19,9 @@ public:
 	void SetRenderTargetFormats(const std::vector<DXGI_FORMAT>& formats);
 	void SetSampleCount(UINT count);
 
-	ComPtr<ID3D12PipelineState> Create(ID3D12Device* device);
+	ComPtr<ID3D12PipelineState> CreateGraphicsState(DX12Context* context);
+	ComPtr<ID3D12PipelineState> CreateComputeState(DX12Context* context);
 private:
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC m_PipelineStateDesc;
+	D3D12_COMPUTE_PIPELINE_STATE_DESC m_ComputeStateDesc;
 };

@@ -61,6 +61,7 @@ void RootSignatureFactory::AddDefaultStaticSampler(UINT shaderRegister, UINT reg
 }
 
 void RootSignatureFactory::AddExtensions(ExtensionContext* extensions) {
+	//AMD
 	if (extensions->Vendor == AMD_VENDOR_ID) {
 		CD3DX12_ROOT_PARAMETER amdParam;
 		//range must live until the root signature is created

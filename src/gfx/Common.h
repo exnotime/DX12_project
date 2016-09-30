@@ -10,7 +10,9 @@
 #include <amd_ags.h>
 
 #define AMD_VENDOR_ID 4098
-#define NVIDIA_VENDOR_ID 3333 //TODO: Lookup the actual id
+#define NVIDIA_VENDOR_ID 4318
+#define NVIDIA_EXTENSION_SPACE 10
+#define NVIDIA_EXTENSION_SLOT 1
 
 using Microsoft::WRL::ComPtr;
 #define HR(x,errorstring) if(x != S_OK) {MessageBox(NULL, errorstring, L"DX12Error", MB_OK);}
@@ -55,8 +57,6 @@ struct DX12Fence {
 	UINT64 FenceValues[g_FrameCount];
 	HANDLE FenceEvent;
 };
-
-
 
 static void WaitForGPU(DX12Fence& fence, DX12Context context, UINT frameIndex) {
 	context.CommandQueue->Signal(fence.Fence.Get(), fence.FenceValues[frameIndex]);

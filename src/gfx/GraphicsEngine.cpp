@@ -5,9 +5,10 @@
 #include "ModelBank.h"
 #include "MaterialBank.h"
 #include "BufferManager.h"
-
+//shader extensions
 #include <amd_ags.h>
-
+#include <NVAPI/nvapi.h>
+#include <NVAPI/nvShaderExtnEnums.h>
 GraphicsEngine::GraphicsEngine() {
 
 }
@@ -17,6 +18,14 @@ GraphicsEngine::~GraphicsEngine() {
 	g_MaterialBank.ClearMaterials();
 	g_ModelBank.Clear();
 	CloseHandle(m_Fence.FenceEvent);
+
+	if (m_Context.Extensions.Vendor == AMD_VENDOR_ID) {
+		agsDeInit(m_Context.Extensions.AGSContext);
+	}
+	else if (m_Context.Extensions.Vendor == NVIDIA_VENDOR_ID) {
+		NvAPI_Unload();
+	}
+
 }
 
 void GraphicsEngine::CreateExtensionContext() {
@@ -35,6 +44,12 @@ void GraphicsEngine::CreateExtensionContext() {
 		}
 	} else if (adapterInfo.VendorId == NVIDIA_VENDOR_ID) {
 		//set up NVAPI
+		if (NvAPI_Initialize() != NVAPI_OK) {
+			HR(E_FAIL, L"This computer can not run this program");
+			exit(0);
+		}
+		m_Context.Extensions.Vendor = NVIDIA_VENDOR_ID;
+		m_Context.Extensions.AGSContext = nullptr;
 	} else {
 		//Cant run this T.T
 		HR(E_FAIL, L"This computer can not run this program");
@@ -53,10 +68,18 @@ void GraphicsEngine::CheckExtensions() {
 				AGS_DX12_EXTENSION_INTRINSIC_READLANE | AGS_DX12_EXTENSION_INTRINSIC_SWIZZLE;
 
 			if (!(extensions & extensionsWeWant)) {
-				HR(E_FAIL, L"The GPU doesn not support the extentions we want");
+				HR(E_FAIL, L"The GPU doesn not support the extentions this application needs");
 				exit(0);
 			}
 		}
+	} else if (m_Context.Extensions.Vendor == NVIDIA_VENDOR_ID) {
+		bool supported;
+		NvAPI_D3D12_IsNvShaderExtnOpCodeSupported(m_Context.Device.Get(), NV_EXTN_OP_VOTE_BALLOT, &supported);
+		if(!supported) {
+			HR(E_FAIL, L"The GPU doesn not support the extentions this application needs");
+			exit(0);
+		}
+
 	}
 }
 

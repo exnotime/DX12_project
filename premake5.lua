@@ -40,7 +40,7 @@ solution "DX12_Project"
 		files { "src/**"}
 		includedirs { "include/*", "src/*" }
 		systemversion "10.0.14393.0"
-		links { "glfw3", "d3d12", "dxgi", "d3dcompiler", "assimp", "amd_ags_x64"}
+		links { "glfw3", "d3d12", "dxgi", "d3dcompiler", "assimp", "amd_ags_x64", "nvapi64" }
 	configuration { "Release" }
 		links {"DirectXTex", "BulletCollision", "BulletDynamics", "BulletLinearMath", "angelscript64", "as_integration"}
 	configuration {"Debug"}

@@ -47,7 +47,7 @@ void FullscreenPass::Init(DX12Context* context) {
 	pipeFact.SetRenderTargetFormats(formats);
 	pipeFact.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 	pipeFact.SetDepthStencilFormat(DXGI_FORMAT_D24_UNORM_S8_UINT);
-	m_PipelineState = pipeFact.Create(context->Device.Get());
+	m_PipelineState = pipeFact.CreateGraphicsState(context);
 
 	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
 	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;

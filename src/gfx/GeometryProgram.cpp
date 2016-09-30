@@ -59,7 +59,7 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	formats.push_back(DXGI_FORMAT_R8G8B8A8_UNORM);
 	pipeStateFact.SetRenderTargetFormats(formats);
 	pipeStateFact.SetAllShaders(state->Shader);
-	state->PipelineState = pipeStateFact.Create(context->Device.Get());
+	state->PipelineState = pipeStateFact.CreateGraphicsState(context);
 
 	state->DiffSkyTex.Init("assets/cubemaps/skybox_irr.dds", context);
 	state->SpecSkyTex.Init("assets/cubemaps/skybox_rad.dds", context);
