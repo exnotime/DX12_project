@@ -50,8 +50,9 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 	for (auto& mesh : mod.Meshes) {
 		glm::vec4 max = input.World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
 		glm::vec4 min = input.World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
+		bool frustum = AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
 
-		if (AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z))) {
+		if (frustum) {
 			drawCall.DrawIndex = m_InstanceCounter;
 			drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
 
@@ -119,6 +120,16 @@ void RenderQueue::AddView(const View& v) {
 	for (int i = 0; i < 6; ++i) {
 		m_FrustumPlanes[i] = glm::normalize(m_FrustumPlanes[i]);
 	}
+	glm::mat4 invProj = glm::inverse(v.Camera.ProjView);
+	m_FrustumCorners[0] = invProj * glm::vec4(1, 1, 1, 1); m_FrustumCorners[0] /= m_FrustumCorners[0].w;
+	m_FrustumCorners[1] = invProj * glm::vec4(-1,  1,  1, 1); m_FrustumCorners[1] /= m_FrustumCorners[1].w;
+	m_FrustumCorners[2] = invProj * glm::vec4( 1, -1,  1, 1); m_FrustumCorners[2] /= m_FrustumCorners[2].w;
+	m_FrustumCorners[3] = invProj * glm::vec4( 1,  1, -1, 1); m_FrustumCorners[3] /= m_FrustumCorners[3].w;
+	m_FrustumCorners[4] = invProj * glm::vec4(-1, -1,  1, 1); m_FrustumCorners[4] /= m_FrustumCorners[4].w;
+	m_FrustumCorners[5] = invProj * glm::vec4( 1, -1, -1, 1); m_FrustumCorners[5] /= m_FrustumCorners[5].w;
+	m_FrustumCorners[6] = invProj * glm::vec4(-1,  1, -1, 1); m_FrustumCorners[6] /= m_FrustumCorners[6].w;
+	m_FrustumCorners[7] = invProj * glm::vec4(-1, -1, -1, 1); m_FrustumCorners[7] /= m_FrustumCorners[7].w;
+
 }
 
 bool RenderQueue::AABBvsFrustum(const glm::vec3& max, const glm::vec3 min) {
@@ -135,5 +146,13 @@ bool RenderQueue::AABBvsFrustum(const glm::vec3& max, const glm::vec3 min) {
 		out += glm::dot(m_FrustumPlanes[i], glm::vec4(max.x, max.y, max.z, 1.0f)) < 0.0f ? 1 : 0;
 		if (out == 8) return false;
 	}
+	int out;
+	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x > max.x) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x < min.x) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].y > max.y) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].y < min.y) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z > max.z) ? 1 : 0); if (out == 8) return false;
+	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z < min.z) ? 1 : 0); if (out == 8) return false;
+
 	return true;
 }

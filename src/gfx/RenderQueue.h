@@ -74,6 +74,7 @@ class RenderQueue {
 
 	std::vector<View>					m_Views;
 	glm::vec4							m_FrustumPlanes[6];
+	glm::vec4							m_FrustumCorners[8];
 
 	std::vector<ShaderInput>			m_ShaderInputBuffer;
 	
