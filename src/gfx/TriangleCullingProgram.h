@@ -1,14 +1,28 @@
 #pragma once
 #include "DX12Common.h"
-
+#include "Shader.h"
+#include "RenderQueue.h"
 class TriangleCullingProgram {
 public:
 	TriangleCullingProgram();
 	~TriangleCullingProgram();
 	void Init(DX12Context* context);
-	void Disbatch();
+	void Disbatch(RenderQueue* queue);
 private:
-	DX12Context* m_Context;
-	ComPtr<ID3D12RootSignature> m_RootSignature;
-	ComPtr<ID3D12PipelineState> m_PipelineState;
+
+	enum ROOT_PARAMS {
+		INPUT_DESC,
+		INPUT_COUNT_C,
+		ROOT_PARAM_COUNT
+	};
+
+	DX12Context*					m_Context;
+	Shader							m_Shader;
+	ComPtr<ID3D12RootSignature>		m_RootSignature;
+	ComPtr<ID3D12PipelineState>		m_PipelineState;
+	ComPtr<ID3D12DescriptorHeap>	m_GPUDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap>	m_CPUDescriptorHeap;
+	ComPtr<ID3D12Resource>			m_OutputBuffer;
+	ComPtr<ID3D12Resource>			m_CounterBuffer;
+	UINT							m_DescIncSize;
 };

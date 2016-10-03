@@ -197,8 +197,8 @@ void BufferManager::UpdateBuffer(const std::string& name, void* data, UINT size)
 			memcpy(gpuPtr, data, size);
 			buffer->second->UploadHeap->Unmap(0, nullptr);
 			m_Context->CopyCommandList->CopyBufferRegion(buffer->second->Resource.Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
-			//m_Context->CommandList->ResourceBarrier(1,
-			//	&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+			//m_Context->CommandList->ResourceBarrier(1,&CD3DX12_RESOURCE_BARRIER::Transition(
+			//	buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 			break;
 		}
 		case INDIRECT_BUFFER: {
@@ -209,8 +209,8 @@ void BufferManager::UpdateBuffer(const std::string& name, void* data, UINT size)
 			memcpy(gpuPtr, data, size);
 			buffer->second->UploadHeap->Unmap(0, nullptr);
 			m_Context->CopyCommandList->CopyBufferRegion(buffer->second->Resource.Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
-			//m_Context->CommandList->ResourceBarrier(1,
-			//	&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
+			//m_Context->CommandList->ResourceBarrier(1,&CD3DX12_RESOURCE_BARRIER::Transition(
+			//	buffer->second->Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
 			break;
 		}
 		default:
@@ -259,4 +259,15 @@ ID3D12Resource* BufferManager::GetBufferResource(const std::string& name) {
 		return buffer->second->Resource.Get();
 	}
 	return nullptr;
+}
+
+void BufferManager::SwitchState(const std::string& name, D3D12_RESOURCE_STATES state) {
+	auto& buffer = m_Buffers.find(name);
+	if (buffer != m_Buffers.end()) {
+		if (state == buffer->second->State)
+			return;
+		m_Context->CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+			buffer->second->Resource.Get(), buffer->second->State, state));
+		buffer->second->State = state;
+	}
 }

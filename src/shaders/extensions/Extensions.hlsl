@@ -11,6 +11,7 @@ typedef uint2 BitMask;
 #define ReadLaneFloat(x,y) AmdExtD3DShaderIntrinsics_ReadlaneF(x, y)
 #define ReadLaneUInt(x,y) AmdExtD3DShaderIntrinsics_ReadlaneU(x, y)
 
+#define WAVE_SIZE 64
 //wrappers
 float WaveMax(float val){
 	return AmdExtD3DShaderIntrinsics_Max3F(val, 0, 0);
@@ -36,19 +37,16 @@ uint LaneId(){
 #define WaveAny(x) AmdExtD3DShaderIntrinsics_BallotAny(x)
 #define WaveAll(x) AmdExtD3DShaderIntrinsics_BallotAll(x)
 #define MBCount(x) AmdExtD3DShaderIntrinsics_MBCnt(x)
-
 //Naive BitCount think of other method later
-uint BitCount(BitMask bm) {
-	//might need to unroll
+uint BitCount32(uint bits){
 	uint count = 0;
-	for(int i = 1; i < NV_WARP_SIZE + 1; i++){
-		//8-bit example
-		// 00110010 << 6
-		// 10000000 >> 7
-		// cnt += 00000001
-		count += ((NV_WARP_SIZE - 1) >> ((NV_WARP_SIZE - i) << bm)) ;
-	}
+	for(int i = 1; i < 32 + 1; i++)
+		count += ((32 - 1) >> ((32 - i) << bits));
 	return count;
+}
+
+uint BitCount(BitMask bm) {
+	return BitCount32(bm.x) + BitCount32(bm.y);
 }
 
 #endif
@@ -57,7 +55,7 @@ uint BitCount(BitMask bm) {
 
 #define NV_SHADER_EXTN_SLOT u1
 #define NV_SHADER_EXTN_REGISTER_SPACE space10
-
+#define WAVE_SIZE NV_WARP_SIZE
 #include "extensions/nvHLSLExtns.h"
 
 typedef int Predicate;
@@ -119,6 +117,7 @@ float WaveMax(float3 val){
 	return waveMax;
 }
 */
+
 float WaveMin(float val){
 	float waveMin = val;
 	waveMin = min(waveMin, NvShflXor(waveMin, 16));
@@ -138,6 +137,7 @@ uint WaveMin(uint val){
 	waveMin = min(waveMin, NvShflXor(waveMin, 1));
 	return waveMin;
 }
+
 /*
 float WaveMin(float3 val){
 	float3 waveMin = val;
@@ -168,22 +168,15 @@ uint BitCount(BitMask bm){
 		// 00110010 << 6
 		// 10000000 >> 7
 		// cnt += 00000001
-		count += ((NV_WARP_SIZE - 1) >> ((NV_WARP_SIZE - i) << bm)) ;
+		count += ((NV_WARP_SIZE - 1) >> ((NV_WARP_SIZE - i) << bm));
 	}
 	return count;
 }
 //Naive MBCount think of other method later
 uint MBCount(uint laneId, BitMask bm){
-	//might need to unroll
-	uint count = 0;
-	for(int i = 1; i < laneId + 1; i++){
-		//8-bit example
-		// 00110010 << 6
-		// 10000000 >> 7
-		// cnt += 00000001
-		count += ((NV_WARP_SIZE - 1) >> ((NV_WARP_SIZE - i) << bm)) ;
-	}
-	return count;
+	BitMask laneMask = pow(2, laneId + 1) - 1;
+	laneMask &= bm;
+	return BitCount(laneMask);
 }
 
 #endif

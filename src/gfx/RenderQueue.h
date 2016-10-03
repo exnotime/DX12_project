@@ -39,6 +39,7 @@ struct IndirectDrawCall {
 	UINT DrawIndex;
 	UINT MaterialOffset;
 	D3D12_DRAW_INDEXED_ARGUMENTS DrawArgs;
+	UINT Padding;
 };
 
 class RenderQueue {

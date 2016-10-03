@@ -114,7 +114,6 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 
 }
 
-
 void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* state, RenderQueue* queue) {
 	cmdList->SetGraphicsRootSignature(state->RootSignature.Get());
 	cmdList->SetPipelineState(state->PipelineState.Get());
@@ -129,6 +128,11 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* st
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(state->RenderDescHeap->GetGPUDescriptorHandleForHeapStart());
 	cmdList->SetGraphicsRootDescriptorTable(ENVIROMENT_DESC_TABLE, gpuHandle);
 	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
+
+	g_BufferManager.SwitchState("CulledIndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+
 	//draw everything
-	cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(), g_BufferManager.GetBufferResource("IndirectBuffer"), 0, nullptr, 0);
+	cmdList->ExecuteIndirect(state->CommandSignature.Get(), 100,
+		g_BufferManager.GetBufferResource("CulledIndirectBuffer"), 0, nullptr, 0);
 }

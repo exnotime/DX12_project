@@ -213,16 +213,16 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	m_DepthProgram.Init(&m_Context, screenSize);
 
 	m_HiZProgram.Init(&m_Context, m_ScreenSize);
-
 	m_FullscreenPass.Init(&m_Context);
-
 	m_FullscreenPass.CreateSRV(&m_Context, m_HiZProgram.GetResource(), DXGI_FORMAT_R32_FLOAT, m_HiZProgram.GetMipCount());
-
+	
 	g_BufferManager.Init(&m_Context);
 	g_BufferManager.CreateConstBuffer("cbPerFrame", nullptr, sizeof(cbPerFrame));
 	g_MaterialBank.Initialize(&m_Context);
 	g_ModelBank.Init(&m_Context);
 	m_RenderQueue.Init(&m_Context);
+
+	m_CullingProgram.Init(&m_Context);
 
 	m_Profiler.Init(&m_Context);
 
@@ -340,6 +340,8 @@ void GraphicsEngine::Render() {
 	m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
 
 	m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
+
+	m_CullingProgram.Disbatch(&m_RenderQueue);
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
 	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());

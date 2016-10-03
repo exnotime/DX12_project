@@ -8,6 +8,7 @@
 #include "GPUProfiler.h"
 #include "FullscreenPass.h"
 #include "HiZProgram.h"
+#include "TriangleCullingProgram.h"
 
 #define SIGNAL_BEGIN_COPY 0
 #define SIGNAL_END_COPY 1
@@ -62,4 +63,5 @@ private:
 
 	FullscreenPass m_FullscreenPass;
 	HiZProgram m_HiZProgram;
+	TriangleCullingProgram m_CullingProgram;
 };

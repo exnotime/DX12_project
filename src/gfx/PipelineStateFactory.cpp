@@ -40,8 +40,8 @@ void PipelineStateFactory::SetShader(const D3D12_SHADER_BYTECODE& byteCode, UINT
 			m_PipelineStateDesc.DS = byteCode;
 			break;
 		case COMPUTE_SHADER_BIT:
-			break;
 			m_ComputeStateDesc.CS = byteCode;
+			break;
 		default:
 			break;
 	}
@@ -120,6 +120,10 @@ ComPtr<ID3D12PipelineState> PipelineStateFactory::CreateComputeState(DX12Context
 	ComPtr<ID3D12PipelineState> pipelineState;
 
 	m_ComputeStateDesc.pRootSignature = m_PipelineStateDesc.pRootSignature;
+	m_ComputeStateDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	m_ComputeStateDesc.NodeMask = 0;
+	m_ComputeStateDesc.CachedPSO.pCachedBlob = nullptr;
+	m_ComputeStateDesc.CachedPSO.CachedBlobSizeInBytes = 0;
 
 	if (context->Extensions.Vendor == NVIDIA_VENDOR_ID) {
 		NVAPI_D3D12_PSO_SET_SHADER_EXTENSION_SLOT_DESC extensionDesc;

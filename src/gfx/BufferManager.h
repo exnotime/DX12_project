@@ -24,6 +24,8 @@ public:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(const std::string& name);
 	D3D12_GPU_VIRTUAL_ADDRESS GetGPUHandle(const std::string& name);
 	ID3D12Resource* GetBufferResource(const std::string& name);
+	void SwitchState(const std::string& name, D3D12_RESOURCE_STATES state);
+
 private:
 	~BufferManager();
 
@@ -32,6 +34,7 @@ private:
 		ComPtr<ID3D12Resource> UploadHeap;
 		UINT Offset;
 		BUFFER_TYPE Type;
+		D3D12_RESOURCE_STATES State;
 	};
 
 	DX12Context* m_Context;

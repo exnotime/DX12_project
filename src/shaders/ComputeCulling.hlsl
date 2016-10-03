@@ -1,23 +1,21 @@
 #include "extensions/Extensions.hlsl"
 
-#struct DrawCallArgs{
+struct DrawCallArgs {
 	uint DrawIndex;
 	uint MaterialIndex;
-
 	uint IndexCount;
 	uint InstanceCount;
 	uint IndexOffset;
 	uint BaseVertex;
 	uint BaseInstance;
+	uint Padding;
 };
 
 StructuredBuffer<DrawCallArgs> g_DrawArgsBuffer : register(t0);
 
 RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
 
-RWBuffer AtomicBuffer : register(u1){
-	uint g_GlobalSlot;
-};
+globallycoherent RWBuffer<uint> g_Counter : register(u1);
 
 cbuffer constants : register(b0){
 	uint g_DrawCallCount;
@@ -25,33 +23,36 @@ cbuffer constants : register(b0){
 
 groupshared uint g_WorkGroupSlot;
 
-[numthreads(64,1,1)]
+[numthreads(WAVE_SIZE,1,1)]
 void CSMain(uint groupIndex : SV_GroupIndex ) {
 	uint laneId = LaneId();
 
 	if(groupIndex == 0)
 		g_WorkGroupSlot = 0;
 
-	if(groupIndex < g_DrawCallCount) {
-		
-		const Predicate laneActive = g_DrawArgsBuffer[groupIndex].IndexCount < 30;
+GroupMemoryBarrierWithGroupSync();
 
-		BitMask ballot = WaveBallot(laneActive);
+	const Predicate laneActive = g_DrawArgsBuffer[groupIndex].IndexCount <= 36;
 
-		uint outCount = BitCount(ballot);
-		uint localSlot = MBCount(ballot);
-		uint groupSlot;
-		if(laneId == 0){
-			InterlockedAdd(g_WorkGroupSlot, outCount, groupSlot);
-		}
-		
-		ReadFirstLane(groupSlot);
+	BitMask ballot = WaveBallot(laneActive);
 
-		if(groupIndex == 0)
-			InterlockedAdd(g_GlobalSlot, outCount, groupSlot);
+	uint outCount = BitCount(ballot);
+	uint localSlot = MBCount(ballot);
 
-		g_OutDrawArgs[localSlot + groupSlot + g_GlobalSlot] = g_DrawArgsBuffer[groupIndex];
+	uint groupSlot = 0;
+	if(laneId == 0){
+		InterlockedAdd(g_WorkGroupSlot, outCount, groupSlot);
+	}
+	
+	groupSlot = ReadFirstLaneUInt(groupSlot);
+
+GroupMemoryBarrierWithGroupSync();
+
+	if(groupIndex == 0){
+		InterlockedAdd(g_Counter[0], groupSlot, g_WorkGroupSlot);
+		g_Counter[0] += groupSlot;
 	}
 
-
+	if(laneActive)
+		g_OutDrawArgs[localSlot + groupSlot + g_WorkGroupSlot] = g_DrawArgsBuffer[groupIndex];
 }
