@@ -15,24 +15,27 @@ StructuredBuffer<DrawCallArgs> g_DrawArgsBuffer : register(t0);
 
 RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
 
-globallycoherent RWBuffer<uint> g_Counter : register(u1);
+globallycoherent RWByteAddressBuffer counterBuffer : register(u1);
 
 cbuffer constants : register(b0){
 	uint g_DrawCallCount;
 };
 
-groupshared uint g_WorkGroupSlot;
+groupshared uint g_WorkGroupCount;
+groupshared uint g_DisbatchSlot;
 
-[numthreads(WAVE_SIZE,1,1)]
-void CSMain(uint groupIndex : SV_GroupIndex ) {
+[numthreads(64,1,1)]
+void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_DispatchThreadID ) {
 	uint laneId = LaneId();
 
-	if(groupIndex == 0)
-		g_WorkGroupSlot = 0;
-
+	if(groupIndex == 0){
+		g_WorkGroupCount = 0;
+		g_DisbatchSlot = 0;
+	}
+	uint index = disbatchThreadID.x;
 GroupMemoryBarrierWithGroupSync();
 
-	const Predicate laneActive = g_DrawArgsBuffer[groupIndex].IndexCount <= 36;
+	const Predicate laneActive = g_DrawArgsBuffer[index].IndexCount <= 300;
 
 	BitMask ballot = WaveBallot(laneActive);
 
@@ -41,18 +44,16 @@ GroupMemoryBarrierWithGroupSync();
 
 	uint groupSlot = 0;
 	if(laneId == 0){
-		InterlockedAdd(g_WorkGroupSlot, outCount, groupSlot);
+		InterlockedAdd(g_WorkGroupCount, outCount, groupSlot);
 	}
 	
 	groupSlot = ReadFirstLaneUInt(groupSlot);
 
+	if(groupIndex == 0){
+		counterBuffer.InterlockedAdd(0, g_WorkGroupCount, g_DisbatchSlot);
+	}
 GroupMemoryBarrierWithGroupSync();
 
-	if(groupIndex == 0){
-		InterlockedAdd(g_Counter[0], groupSlot, g_WorkGroupSlot);
-		g_Counter[0] += groupSlot;
-	}
-
 	if(laneActive)
-		g_OutDrawArgs[localSlot + groupSlot + g_WorkGroupSlot] = g_DrawArgsBuffer[groupIndex];
+		g_OutDrawArgs[localSlot + groupSlot + g_DisbatchSlot] = g_DrawArgsBuffer[index];
 }

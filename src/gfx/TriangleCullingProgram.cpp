@@ -60,28 +60,8 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	context->Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_CPUDescriptorHeap));
 
-	//D3D12_RESOURCE_DESC resourceDesc = {};
-	//resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	//resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-	//resourceDesc.Alignment = 0;
-	//resourceDesc.Height = 1;
-	//resourceDesc.DepthOrArraySize = 1;
-	//resourceDesc.MipLevels = 1;
-	//resourceDesc.SampleDesc.Count = 1;
-	//resourceDesc.SampleDesc.Quality = 0;
-	//resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	//resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-	//resourceDesc.Width = sizeof(IndirectDrawCall) * 10000;
-
-	//context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-	//	&resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&m_OutputBuffer));
-
-	//CD3DX12_RESOURCE_DESC counterDesc = CD3DX12_RESOURCE_DESC::Buffer(4096, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-	//context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-	//	&counterDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&m_CounterBuffer));
-
 	g_BufferManager.CreateStructuredBuffer("CulledIndirectBuffer", nullptr, sizeof(IndirectDrawCall) * 10000, sizeof(IndirectDrawCall));
-	g_BufferManager.CreateStructuredBuffer("CullingCounterBuffer", nullptr, 4096, sizeof(UINT));
+	g_BufferManager.CreateStructuredBuffer("CullingCounterBuffer", nullptr, 32 * sizeof(UINT), sizeof(UINT));
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	CD3DX12_CPU_DESCRIPTOR_HANDLE gpuHandle(m_GPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -112,20 +92,15 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 	uavDesc = {};
 	uavDesc.Buffer.CounterOffsetInBytes = 0;
 	uavDesc.Buffer.FirstElement = 0;
-	uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-	uavDesc.Buffer.NumElements = 1024;
-	uavDesc.Buffer.StructureByteStride = sizeof(UINT);
-	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+	uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
+	uavDesc.Buffer.NumElements = 32;
+	uavDesc.Buffer.StructureByteStride = 0;
+	uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 	context->Device->CreateUnorderedAccessView(g_BufferManager.GetBufferResource("CullingCounterBuffer"), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescIncSize));
 	context->Device->CreateUnorderedAccessView(g_BufferManager.GetBufferResource("CullingCounterBuffer"), nullptr, &uavDesc, gpuHandle.Offset(1, m_DescIncSize));
 
 	m_Context = context;
-
-#ifdef _DEBUG
-	//m_CounterBuffer->SetName(L"CounterBuffer");
-	//m_OutputBuffer->SetName(L"CulledIndirectBuffer");
-#endif
 }
 
 void TriangleCullingProgram::Disbatch(RenderQueue* queue) {
@@ -135,12 +110,13 @@ void TriangleCullingProgram::Disbatch(RenderQueue* queue) {
 
 	//clear uav counter
 	UINT vals[4] = { 0,0,0,0 };
-	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 2, m_DescIncSize);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_GPUDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_DescIncSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_DescIncSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_GPUDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_DescIncSize);
 
 	ID3D12GraphicsCommandList* cmdList = m_Context->CommandList.Get();
 
-	cmdList->ClearUnorderedAccessViewUint(gpuHandle, cpuHandle, g_BufferManager.GetBufferResource("CullingCounterBuffer"), vals, 0, nullptr);
+	cmdList->ClearUnorderedAccessViewUint(gpuHandle, cpuHandle, g_BufferManager.GetBufferResource("CulledIndirectBuffer"), vals, 0, nullptr);
+	cmdList->ClearUnorderedAccessViewUint(gpuHandle.Offset(1, m_DescIncSize), cpuHandle.Offset(1, m_DescIncSize), g_BufferManager.GetBufferResource("CullingCounterBuffer"), vals, 0, nullptr);
 	
 	cmdList->SetPipelineState(m_PipelineState.Get());
 	cmdList->SetComputeRootSignature(m_RootSignature.Get());
@@ -151,7 +127,8 @@ void TriangleCullingProgram::Disbatch(RenderQueue* queue) {
 	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, queue->GetDrawCount(), 0);
 	cmdList->SetComputeRootDescriptorTable(INPUT_DESC, m_GPUDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 	
-	const int workGroups = (queue->GetDrawCount() + 64 - 1) / 64;
+	const UINT workGroupSize = 64;
+	const int workGroups = (queue->GetDrawCount() + workGroupSize - 1) / workGroupSize;
 
 	cmdList->Dispatch(workGroups, 1, 1);
 }

@@ -38,10 +38,10 @@ uint LaneId(){
 #define WaveAll(x) AmdExtD3DShaderIntrinsics_BallotAll(x)
 #define MBCount(x) AmdExtD3DShaderIntrinsics_MBCnt(x)
 //Naive BitCount think of other method later
-uint BitCount32(uint bits){
+uint BitCount32(uint bits) {
 	uint count = 0;
-	for(int i = 1; i < 32 + 1; i++)
-		count += ((32 - 1) >> ((32 - i) << bits));
+	for (int i = 1; i < 32 + 1; i++)
+		count += ((bits << (32 - i)) >> (32 - 1));
 	return count;
 }
 
@@ -96,27 +96,6 @@ uint WaveMax(uint val){
 	waveMax = max(waveMax, NvShflXor(waveMax, 1));
 	return waveMax;
 }
-/*
-uint WaveMax(uint3 val){
-	uint3 waveMax = val;
-	waveMax = max(waveMax, NvShflXor(waveMax, 16));
-	waveMax = max(waveMax, NvShflXor(waveMax, 8));
-	waveMax = max(waveMax, NvShflXor(waveMax, 4));
-	waveMax = max(waveMax, NvShflXor(waveMax, 2));
-	waveMax = max(waveMax, NvShflXor(waveMax, 1));
-	return waveMax;
-}
-
-float WaveMax(float3 val){
-	float3 waveMax = val;
-	waveMax = max(waveMax, NvShflXor(waveMax, 16));
-	waveMax = max(waveMax, NvShflXor(waveMax, 8));
-	waveMax = max(waveMax, NvShflXor(waveMax, 4));
-	waveMax = max(waveMax, NvShflXor(waveMax, 2));
-	waveMax = max(waveMax, NvShflXor(waveMax, 1));
-	return waveMax;
-}
-*/
 
 float WaveMin(float val){
 	float waveMin = val;
@@ -137,28 +116,6 @@ uint WaveMin(uint val){
 	waveMin = min(waveMin, NvShflXor(waveMin, 1));
 	return waveMin;
 }
-
-/*
-float WaveMin(float3 val){
-	float3 waveMin = val;
-	waveMin = min(waveMin, NvShflXor(waveMin, 16));
-	waveMin = min(waveMin, NvShflXor(waveMin, 8));
-	waveMin = min(waveMin, NvShflXor(waveMin, 4));
-	waveMin = min(waveMin, NvShflXor(waveMin, 2));
-	waveMin = min(waveMin, NvShflXor(waveMin, 1));
-	return waveMin;
-}
-
-uint WaveMin(uint3 val){
-	uint3 waveMin = val;
-	waveMin = min(waveMin, NvShflXor(waveMin, 16));
-	waveMin = min(waveMin, NvShflXor(waveMin, 8));
-	waveMin = min(waveMin, NvShflXor(waveMin, 4));
-	waveMin = min(waveMin, NvShflXor(waveMin, 2));
-	waveMin = min(waveMin, NvShflXor(waveMin, 1));
-	return waveMin;
-}
-*/
 //Naive BitCount think of other method later
 uint BitCount(BitMask bm){
 	//might need to unroll
@@ -168,7 +125,7 @@ uint BitCount(BitMask bm){
 		// 00110010 << 6
 		// 10000000 >> 7
 		// cnt += 00000001
-		count += ((NV_WARP_SIZE - 1) >> ((NV_WARP_SIZE - i) << bm));
+		count += ((bm << (NV_WARP_SIZE - i)) >> (NV_WARP_SIZE - 1));
 	}
 	return count;
 }

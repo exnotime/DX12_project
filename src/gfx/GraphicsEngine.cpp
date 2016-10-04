@@ -128,7 +128,7 @@ void GraphicsEngine::CreateContext() {
 }
 
 void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
-	m_ScreenSize = screenSize * 1.0f;
+	m_ScreenSize = screenSize * 2.0f;
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
 	m_Viewport.MinDepth = 0.0f;
@@ -210,7 +210,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	CreateSwapChain(hWnd, screenSize);
 
 	InitGeometryState(&m_ProgramState, &m_Context);
-	m_DepthProgram.Init(&m_Context, screenSize);
+	m_DepthProgram.Init(&m_Context, m_ScreenSize);
 
 	m_HiZProgram.Init(&m_Context, m_ScreenSize);
 	m_FullscreenPass.Init(&m_Context);
@@ -341,6 +341,8 @@ void GraphicsEngine::Render() {
 
 	m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
 
+	m_Profiler.Step(m_Context.CommandList.Get(), "Culling");
+
 	m_CullingProgram.Disbatch(&m_RenderQueue);
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
@@ -352,16 +354,6 @@ void GraphicsEngine::Render() {
 	m_Profiler.Step(m_Context.CommandList.Get(), "Geometry");
 
 	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue);
-
-	/*m_Profiler.Step(m_Context.CommandList.Get(), "FullScreen");
-
-	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_HiZProgram.GetResource(),
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-
-	m_FullscreenPass.Render(&m_Context);
-
-	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_HiZProgram.GetResource(),
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));*/
 
 	m_Profiler.End(m_Context.CommandList.Get());
 

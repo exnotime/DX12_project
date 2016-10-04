@@ -50,7 +50,7 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 	for (auto& mesh : mod.Meshes) {
 		glm::vec4 max = input.World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
 		glm::vec4 min = input.World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
-		bool frustum = AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
+		bool frustum = true;  //AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
 
 		if (frustum) {
 			drawCall.DrawIndex = m_InstanceCounter;
@@ -146,6 +146,7 @@ bool RenderQueue::AABBvsFrustum(const glm::vec3& max, const glm::vec3 min) {
 		out += glm::dot(m_FrustumPlanes[i], glm::vec4(max.x, max.y, max.z, 1.0f)) < 0.0f ? 1 : 0;
 		if (out == 8) return false;
 	}
+
 	int out;
 	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x > max.x) ? 1 : 0); if (out == 8) return false;
 	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x < min.x) ? 1 : 0); if (out == 8) return false;
