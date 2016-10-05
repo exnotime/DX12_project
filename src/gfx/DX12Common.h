@@ -19,8 +19,10 @@ static const UINT g_FrameCount = 2;
 
 struct ExtensionContext {
 	union {
-		AGSContext* AGSContext;
+		AGSContext* AGSContext; //context for all ags functions
+		
 	};
+	ComPtr<ID3D12Resource> NvExtResource; //resource to contain the uav needed for nvidia extentions
 	int Vendor;
 	int WaveSize;
 };

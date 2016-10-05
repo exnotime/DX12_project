@@ -55,5 +55,5 @@ GroupMemoryBarrierWithGroupSync();
 GroupMemoryBarrierWithGroupSync();
 
 	if(laneActive)
-		g_OutDrawArgs[localSlot + groupSlot + g_DisbatchSlot] = g_DrawArgsBuffer[index];
+		g_OutDrawArgs[index].DrawIndex = laneId;
 }

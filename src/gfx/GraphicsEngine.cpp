@@ -26,7 +26,6 @@ GraphicsEngine::~GraphicsEngine() {
 	else if (m_Context.Extensions.Vendor == NVIDIA_VENDOR_ID) {
 		NvAPI_Unload();
 	}
-
 }
 
 void GraphicsEngine::CreateExtensionContext() {
@@ -82,7 +81,9 @@ void GraphicsEngine::CheckExtensions() {
 			HR(E_FAIL, L"The GPU doesn not support the extentions this application needs");
 			exit(0);
 		}
-
+		CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(1024 * 8, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+		m_Context.Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
+			&resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&m_Context.Extensions.NvExtResource));
 	}
 }
 

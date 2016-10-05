@@ -128,6 +128,7 @@ ComPtr<ID3D12PipelineState> PipelineStateFactory::CreateComputeState(DX12Context
 	if (context->Extensions.Vendor == NVIDIA_VENDOR_ID) {
 		NVAPI_D3D12_PSO_SET_SHADER_EXTENSION_SLOT_DESC extensionDesc;
 		extensionDesc.baseVersion = NV_PSO_EXTENSION_DESC_VER;
+		extensionDesc.psoExtension = NV_PSO_EXTENSION::NV_PSO_SET_SHADER_EXTNENSION_SLOT_AND_SPACE;
 		extensionDesc.version = NV_SET_SHADER_EXTENSION_SLOT_DESC_VER;
 		extensionDesc.registerSpace = NVIDIA_EXTENSION_SPACE;
 		extensionDesc.uavSlot = NVIDIA_EXTENSION_SLOT;
