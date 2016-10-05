@@ -27,6 +27,7 @@ void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes, Extens
 			macros.push_back({ nullptr, nullptr });
 		} //NVIDIA
 		else if (extensions->Vendor == NVIDIA_VENDOR_ID) {
+			compileFlags &= ~D3DCOMPILE_SKIP_OPTIMIZATION;
 			macros.push_back({ "NVIDIA_USE_SHADER_INTRINSICS", "1" });
 			macros.push_back({ nullptr, nullptr });
 		}

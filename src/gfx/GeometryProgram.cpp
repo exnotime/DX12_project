@@ -131,7 +131,6 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* st
 
 	g_BufferManager.SwitchState("CulledIndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
-
 	//draw everything
 	cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(),
 		g_BufferManager.GetBufferResource("CulledIndirectBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0);

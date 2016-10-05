@@ -104,7 +104,7 @@ btRigidBody* PhysicsEngine::AddPhysicsObjectS(BASIC_SHAPE shape, float mass, glm
 	btVector3 inertia;
 	object->calculateLocalInertia(mass, inertia);
 	btRigidBody* body = new btRigidBody(mass, state, object, inertia);
-	body->setRestitution(0.0f);
+	body->setRestitution(1.0f);
 	m_World->addRigidBody(body);
 	return body;
 }

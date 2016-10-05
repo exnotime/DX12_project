@@ -33,7 +33,7 @@ void main(){
 	SpawnLevelObject(teapot, vec3(70, 20, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(0, 0.4f, 0, 1));
 	//SpawnLevelObject(bunny, vec3(0, 10, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-	SpawnPhysicsShape(int(CUBE), vec3(0, -1.6f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1000,1,1000), vec4(1.0f), 0.0f);
+	SpawnPhysicsShape(int(CUBE), vec3(0, -1.6f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(200,1,200), vec4(1.0f), 0.0f);
 	SpawnPhysicsShape(int(CUBE), vec3(22, 10, 10), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.1f, 0.1f, 60.0f), vec4(1.0f) , 0.0f);
 
 	for(int i = 0; i < SHAPE_COUNT; ++i){

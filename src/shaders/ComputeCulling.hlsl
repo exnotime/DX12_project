@@ -24,7 +24,7 @@ cbuffer constants : register(b0){
 groupshared uint g_WorkGroupCount;
 groupshared uint g_DisbatchSlot;
 
-[numthreads(64,1,1)]
+[numthreads(WAVE_SIZE,1,1)]
 void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_DispatchThreadID ) {
 	uint laneId = LaneId();
 
@@ -35,7 +35,7 @@ void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_Dispatc
 	uint index = disbatchThreadID.x;
 GroupMemoryBarrierWithGroupSync();
 
-	const Predicate laneActive = g_DrawArgsBuffer[index].IndexCount <= 300;
+	const Predicate laneActive = g_DrawArgsBuffer[index].DrawIndex != 0;
 
 	BitMask ballot = WaveBallot(laneActive);
 

@@ -1,4 +1,4 @@
-solution "DX12_Project"
+solution "Exjobb_GPU_Culling"
     configurations { "Debug", "Release" }
         flags{ "Unicode", "NoPCH" }
         libdirs { "lib" }
@@ -31,8 +31,8 @@ solution "DX12_Project"
         targetdir ( "bin/" .. "/release" )
 
 
-	project "DX12_Project"
-		targetname "DX12_Project"
+	project "Exjobb_Engine"
+		targetname "Engine"
 		debugdir ""
 		location ( location_path )
 		language "C++"

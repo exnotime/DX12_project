@@ -8,7 +8,6 @@
 #include <string>
 
 #include <amd_ags.h>
-
 #define AMD_VENDOR_ID 4098
 #define NVIDIA_VENDOR_ID 4318
 #define NVIDIA_EXTENSION_SPACE 10
@@ -23,6 +22,7 @@ struct ExtensionContext {
 		AGSContext* AGSContext;
 	};
 	int Vendor;
+	int WaveSize;
 };
 
 struct DX12Context {
@@ -43,6 +43,7 @@ struct DX12Context {
 	ComPtr<ID3D12Fence> CopyFence;
 	ComPtr<IDXGIFactory> DXGIFactory;
 	ExtensionContext Extensions;
+	UINT FrameIndex = 0;
 };
 
 struct DX12SwapChain {

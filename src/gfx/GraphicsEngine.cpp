@@ -15,7 +15,7 @@ GraphicsEngine::GraphicsEngine() {
 }
 
 GraphicsEngine::~GraphicsEngine() {
-	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
+	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 	g_MaterialBank.ClearMaterials();
 	g_ModelBank.Clear();
 	CloseHandle(m_Fence.FenceEvent);
@@ -42,6 +42,7 @@ void GraphicsEngine::CreateExtensionContext() {
 		if (agsInit(&context, nullptr, nullptr) == AGS_SUCCESS) {
 			m_Context.Extensions.Vendor = AMD_VENDOR_ID;
 			m_Context.Extensions.AGSContext = context;
+			m_Context.Extensions.WaveSize = 64;
 		}
 	} else if (adapterInfo.VendorId == NVIDIA_VENDOR_ID) {
 		//set up NVAPI
@@ -51,6 +52,7 @@ void GraphicsEngine::CreateExtensionContext() {
 		}
 		m_Context.Extensions.Vendor = NVIDIA_VENDOR_ID;
 		m_Context.Extensions.AGSContext = nullptr;
+		m_Context.Extensions.WaveSize = 32;
 	} else {
 		//Cant run this T.T
 		HR(E_FAIL, L"This computer can not run this program");
@@ -114,9 +116,9 @@ void GraphicsEngine::CreateContext() {
 		HR(m_Context.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&m_Context.ComputeAllocator[i])), L"Error creating compute allocator");
 	}
 
-	HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_Context.CommandAllocator[m_FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.CommandList)), L"Error creating command list");
-	HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, m_Context.CopyAllocator[m_FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.CopyCommandList)), L"Error creating copy list");
-	HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, m_Context.ComputeAllocator[m_FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.ComputeCommandList)), L"Error creating compute list");
+	HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.CommandList)), L"Error creating command list");
+	HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, m_Context.CopyAllocator[m_Context.FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.CopyCommandList)), L"Error creating copy list");
+	HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, m_Context.ComputeAllocator[m_Context.FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.ComputeCommandList)), L"Error creating compute list");
 
 	//m_Context.CommandList->Close();
 	m_Context.CopyCommandList->Close();
@@ -157,7 +159,7 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 	ComPtr<IDXGISwapChain> swapchain;
 	HR(m_Context.DXGIFactory->CreateSwapChain(m_Context.CommandQueue.Get(), &swapChainDesc, &swapchain), L"Error creating swapchain");
 	swapchain.As(&m_SwapChain.SwapChain);
-	m_FrameIndex = m_SwapChain.SwapChain->GetCurrentBackBufferIndex();
+	m_Context.FrameIndex = m_SwapChain.SwapChain->GetCurrentBackBufferIndex();
 
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 	rtvHeapDesc.NumDescriptors = g_FrameCount;
@@ -230,14 +232,14 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
 	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
 
-	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
+	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 
-	HR(m_Context.CommandAllocator[m_FrameIndex]->Reset(), L"Error resetting command allocator");
-	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_FrameIndex].Get(), nullptr), L"Error resetting command list");
+	HR(m_Context.CommandAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting command allocator");
+	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting command list");
 }
 
 void GraphicsEngine::ResizeFrameBuffer(const glm::vec2& screenSize) {
-	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
+	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 	//get window 
 	HWND hWnd;
 	m_SwapChain.SwapChain->GetHwnd(&hWnd);
@@ -262,7 +264,7 @@ void GraphicsEngine::ResizeFrameBuffer(const glm::vec2& screenSize) {
 	m_ScissorRect.bottom = (unsigned)screenSize.y;
 	m_ScissorRect.right = (unsigned)screenSize.x;
 
-	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
+	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 }
 
 void GraphicsEngine::PrepareForRender() {
@@ -273,15 +275,15 @@ void GraphicsEngine::PrepareForRender() {
 	m_Context.CommandList->Close();
 	ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
 	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
-	WaitForGPU(m_Fence, m_Context, m_FrameIndex);
+	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 
 	g_MaterialBank.FreeResources();
 	g_ModelBank.FreeUploadHeaps();
 }
 
 void GraphicsEngine::TransferFrame() {
-	HR(m_Context.CopyAllocator[m_FrameIndex]->Reset(), L"Error resetting copy allocator");
-	HR(m_Context.CopyCommandList->Reset(m_Context.CopyAllocator[m_FrameIndex].Get(), nullptr), L"Error resetting copy list");
+	HR(m_Context.CopyAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting copy allocator");
+	HR(m_Context.CopyCommandList->Reset(m_Context.CopyAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting copy list");
 
 	m_RenderQueue.UpdateBuffer();
 
@@ -298,10 +300,10 @@ void GraphicsEngine::TransferFrame() {
 
 void GraphicsEngine::ClearScreen() {
 	//prepare render target for rendering
-	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_FrameIndex].Get(),
+	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_Context.FrameIndex, m_SwapChain.RenderTargetHeapSize);
 	const float clearColor[] = { 100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1.0f };
 
 	m_Context.CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
@@ -312,13 +314,13 @@ void GraphicsEngine::Render() {
 	
 	TransferFrame();
 
-	HR(m_Context.CommandAllocator[m_FrameIndex]->Reset(), L"Error resetting command allocator");
-	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_FrameIndex].Get(), m_ProgramState.PipelineState.Get()), L"Error resetting command list");
+	HR(m_Context.CommandAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting command allocator");
+	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting command list");
 
 	ClearScreen();
 
 	if (m_RenderQueue.GetDrawCount() == 0) {
-		m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_FrameIndex].Get(),
+		m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 		HR(m_Context.CommandList->Close(), L"Error closing command list");
 		ID3D12CommandList* commandLists = { m_Context.CommandList.Get() };
@@ -345,7 +347,7 @@ void GraphicsEngine::Render() {
 
 	m_CullingProgram.Disbatch(&m_RenderQueue);
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChain.RenderTargetHeapSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_Context.FrameIndex, m_SwapChain.RenderTargetHeapSize);
 	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
 
 	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
@@ -358,7 +360,7 @@ void GraphicsEngine::Render() {
 	m_Profiler.End(m_Context.CommandList.Get());
 
 	//return to present mode for render target
-	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_FrameIndex].Get(),
+	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	HR(m_Context.CommandList->Close(),L"Error closing command list");
@@ -371,14 +373,14 @@ void GraphicsEngine::Render() {
 void GraphicsEngine::Swap() {
 	m_SwapChain.SwapChain->Present(1, 0);
 	m_RenderQueue.Clear();
-	const UINT64 currentFenceValue = m_Fence.FenceValues[m_FrameIndex];
-	m_Context.CommandQueue->Signal(m_Fence.Fence.Get(), m_Fence.FenceValues[m_FrameIndex]);
+	const UINT64 currentFenceValue = m_Fence.FenceValues[m_Context.FrameIndex];
+	m_Context.CommandQueue->Signal(m_Fence.Fence.Get(), m_Fence.FenceValues[m_Context.FrameIndex]);
 
-	m_FrameIndex = m_SwapChain.SwapChain->GetCurrentBackBufferIndex();
+	m_Context.FrameIndex = m_SwapChain.SwapChain->GetCurrentBackBufferIndex();
 
-	if (m_Fence.Fence->GetCompletedValue() < m_Fence.FenceValues[m_FrameIndex]) {
-		m_Fence.Fence->SetEventOnCompletion(m_Fence.FenceValues[m_FrameIndex], m_Fence.FenceEvent);
+	if (m_Fence.Fence->GetCompletedValue() < m_Fence.FenceValues[m_Context.FrameIndex]) {
+		m_Fence.Fence->SetEventOnCompletion(m_Fence.FenceValues[m_Context.FrameIndex], m_Fence.FenceEvent);
 		WaitForSingleObjectEx(m_Fence.FenceEvent, INFINITE, false);
 	}
-	m_Fence.FenceValues[m_FrameIndex] = currentFenceValue + 1;
+	m_Fence.FenceValues[m_Context.FrameIndex] = currentFenceValue + 1;
 }

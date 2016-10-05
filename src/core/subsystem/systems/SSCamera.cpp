@@ -5,7 +5,7 @@
 #include "../../Input/Input.h"
 #include "../../entity/EntityFactory.h"
 #define MOVE_SPEED 35.0f
-#define TURN_SPEED 0.001f
+#define TURN_SPEED 0.004f
 SSCamera::SSCamera() {
 
 }

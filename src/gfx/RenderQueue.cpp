@@ -44,16 +44,16 @@ void RenderQueue::Enqueue(ModelHandle model, const std::vector<ShaderInput>& inp
 }
 
 void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
-	m_ShaderInputBuffer.push_back(input);
 	IndirectDrawCall drawCall;
 	Model mod = g_ModelBank.FetchModel(model);
+
 	for (auto& mesh : mod.Meshes) {
 		glm::vec4 max = input.World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
 		glm::vec4 min = input.World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
-		bool frustum = true;  //AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
+		bool frustum = true; // AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
 
 		if (frustum) {
-			drawCall.DrawIndex = m_InstanceCounter;
+			drawCall.DrawIndex = m_ShaderInputBuffer.size();
 			drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
 
 			drawCall.DrawArgs.InstanceCount = 1;
@@ -65,8 +65,7 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 			m_DrawCalls.push_back(drawCall);
 		}
 	}
-
-	m_InstanceCounter += 1;
+	m_ShaderInputBuffer.push_back(input);
 }
 
 void RenderQueue::EnqueueOccluder(ModelHandle occluderModel) {
@@ -81,7 +80,7 @@ void RenderQueue::EnqueueOccluder(ModelHandle occluderModel) {
 		if (!AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z)))
 			continue;
 
-		drawCall.DrawIndex = m_InstanceCounter - 1;
+		drawCall.DrawIndex = m_ShaderInputBuffer.size() - 1;
 		drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
 
 		drawCall.DrawArgs.InstanceCount = 1;

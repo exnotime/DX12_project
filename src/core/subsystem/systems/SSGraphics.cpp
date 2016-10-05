@@ -43,6 +43,7 @@ void SSGraphics::Update(const double deltaTime) {
 	}
 
 	int flag = CameraComponent::Flag;
+	static CameraData lastCam;
 	for (auto& entity : g_EntityManager.GetEntityList()) {
 		if ((entity.ComponentBitfield & flag) == flag) {
 			CameraComponent* cc = (CameraComponent*)g_ComponentManager.GetComponent(entity, CameraComponent::Flag);
@@ -50,7 +51,11 @@ void SSGraphics::Update(const double deltaTime) {
 			View v;
 			v.Camera = cc->Camera.GetData();
 			m_RenderQueue->AddView(v);
-			
+
+			//if (g_Input.IsKeyPushed(GLFW_KEY_T))
+			//	lastCam = cc->Camera.GetData();
+			//v.Camera = lastCam;
+			//m_RenderQueue->AddView(v);
 		}
 	}
 	ShaderInput si;
@@ -75,14 +80,4 @@ void SSGraphics::Update(const double deltaTime) {
 
 void SSGraphics::Shutdown() {
 	delete m_Graphics;
-}
-
-bool SSGraphics::FrustumCheck(const glm::vec4* planes, const glm::vec3& pos, float radius) {
-	for (int i = 0; i < 6; ++i) {
-		float d = glm::dot(glm::vec4(pos,1), planes[i]);
-		if (d < -radius) {
-			return false;
-		}
-	}
-	return true;
 }

@@ -135,7 +135,7 @@ void SpawnPhysicsObjectS(int shape, const glm::vec3& position, const glm::quat& 
 	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
 
 	ModelComponent mc;
-	mc.Model = g_ShapeGenerator.GenerateModel((BASIC_SHAPE)shape);;
+	mc.Model = g_ShapeGenerator.GenerateModel((BASIC_SHAPE)shape);
 	mc.Color = color;
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
 
@@ -143,10 +143,8 @@ void SpawnPhysicsObjectS(int shape, const glm::vec3& position, const glm::quat& 
 	//special special case for special shapes that need special treatment
 	glm::vec3 objectscale = scale;
 	if (shape == CAPSULE) {
-		objectscale = glm::vec3(1, 2, 0);
+		objectscale = glm::vec3(2, 2.0f, 0);
 	}
-		
-
 	rbc.Body = g_PhysicsEngine.AddPhysicsObjectS((BASIC_SHAPE)shape, mass, position, objectscale);
 	g_ComponentManager.CreateComponent(&rbc, e, RigidBodyComponent::Flag);
 }

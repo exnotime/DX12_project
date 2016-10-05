@@ -70,7 +70,7 @@ int ShapeGenerator::GenerateModel(BASIC_SHAPE shape) {
 	{
 		mesh = par_shapes_create_cylinder(64, 1);
 		par_shapes_translate(mesh, 0, 0, -0.5f);
-		par_shapes_scale(mesh, 1, 1, 2.0f);
+		//par_shapes_scale(mesh, 1, 1, 2.0f);
 
 		par_shapes_mesh_s* topSphere = par_shapes_create_subdivided_sphere(4);
 		par_shapes_mesh_s* bottomSphere = par_shapes_create_subdivided_sphere(4);
@@ -84,6 +84,9 @@ int ShapeGenerator::GenerateModel(BASIC_SHAPE shape) {
 
 		par_shapes_merge(mesh, topSphere);
 		par_shapes_merge(mesh, bottomSphere);
+
+		axis = glm::vec3(0, 0, 1);
+		par_shapes_rotate(mesh, 3.14f * 0.5f, &axis[0]);
 
 		par_shapes_free_mesh(topSphere);
 		par_shapes_free_mesh(bottomSphere);
