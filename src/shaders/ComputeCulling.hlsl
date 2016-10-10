@@ -58,4 +58,8 @@ GroupMemoryBarrierWithGroupSync();
 	if(laneActive){
 		g_OutDrawArgs[localSlot + waveSlot + g_DisbatchSlot] = g_DrawArgsBuffer[index];
 	}
+GroupMemoryBarrierWithGroupSync();
+
+	if(laneActive)
+		g_OutDrawArgs[index].DrawIndex = laneId;
 }

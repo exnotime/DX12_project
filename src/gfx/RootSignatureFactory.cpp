@@ -61,14 +61,22 @@ void RootSignatureFactory::AddDefaultStaticSampler(UINT shaderRegister, UINT reg
 }
 
 void RootSignatureFactory::AddExtensions(ExtensionContext* extensions) {
+	CD3DX12_ROOT_PARAMETER rootParam;
 	//AMD
 	if (extensions->Vendor == AMD_VENDOR_ID) {
-		CD3DX12_ROOT_PARAMETER amdParam;
+		
 		//range must live until the root signature is created
 		m_ExtensionData = malloc(sizeof(CD3DX12_DESCRIPTOR_RANGE));
 		((CD3DX12_DESCRIPTOR_RANGE*)m_ExtensionData)->Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, AGS_DX12_SHADER_INSTRINSICS_SPACE_ID);
-		amdParam.InitAsDescriptorTable(1, (CD3DX12_DESCRIPTOR_RANGE*)m_ExtensionData, D3D12_SHADER_VISIBILITY_ALL);
-		m_RootParamters.push_back(amdParam);
+		rootParam.InitAsDescriptorTable(1, (CD3DX12_DESCRIPTOR_RANGE*)m_ExtensionData, D3D12_SHADER_VISIBILITY_ALL);
+		m_RootParamters.push_back(rootParam);
+	}
+	else if (extensions->Vendor == NVIDIA_VENDOR_ID) {
+		//range must live until the root signature is created
+		m_ExtensionData = malloc(sizeof(CD3DX12_DESCRIPTOR_RANGE));
+		((CD3DX12_DESCRIPTOR_RANGE*)m_ExtensionData)->Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, NVIDIA_EXTENSION_SLOT, NVIDIA_EXTENSION_SPACE);
+		rootParam.InitAsDescriptorTable(1, (CD3DX12_DESCRIPTOR_RANGE*)m_ExtensionData, D3D12_SHADER_VISIBILITY_ALL);
+		m_RootParamters.push_back(rootParam);
 	}
 }
 

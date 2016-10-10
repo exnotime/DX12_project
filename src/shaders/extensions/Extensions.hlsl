@@ -5,7 +5,8 @@
 
 typedef bool Predicate;
 typedef uint2 BitMask;
-
+#define TRUE true
+#define FASLE false
 #define ReadFirstLaneFloat(x) AmdExtD3DShaderIntrinsics_ReadfirstlaneF(x)
 #define ReadFirstLaneUInt(x) AmdExtD3DShaderIntrinsics_ReadfirstlaneU(x)
 #define ReadLaneFloat(x,y) AmdExtD3DShaderIntrinsics_ReadlaneF(x, y)
@@ -130,8 +131,8 @@ uint BitCount(BitMask bm){
 	return count;
 }
 //Naive MBCount think of other method later
-uint MBCount(uint laneId, BitMask bm){
-	BitMask laneMask = (1 << laneId) - 1;
+uint MBCount(BitMask bm){
+	BitMask laneMask = pow(2, NvGetLaneId()) - 1;
 	laneMask &= bm;
 	return BitCount(laneMask);
 }
