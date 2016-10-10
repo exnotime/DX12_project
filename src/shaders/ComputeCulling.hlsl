@@ -15,7 +15,7 @@ StructuredBuffer<DrawCallArgs> g_DrawArgsBuffer : register(t0);
 
 RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
 
-globallycoherent RWByteAddressBuffer counterBuffer : register(u1);
+globallycoherent RWByteAddressBuffer g_CounterBuffer : register(u1);
 
 cbuffer constants : register(b0){
 	uint g_DrawCallCount;
@@ -35,25 +35,27 @@ void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_Dispatc
 	uint index = disbatchThreadID.x;
 GroupMemoryBarrierWithGroupSync();
 
-	const Predicate laneActive = g_DrawArgsBuffer[index].DrawIndex != 0;
+	Predicate laneActive = false;
+	uint localSlot = 0;
+	uint waveSlot = 0;
 
-	BitMask ballot = WaveBallot(laneActive);
+	if(index < g_DrawCallCount){
+		laneActive = g_DrawArgsBuffer[index].DrawIndex & 1;
+		BitMask ballot = WaveBallot(laneActive);
 
-	uint outCount = BitCount(ballot);
-	uint localSlot = MBCount(ballot);
+		uint outCount = BitCount(ballot);
+		localSlot = MBCount(ballot);
 
-	uint groupSlot = 0;
-	if(laneId == 0){
-		InterlockedAdd(g_WorkGroupCount, outCount, groupSlot);
+		if(laneId == 0){
+			InterlockedAdd(g_WorkGroupCount, outCount, waveSlot);
+		}
+		waveSlot = ReadFirstLaneUInt(waveSlot);
 	}
-	
-	groupSlot = ReadFirstLaneUInt(groupSlot);
 
 	if(groupIndex == 0){
-		counterBuffer.InterlockedAdd(0, g_WorkGroupCount, g_DisbatchSlot);
+		g_CounterBuffer.InterlockedAdd(0, g_WorkGroupCount, g_DisbatchSlot);
 	}
-GroupMemoryBarrierWithGroupSync();
-
-	if(laneActive)
-		g_OutDrawArgs[localSlot + groupSlot + g_DisbatchSlot] = g_DrawArgsBuffer[index];
+	if(laneActive){
+		g_OutDrawArgs[localSlot + waveSlot + g_DisbatchSlot] = g_DrawArgsBuffer[index];
+	}
 }

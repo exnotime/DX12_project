@@ -9,6 +9,7 @@
 #include "FullscreenPass.h"
 #include "HiZProgram.h"
 #include "DrawCullingProgram.h"
+#include "TriangleCullingProgram.h"
 
 #define SIGNAL_BEGIN_COPY 0
 #define SIGNAL_END_COPY 1
@@ -63,4 +64,5 @@ private:
 	FullscreenPass m_FullscreenPass;
 	HiZProgram m_HiZProgram;
 	DrawCullingProgram m_CullingProgram;
+	TriangleCullingProgram m_TriangleCullingProgram;
 };

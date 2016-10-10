@@ -114,13 +114,14 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 
 }
 
-void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* state, RenderQueue* queue) {
+void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* state, RenderQueue* queue, TriangleCullingProgram& cullingProgram) {
 	cmdList->SetGraphicsRootSignature(state->RootSignature.Get());
 	cmdList->SetPipelineState(state->PipelineState.Get());
 	cmdList->SetGraphicsRootConstantBufferView(PER_FRAME_CONST_BUFFER, g_BufferManager.GetGPUHandle("cbPerFrame"));
 	cmdList->SetGraphicsRootShaderResourceView(SHADER_INPUT_STRUCT_BUFFER, g_BufferManager.GetGPUHandle("ShaderInputBuffer"));
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	g_ModelBank.ApplyBuffers(cmdList);
+	cmdList->IASetIndexBuffer(&cullingProgram.GetCulledIndexBufferView());
 
 	ID3D12DescriptorHeap* heaps[] = { state->RenderDescHeap.Get() };
 	cmdList->SetDescriptorHeaps(1, heaps);
@@ -129,9 +130,9 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* st
 	cmdList->SetGraphicsRootDescriptorTable(ENVIROMENT_DESC_TABLE, gpuHandle);
 	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
 
-	g_BufferManager.SwitchState("CulledIndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+	g_BufferManager.SwitchState("IndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 	//draw everything
-	cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(),
-		g_BufferManager.GetBufferResource("CulledIndirectBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0);
+	cmdList->ExecuteIndirect(state->CommandSignature.Get(), cullingProgram.GetDrawCount(),
+		cullingProgram.GetDrawArgsBuffer(), 0, nullptr, 0);
 }

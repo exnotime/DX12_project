@@ -62,6 +62,7 @@ void DrawCullingProgram::Init(DX12Context* context) {
 
 	g_BufferManager.CreateStructuredBuffer("CulledIndirectBuffer", nullptr, sizeof(IndirectDrawCall) * 10000, sizeof(IndirectDrawCall));
 	g_BufferManager.CreateStructuredBuffer("CullingCounterBuffer", nullptr, 32 * sizeof(UINT), sizeof(UINT));
+	g_BufferManager.CreateConstBuffer("CopyBuffer", nullptr, 32 * sizeof(UINT));
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	CD3DX12_CPU_DESCRIPTOR_HANDLE gpuHandle(m_GPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -131,4 +132,9 @@ void DrawCullingProgram::Disbatch(RenderQueue* queue) {
 	const int workGroups = (queue->GetDrawCount() + workGroupSize - 1) / workGroupSize;
 
 	cmdList->Dispatch(workGroups, 1, 1);
+
+	//read back the counter buffer
+	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_COPY_SOURCE);
+	//g_BufferManager.SwitchState("CopyBuffer", D3D12_RESOURCE_STATE_COPY_DEST);
+	//cmdList->CopyBufferRegion(g_BufferManager.GetBufferResource("CopyBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0, sizeof(UINT) * 32);
 }

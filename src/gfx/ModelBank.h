@@ -27,6 +27,20 @@ class ModelBank {
 
 	float GetScaledRadius(ModelHandle model, const glm::vec3& scale);
 	void FreeUploadHeaps();
+
+	UINT GetVertexCount() {
+		return m_VertexPositions.size();
+	}
+	ID3D12Resource* GetVertexBufferResource() {
+		return m_VertexBufferResource.Get();
+	}
+	UINT GetIndexCount() {
+		return m_Indices.size();
+	}
+	ID3D12Resource* GetIndexBufferResource() {
+		return m_IndexBufferResource.Get();
+	}
+
   private:
 	ModelBank();
 	void LoadMeshes(Model& model, const aiScene* scene);

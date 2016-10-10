@@ -147,7 +147,9 @@ Material* MaterialBank::GetMaterial(const std::string& name) {
 
 TextureHandle MaterialBank::LoadTexture(const char* filename) {
 	Texture* tex = new Texture();
-	tex->Init(filename, m_Context);
+	if (!tex->Init(filename, m_Context)) {
+		return m_DefaultAlbedo;
+	}
 	m_Textures.push_back(tex);
 	return m_Numerator++;
 

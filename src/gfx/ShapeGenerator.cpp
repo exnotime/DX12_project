@@ -79,8 +79,8 @@ int ShapeGenerator::GenerateModel(BASIC_SHAPE shape) {
 		par_shapes_rotate(topSphere, 3.14f, &axis[0]);
 		par_shapes_rotate(bottomSphere, 3.14f, &axis[0]);
 
-		par_shapes_translate(topSphere, 0, 0, 1.0f);
-		par_shapes_translate(bottomSphere, 0, 0, -1.0f);
+		par_shapes_translate(topSphere, 0, 0, 0.5f);
+		par_shapes_translate(bottomSphere, 0, 0, -0.5f);
 
 		par_shapes_merge(mesh, topSphere);
 		par_shapes_merge(mesh, bottomSphere);

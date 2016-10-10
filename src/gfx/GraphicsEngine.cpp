@@ -225,6 +225,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	m_RenderQueue.Init(&m_Context);
 
 	m_CullingProgram.Init(&m_Context);
+	m_TriangleCullingProgram.Init(&m_Context);
 
 	m_Profiler.Init(&m_Context);
 
@@ -277,25 +278,24 @@ void GraphicsEngine::PrepareForRender() {
 	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 
+	m_TriangleCullingProgram.CreateDescriptorTable();
+
 	g_MaterialBank.FreeResources();
 	g_ModelBank.FreeUploadHeaps();
 }
 
 void GraphicsEngine::TransferFrame() {
-	HR(m_Context.CopyAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting copy allocator");
-	HR(m_Context.CopyCommandList->Reset(m_Context.CopyAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting copy list");
+	HR(m_Context.CommandAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting copy allocator");
+	HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting copy list");
 
 	m_RenderQueue.UpdateBuffer();
 
-	m_Context.CopyCommandList->Close();
+	m_Context.CommandList->Close();
 
-	m_Context.CopyQueue->Signal(m_Context.CopyFence.Get(), SIGNAL_BEGIN_COPY);
-	ID3D12CommandList* ppCommandList[] = { m_Context.CopyCommandList.Get() };
-	m_Context.CopyQueue->ExecuteCommandLists(1, ppCommandList);
+	ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
+	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
 
-	m_Context.CopyQueue->Signal(m_Context.CopyFence.Get(), SIGNAL_END_COPY);
-
-	m_Context.CommandQueue->Wait(m_Context.CopyFence.Get(), SIGNAL_END_COPY);
+	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 }
 
 void GraphicsEngine::ClearScreen() {
@@ -304,14 +304,13 @@ void GraphicsEngine::ClearScreen() {
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_Context.FrameIndex, m_SwapChain.RenderTargetHeapSize);
-	const float clearColor[] = { 100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 1.0f };
+	const float clearColor[] = { 0,0,0,0 };
 
 	m_Context.CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	m_Context.CommandList->ClearDepthStencilView(m_DSVHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0x0, 0, nullptr);
 }
 
 void GraphicsEngine::Render() {
-	
 	TransferFrame();
 
 	HR(m_Context.CommandAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting command allocator");
@@ -335,17 +334,23 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
 
-	m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
+	//m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
 
-	m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
+	//m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
 
-	m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
+	//m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
 
-	m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
+	//m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
 
-	m_Profiler.Step(m_Context.CommandList.Get(), "Culling");
+	//m_Profiler.Step(m_Context.CommandList.Get(), "DrawCulling");
 
-	m_CullingProgram.Disbatch(&m_RenderQueue);
+	//m_CullingProgram.Disbatch(&m_RenderQueue);
+
+	m_Profiler.Step(m_Context.CommandList.Get(), "TriangleCulling");
+	
+	m_TriangleCullingProgram.Disbatch(&m_RenderQueue);
+
+	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_Context.FrameIndex, m_SwapChain.RenderTargetHeapSize);
 	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
@@ -355,7 +360,7 @@ void GraphicsEngine::Render() {
 
 	m_Profiler.Step(m_Context.CommandList.Get(), "Geometry");
 
-	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue);
+	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, m_TriangleCullingProgram);
 
 	m_Profiler.End(m_Context.CommandList.Get());
 

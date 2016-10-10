@@ -12,6 +12,8 @@ void SpawnLevelObjectM(int model, const glm::vec3& position, const glm::quat& or
 void SpawnLevelObjectS(int shape, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color);
 void SpawnLevelObjectO(int model, int occluder, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color);
 
+void SpawnOccluder(int model, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale);
+
 void SpawnPhysicsObject(const std::string modelFilename, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color, float mass);
 void SpawnPhysicsObjectM(int model, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color, float mass);
 void SpawnPhysicsObjectS(int shape, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color, float mass);

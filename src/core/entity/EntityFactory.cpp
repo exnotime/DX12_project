@@ -21,6 +21,7 @@ void SpawnPlayer(const glm::vec3& position, const glm::vec3& size) {
 	CameraComponent cc;
 	cc.Camera.GetEditableData().Fov = (60.0f / 360.0f) * glm::pi<float>() * 2;
 	cc.Camera.GetEditableData().Far = 1000.0f;
+	cc.Camera.GetEditableData().Near = 0.01f;
 	g_ComponentManager.CreateComponent(&cc, e, CameraComponent::Flag);
 }
 
@@ -188,6 +189,11 @@ void RegisterScriptFunctions() {
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
 		"void SpawnLevelObject(int model, vec3 pos, quat orientation, vec3 scale, vec4 color)",
 		AngelScript::asFUNCTION(SpawnLevelObjectM),
+		AngelScript::asCALL_CDECL);
+
+	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
+		"void SpawnLevelObjectWithOccluder(int model,int occluder, vec3 pos, quat orientation, vec3 scale, vec4 color)",
+		AngelScript::asFUNCTION(SpawnLevelObjectO),
 		AngelScript::asCALL_CDECL);
 
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(

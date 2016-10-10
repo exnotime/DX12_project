@@ -12,12 +12,6 @@ struct ModelObject {
 	unsigned int InstanceCount;
 };
 
-struct TransparentModelObject {
-	ModelHandle Model;
-	unsigned int InstanceCount;
-	float Transparency;
-};
-
 struct ShaderInput {
 	glm::mat4 World;
 	glm::vec4 Color;
@@ -67,6 +61,9 @@ class RenderQueue {
 
 	UINT GetOccluderCount() const {
 		return m_OccluderDrawCalls.size();
+	}
+	std::vector<IndirectDrawCall>& GetDrawList() {
+		return m_DrawCalls;
 	}
 
   private:

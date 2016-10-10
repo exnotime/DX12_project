@@ -344,13 +344,20 @@ void ModelBank::Clear() {
 
 void ModelBank::BuildBuffers() {
 	// Vertex buffers
-	size_t vboSize = (m_VertexPositions.size() * 4) * (sizeof(glm::vec3) * 3 + sizeof(glm::vec2));
+	size_t vertexCount = m_VertexPositions.size();
+	size_t vboSize = (vertexCount) * (sizeof(glm::vec3) * 3 + sizeof(glm::vec2));
 
 	CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vboSize);
 	HR(m_Context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-		&vertexBufferDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_VertexBufferResource)), L"Error creating index buffer resource");
+		&vertexBufferDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_VertexBufferResource)), L"Error creating Vertex buffer resource");
+
+	//perform multiple uploads if the size is too big
+	const int maxUploadSize = 256 * 1024 * 1024;
+	size_t uploadSize = (vboSize < maxUploadSize) ? vboSize : maxUploadSize;
+
+	CD3DX12_RESOURCE_DESC vertexBufferUploadDesc = CD3DX12_RESOURCE_DESC::Buffer(vboSize);
 	HR(m_Context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-		&vertexBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_VertexBufferUpload)), L"Error creating index buffer upload resource");
+		&vertexBufferUploadDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_VertexBufferUpload)), L"Error creating Vertex buffer upload resource");
 	
 #ifdef _DEBUG
 	m_VertexBufferResource->SetName(L"Vertex buffer");
@@ -465,7 +472,7 @@ void ModelBank::BuildBuffers() {
 }
 
 void ModelBank::ApplyBuffers(ID3D12GraphicsCommandList* cmdList) {
-	cmdList->IASetIndexBuffer(&m_IndexBufferView);
+	//cmdList->IASetIndexBuffer(&m_IndexBufferView);
 	cmdList->IASetVertexBuffers(0, 4, m_VertexBufferView);
 }
 
@@ -477,6 +484,10 @@ float ModelBank::GetScaledRadius(ModelHandle model, const glm::vec3& scale) {
 void ModelBank::FreeUploadHeaps(){
 	m_IndexbufferUpload.Reset();
 	m_VertexBufferUpload.Reset();
+	m_VertexPositions.clear();
+	m_VertexNormals.clear();
+	m_VertexTangents.clear();
+	m_VertexTexCoords.clear();
 }
 
 void ModelBank::UpdateModel(ModelHandle& handle, Model& model) {

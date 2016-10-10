@@ -9,7 +9,7 @@ Texture::~Texture() {
 	m_Resource.Reset();
 }
 
-void Texture::Init(const std::string& filename, DX12Context* context) {
+bool Texture::Init(const std::string& filename, DX12Context* context) {
 	if (strstr(filename.c_str(), ".dds")) {
 		DirectX::ScratchImage scratchImage;
 		DirectX::TexMetadata meta;
@@ -34,24 +34,31 @@ void Texture::Init(const std::string& filename, DX12Context* context) {
 		m_Width = meta.width;
 		m_Height = meta.height;
 		m_Format = meta.format;
-
-		HR(context->Device->CreateCommittedResource(
+		HRESULT hr;
+		hr = context->Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
 			&texDesc,
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
-			IID_PPV_ARGS(&m_Resource)), L"Error creating texture resource");
+			IID_PPV_ARGS(&m_Resource));
+
+		if (hr != S_OK) {
+			return false;
+		}
 
 		const UINT64 uploadSize = GetRequiredIntermediateSize(m_Resource.Get(), 0, meta.mipLevels * meta.arraySize);
 
-		HR(context->Device->CreateCommittedResource(
+		hr = context->Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
 			&CD3DX12_RESOURCE_DESC::Buffer(uploadSize),
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&m_UploadHeap)), L"Error creating texture upload heap");
+			IID_PPV_ARGS(&m_UploadHeap));
+		if (hr != S_OK) {
+			return false;
+		}
 
 		D3D12_SUBRESOURCE_DATA* texDataArray = new D3D12_SUBRESOURCE_DATA[meta.mipLevels * meta.arraySize];
 		for (int side = 0; side < meta.arraySize; side++) {
@@ -75,7 +82,7 @@ void Texture::Init(const std::string& filename, DX12Context* context) {
 		m_UploadHeap->SetName(L"upload heap");
 #endif
 		printf("Loaded texture: %s\n", filename.c_str());
-		return;
+		return true;
 	}
 
 	unsigned char* textureData = stbi_load(filename.c_str(), &m_Width, &m_Height, &m_Channels, 4);
@@ -92,25 +99,31 @@ void Texture::Init(const std::string& filename, DX12Context* context) {
 		texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		
 		m_Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-		HR(context->Device->CreateCommittedResource(
+		HRESULT hr;
+		hr = context->Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
 			&texDesc,
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
-			IID_PPV_ARGS(&m_Resource)),L"Error creating texture resource");
+			IID_PPV_ARGS(&m_Resource));
+
+		if (hr != S_OK) {
+			return false;
+		}
 
 		const UINT64 uploadSize = GetRequiredIntermediateSize(m_Resource.Get(), 0, 1);
 
-		HR(context->Device->CreateCommittedResource(
+		hr = context->Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
 			&CD3DX12_RESOURCE_DESC::Buffer(uploadSize),
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&m_UploadHeap)),L"Error creating texture upload heap");
-
+			IID_PPV_ARGS(&m_UploadHeap));
+		if (hr != S_OK) {
+			return false;
+		}
 		D3D12_SUBRESOURCE_DATA texData = {};
 		texData.pData = (void*)textureData;
 		texData.RowPitch = m_Width * 4;
@@ -131,7 +144,10 @@ void Texture::Init(const std::string& filename, DX12Context* context) {
 	}
 	else {
 		printf("!!!Error loading texture!!!: %s\n", filename.c_str());
+		return false;
 	}
+
+	return true;
 }
 
 void Texture::CreateSRV(DX12Context* context, D3D12_CPU_DESCRIPTOR_HANDLE handle) {

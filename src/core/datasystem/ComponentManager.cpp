@@ -81,7 +81,7 @@ int ComponentManager::GetBuffer(void** outBuffer, uint type) {
 	}
 }
 
-void* ComponentManager::GetComponent(Entity& ent, uint type) {
+void* ComponentManager::GetComponent(const Entity& ent, uint type) {
 	auto buffer = m_Buffers.find(type);
 
 	if (buffer != m_Buffers.end()) {

@@ -13,7 +13,7 @@ public:
 	void RemoveComponent(Entity& ent, uint type);
 	void RemoveComponents(Entity& ent);
 	int GetBuffer(void** outBuffer, uint type);
-	void* GetComponent(Entity& ent, uint type);
+	void* GetComponent(const Entity& ent, uint type);
 private:
 	ComponentManager();
 	void CreateComponentBuffer(uint count, uint componentSize, uint id, std::string name);

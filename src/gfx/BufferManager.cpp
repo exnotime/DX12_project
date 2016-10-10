@@ -115,7 +115,7 @@ void BufferManager::CreateIndirectBuffer(const std::string& name, void* data, UI
 		L"Error creating indirect buffer upload heap");
 	buffer->Offset = m_BufferCounter++;
 	buffer->Type = INDIRECT_BUFFER;
-
+	buffer->State = D3D12_RESOURCE_STATE_COPY_DEST;
 	if (data != nullptr) {
 		D3D12_SUBRESOURCE_DATA sub_data = {};
 		sub_data.pData = data;
@@ -126,6 +126,7 @@ void BufferManager::CreateIndirectBuffer(const std::string& name, void* data, UI
 
 		m_Context->CommandList->ResourceBarrier(1,
 			&CD3DX12_RESOURCE_BARRIER::Transition(buffer->Resource[0].Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
+		buffer->State = D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
 	}
 #ifdef _DEBUG
 	wchar_t* wName = convertCharArrayToLPCWSTR(name.c_str());
@@ -170,6 +171,7 @@ void BufferManager::CreateStructuredBuffer(const std::string& name, void* data, 
 
 	buffer->Offset = m_BufferCounter++;
 	buffer->Type = STRUCTURED_BUFFER;
+	buffer->State = D3D12_RESOURCE_STATE_COPY_DEST;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
 	viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -196,6 +198,7 @@ void BufferManager::CreateStructuredBuffer(const std::string& name, void* data, 
 
 		m_Context->CommandList->ResourceBarrier(1,
 			&CD3DX12_RESOURCE_BARRIER::Transition(buffer->Resource[0].Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+		buffer->State = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 	}
 #ifdef _DEBUG
 	wchar_t* wName = convertCharArrayToLPCWSTR(name.c_str());
@@ -228,23 +231,23 @@ void BufferManager::UpdateBuffer(const std::string& name, void* data, UINT size)
 			break;
 		}
 		case STRUCTURED_BUFFER: {
-			m_Context->CopyCommandList->ResourceBarrier(1,
-				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource[0].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+			SwitchState(name, D3D12_RESOURCE_STATE_COPY_DEST);
 			void* gpuPtr;
 			buffer->second->UploadHeap->Map(0, nullptr, &gpuPtr);
 			memcpy(gpuPtr, data, size);
 			buffer->second->UploadHeap->Unmap(0, nullptr);
-			m_Context->CopyCommandList->CopyBufferRegion(buffer->second->Resource[0].Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
+			m_Context->CommandList->CopyBufferRegion(buffer->second->Resource[0].Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
+			buffer->second->State = D3D12_RESOURCE_STATE_COPY_DEST;
 			break;
 		}
 		case INDIRECT_BUFFER: {
-			m_Context->CopyCommandList->ResourceBarrier(1,
-				&CD3DX12_RESOURCE_BARRIER::Transition(buffer->second->Resource[0].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+			SwitchState(name, D3D12_RESOURCE_STATE_COPY_DEST);
 			void* gpuPtr;
 			buffer->second->UploadHeap->Map(0, nullptr, &gpuPtr);
 			memcpy(gpuPtr, data, size);
 			buffer->second->UploadHeap->Unmap(0, nullptr);
-			m_Context->CopyCommandList->CopyBufferRegion(buffer->second->Resource[0].Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
+			m_Context->CommandList->CopyBufferRegion(buffer->second->Resource[0].Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
+			buffer->second->State = D3D12_RESOURCE_STATE_COPY_DEST;
 			break;
 		}
 		default:
