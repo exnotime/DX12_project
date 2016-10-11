@@ -21,6 +21,7 @@ struct cbPerFrame {
 	float padding;
 	glm::vec3 LightDir;
 	float padding2;
+	glm::vec2 ScreenSize;
 };
 
 class GraphicsEngine {

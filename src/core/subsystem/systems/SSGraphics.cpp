@@ -49,10 +49,10 @@ void SSGraphics::Update(const double deltaTime) {
 			v.Camera = cc->Camera.GetData();
 			m_RenderQueue->AddView(v);
 
-			//if (g_Input.IsKeyPushed(GLFW_KEY_T))
-			//	lastCam = cc->Camera.GetData();
-			//v.Camera = lastCam;
-			//m_RenderQueue->AddView(v);
+			if (g_Input.IsKeyPushed(GLFW_KEY_T))
+				lastCam = cc->Camera.GetData();
+			v.Camera = lastCam;
+			m_RenderQueue->AddView(v);
 		}
 	}
 	ShaderInput si;

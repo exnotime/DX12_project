@@ -50,7 +50,7 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 	for (auto& mesh : mod.Meshes) {
 		glm::vec4 max = input.World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
 		glm::vec4 min = input.World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
-		bool frustum = true; // AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
+		bool frustum = AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
 
 		if (frustum) {
 			drawCall.DrawIndex = m_ShaderInputBuffer.size();

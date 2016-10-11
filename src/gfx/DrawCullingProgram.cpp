@@ -100,18 +100,19 @@ void DrawCullingProgram::Init(DX12Context* context) {
 	context->Device->CreateUnorderedAccessView(g_BufferManager.GetBufferResource("CullingCounterBuffer"), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescIncSize));
 	context->Device->CreateUnorderedAccessView(g_BufferManager.GetBufferResource("CullingCounterBuffer"), nullptr, &uavDesc, gpuHandle.Offset(1, m_DescIncSize));
 
-	D3D12_UNORDERED_ACCESS_VIEW_DESC NvExtUavDesc = {};
-	NvExtUavDesc.Format = DXGI_FORMAT_UNKNOWN;
-	NvExtUavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-	NvExtUavDesc.Buffer.CounterOffsetInBytes = 4096;
-	NvExtUavDesc.Buffer.FirstElement = 0;
-	NvExtUavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-	NvExtUavDesc.Buffer.NumElements = 1;
-	NvExtUavDesc.Buffer.StructureByteStride = 256;
+	if (context->Extensions.Vendor == NVIDIA_VENDOR_ID) {
+		D3D12_UNORDERED_ACCESS_VIEW_DESC NvExtUavDesc = {};
+		NvExtUavDesc.Format = DXGI_FORMAT_UNKNOWN;
+		NvExtUavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+		NvExtUavDesc.Buffer.CounterOffsetInBytes = 4096;
+		NvExtUavDesc.Buffer.FirstElement = 0;
+		NvExtUavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+		NvExtUavDesc.Buffer.NumElements = 1;
+		NvExtUavDesc.Buffer.StructureByteStride = 256;
 
-	context->Device->CreateUnorderedAccessView(context->Extensions.NvExtResource.Get(), context->Extensions.NvExtResource.Get(), &NvExtUavDesc, cpuHandle.Offset(1, m_DescIncSize));
-	context->Device->CreateUnorderedAccessView(context->Extensions.NvExtResource.Get(), context->Extensions.NvExtResource.Get(), &NvExtUavDesc, gpuHandle.Offset(1, m_DescIncSize));
-
+		context->Device->CreateUnorderedAccessView(context->Extensions.NvExtResource.Get(), context->Extensions.NvExtResource.Get(), &NvExtUavDesc, cpuHandle.Offset(1, m_DescIncSize));
+		context->Device->CreateUnorderedAccessView(context->Extensions.NvExtResource.Get(), context->Extensions.NvExtResource.Get(), &NvExtUavDesc, gpuHandle.Offset(1, m_DescIncSize));
+	}
 	m_Context = context;
 }
 

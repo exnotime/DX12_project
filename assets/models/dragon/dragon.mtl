@@ -1,3 +1,14 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5f28b36e9b7738da404e8602623697b00505e31b784b3850b28b92623d63b259
-size 267
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl dragon
+Ns 0.000000
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.800000 0.800000 0.800000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Ks dragon_spec.png
+map_Ka dragon_met.png

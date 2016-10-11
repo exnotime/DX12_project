@@ -24,7 +24,7 @@ void TriangleCullingProgram::Init(DX12Context* context, const UINT maxTriangleCo
 			rootSignFact.AddConstantBufferView(0);
 			break;
 		case CONSTANTS_C:
-			rootSignFact.AddConstant(2, 1);
+			rootSignFact.AddConstant(1, 1);
 			break;
 		case INPUT_DT:
 			ranges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 0));
@@ -135,12 +135,8 @@ void TriangleCullingProgram::Disbatch(RenderQueue* queue) {
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_CulledDrawArgsBuffer.Get(),
 		D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
-	for (int i = 0; i < m_BatchCount; ++i) {
-		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, i, 0);
-		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, i * m_BatchSize * 3, 1);
-		//const UINT disbatchSize = (m_BatchSize + 256 - 1) / 256;
-		cmdList->Dispatch(1, 1, 1); //look into multiple work groups
-	}
+	cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, m_BatchSize, 0);
+	cmdList->Dispatch(m_BatchCount, 1, 1); //look into multiple work groups
 
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(g_ModelBank.GetVertexBufferResource(),
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
@@ -160,7 +156,7 @@ UINT TriangleCullingProgram::SplitMeshes(RenderQueue* queue) {
 		UINT indexCount = draw.DrawArgs.IndexCountPerInstance;
 		for (int i = 0; i < batchCount; ++i) {
 			m_DrawListArray[batchCounter + i] = draw;
-			m_DrawListArray[batchCounter + i].DrawArgs.StartIndexLocation = draw.DrawArgs.StartIndexLocation + m_BatchSize * 3 * i; // (batchCounter + i) * m_BatchSize * 3;
+			m_DrawListArray[batchCounter + i].DrawArgs.StartIndexLocation = draw.DrawArgs.StartIndexLocation + m_BatchSize * 3 * i;
 			m_DrawListArray[batchCounter + i].DrawArgs.IndexCountPerInstance = (indexCount > m_BatchSize * 3) ? m_BatchSize * 3 : indexCount;
 			indexCount -= m_BatchSize * 3;
 		}

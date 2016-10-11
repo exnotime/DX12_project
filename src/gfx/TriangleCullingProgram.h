@@ -2,7 +2,7 @@
 #include "DX12Common.h"
 #include "RenderQueue.h"
 #include "Shader.h"
-#define MAX_TRIANGLE_COUNT 1000000
+#define MAX_TRIANGLE_COUNT 2000000
 
 class TriangleCullingProgram {
 public:
@@ -41,8 +41,8 @@ private:
 	UINT m_MaxTrianglecount;
 	UINT m_MaxBatchCount;
 	UINT m_BatchCount;
-	IndirectDrawCall* m_DrawListArray;
 
+	IndirectDrawCall* m_DrawListArray;
 	enum ROOT_PARAMS {
 		PER_FRAME_CB,
 		CONSTANTS_C,

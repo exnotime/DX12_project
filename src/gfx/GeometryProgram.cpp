@@ -33,7 +33,7 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	state->RootSignature = rootSignFactory.CreateSignture(context->Device.Get());
 
 	PipelineStateFactory pipeStateFact;
-
+	//depth state
 	D3D12_DEPTH_STENCIL_DESC depthDesc = {};
 	depthDesc.DepthEnable = true;
 	depthDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
@@ -49,6 +49,10 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	depthDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_REPLACE;
 	depthDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
 	depthDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	//rasterstate
+	CD3DX12_RASTERIZER_DESC rasterDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	rasterDesc.CullMode = D3D12_CULL_MODE_NONE;
+	pipeStateFact.SetRasterizerState(rasterDesc);
 
 	pipeStateFact.SetDepthStencilFormat(DXGI_FORMAT_D24_UNORM_S8_UINT);
 	pipeStateFact.SetDepthStencilState(depthDesc);

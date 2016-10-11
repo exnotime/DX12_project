@@ -132,7 +132,7 @@ uint BitCount(BitMask bm){
 }
 //Naive MBCount think of other method later
 uint MBCount(BitMask bm){
-	BitMask laneMask = pow(2, NvGetLaneId()) - 1;
+	BitMask laneMask = (1 << NvGetLaneId()) - 1;
 	laneMask &= bm;
 	return BitCount(laneMask);
 }

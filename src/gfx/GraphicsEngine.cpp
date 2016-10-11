@@ -131,7 +131,7 @@ void GraphicsEngine::CreateContext() {
 }
 
 void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
-	m_ScreenSize = screenSize * 2.0f;
+	m_ScreenSize = screenSize * 1.0f;
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
 	m_Viewport.MinDepth = 0.0f;
@@ -221,6 +221,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	
 	g_BufferManager.Init(&m_Context);
 	g_BufferManager.CreateConstBuffer("cbPerFrame", nullptr, sizeof(cbPerFrame));
+	g_BufferManager.CreateConstBuffer("testBuffer", nullptr, sizeof(IndirectDrawCall) * 100);
 	g_MaterialBank.Initialize(&m_Context);
 	g_ModelBank.Init(&m_Context);
 	m_RenderQueue.Init(&m_Context);
@@ -328,11 +329,10 @@ void GraphicsEngine::Render() {
 		return;
 	}
 
-	View v = m_RenderQueue.GetViews().at(0);
+	View v = m_RenderQueue.GetViews().at(1);
 	cbPerFrame* perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame");
-	perFrame->CamPos = v.Camera.Position;
-	perFrame->LightDir = glm::vec3(0.0f, -1.0f, 0.2f);
 	perFrame->ViewProj = v.Camera.ProjView;
+	perFrame->ScreenSize = m_ScreenSize;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
 
 	//m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
@@ -351,7 +351,27 @@ void GraphicsEngine::Render() {
 	
 	m_TriangleCullingProgram.Disbatch(&m_RenderQueue);
 
+	//HR(m_Context.CommandList->Close(), L"Error closing command list");
+	//ID3D12CommandList* commandLists = { m_Context.CommandList.Get() };
+	//m_Context.CommandQueue->ExecuteCommandLists(1, &commandLists);
+
+	//WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
+
+	//HR(m_Context.CommandAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting command allocator");
+	//HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting command list");
+
+	ExecuteCmdList(&m_Context);
+	
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
+
+	ResetCmdList(&m_Context);
+
+	v = m_RenderQueue.GetViews().at(0);
+	perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame");
+	perFrame->CamPos = v.Camera.Position;
+	perFrame->LightDir = glm::vec3(0.0f, -1.0f, 0.2f);
+	perFrame->ViewProj = v.Camera.ProjView;
+	g_BufferManager.UnMapBuffer("cbPerFrame");
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_Context.FrameIndex, m_SwapChain.RenderTargetHeapSize);
 	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
@@ -368,12 +388,15 @@ void GraphicsEngine::Render() {
 	//return to present mode for render target
 	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	
+	//m_Context.CommandList->CopyBufferRegion(g_BufferManager.GetBufferResource("testBuffer"), 0, m_TriangleCullingProgram.GetDrawArgsBuffer(), 0, sizeof(IndirectDrawCall) * 100);
 
-	HR(m_Context.CommandList->Close(),L"Error closing command list");
-	ID3D12CommandList* commandLists = { m_Context.CommandList.Get() };
-	m_Context.CommandQueue->ExecuteCommandLists(1, &commandLists);
+	ExecuteCmdList(&m_Context);
 
-	m_Profiler.PrintResults();
+	//IndirectDrawCall* testDraws;
+	//testDraws = (IndirectDrawCall*)g_BufferManager.MapBuffer("testBuffer");
+	//testDraws;
+	//g_BufferManager.UnMapBuffer("testBuffer");
 }
 
 void GraphicsEngine::Swap() {
@@ -389,4 +412,6 @@ void GraphicsEngine::Swap() {
 		WaitForSingleObjectEx(m_Fence.FenceEvent, INFINITE, false);
 	}
 	m_Fence.FenceValues[m_Context.FrameIndex] = currentFenceValue + 1;
+
+	m_Profiler.PrintResults();
 }
