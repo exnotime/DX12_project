@@ -472,8 +472,16 @@ void ModelBank::BuildBuffers() {
 }
 
 void ModelBank::ApplyBuffers(ID3D12GraphicsCommandList* cmdList) {
-	//cmdList->IASetIndexBuffer(&m_IndexBufferView);
+	cmdList->IASetIndexBuffer(&m_IndexBufferView);
 	cmdList->IASetVertexBuffers(0, 4, m_VertexBufferView);
+}
+
+void ModelBank::ApplyVertexBuffers(ID3D12GraphicsCommandList* cmdList) {
+	cmdList->IASetVertexBuffers(0, 4, m_VertexBufferView);
+}
+
+void ModelBank::ApplyIndexBuffers(ID3D12GraphicsCommandList* cmdList) {
+	cmdList->IASetIndexBuffer(&m_IndexBufferView);
 }
 
 float ModelBank::GetScaledRadius(ModelHandle model, const glm::vec3& scale) {

@@ -7,6 +7,7 @@ public:
 	GPUProfiler();
 	~GPUProfiler();
 	void Init(DX12Context* context);
+	void Start();
 	void Step(ID3D12GraphicsCommandList* cmdList, const std::string& name);
 	void End(ID3D12GraphicsCommandList* cmdList);
 	void PrintResults();

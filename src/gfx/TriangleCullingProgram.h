@@ -2,7 +2,7 @@
 #include "DX12Common.h"
 #include "RenderQueue.h"
 #include "Shader.h"
-#define MAX_TRIANGLE_COUNT 2000000
+#define MAX_TRIANGLE_COUNT 10000000
 
 class TriangleCullingProgram {
 public:
@@ -21,6 +21,9 @@ public:
 	UINT GetDrawCount() {
 		return m_BatchCount;
 	}
+	UINT GetMaxBatchCount() {
+		return m_MaxBatchCount;
+	}
 private:
 	UINT SplitMeshes(RenderQueue* queue);
 
@@ -30,7 +33,6 @@ private:
 	ComPtr<ID3D12PipelineState> m_PipeState;
 	ComPtr<ID3D12Resource> m_CulledIndexBuffer;
 	ComPtr<ID3D12Resource> m_CulledDrawArgsBuffer;
-	//it would be better to reuse the culleddrawargsbuffer but for debugging/visibilitys sake lets keep two buffers for now
 	ComPtr<ID3D12Resource> m_SplitDrawArgsBuffer;
 	ComPtr<ID3D12Resource> m_SplitDrawArgsBufferUpload;
 	ComPtr<ID3D12DescriptorHeap> m_DescHeap;

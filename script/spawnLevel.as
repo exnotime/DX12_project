@@ -17,27 +17,29 @@ enum BASIC_SHAPE {
 };
 
 void main(){
+	bunny = LoadModel("assets/models/bunny/bunny.obj");
 	//sponza
 	level = LoadModel("assets/models/sponza/sponza.obj");
 	occluder = LoadModel("assets/models/sponza/SponzaOccluder.obj");
 	//san miguel
 	//level = LoadModel("E:/san_miguel/sanMiguel.obj");
-
-	teapot = LoadModel("assets/models/teapot/teapot.obj");
+	
+	//teapot = LoadModel("assets/models/teapot/teapot.obj");
 	//cube = LoadModel("assets/models/cube/cube.obj");
 	dragon = LoadModel("assets/models/dragon/dragon.obj");
 	//lucina = LoadModel("assets/models/LucinaResource/Lucina_Posed.obj");
 	//sphere = LoadModel("assets/models/sphere/sphere.dae");
-	//bunny = LoadModel("assets/models/bunny/bunny.obj");
+	
 	print("Spawning Level\n");
-	SpawnPlayer(vec3(0,0,0), vec3(0.5f, 1.8f, 0.3f));
-	SpawnLevelObject(teapot, vec3(20, 5, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.3f), vec4(0, 0.4f, 0, 1));
+	SpawnPlayer(vec3(28.75f, 42.03f, -3.47f), vec3(0.5f, 1.8f, 0.3f), quat(-0.627f, 0.187f, -0.724f, -0.216f));
 
-	SpawnLevelObject(dragon, vec3(0, 10, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2.0f), vec4(1, 0, 0, 1));
+	SpawnLevelObject(teapot, vec3(20, 5, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(0, 0.4f, 0, 1));
+
+	SpawnLevelObject(bunny, vec3(0, 10, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.5f), vec4(1, 0, 0, 1));
 
 	SpawnLevelObjectWithOccluder(level, occluder, vec3(0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(1));
 
-	SpawnLevelObject(level, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	//SpawnLevelObject(level, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	
 	//SpawnPhysicsShape(int(CUBE), vec3(0, -1.5f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(100,1,100), vec4(1.0f), 0.0f);
 	/*

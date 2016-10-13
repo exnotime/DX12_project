@@ -2,12 +2,13 @@
 #include "DX12Common.h"
 #include "Shader.h"
 #include "RenderQueue.h"
+#include "TriangleCullingProgram.h"
 class DrawCullingProgram {
 public:
 	DrawCullingProgram();
 	~DrawCullingProgram();
-	void Init(DX12Context* context);
-	void Disbatch(RenderQueue* queue);
+	void Init(DX12Context* context, TriangleCullingProgram* cullingProgram);
+	void Disbatch(RenderQueue* queue, TriangleCullingProgram* cullingProgram);
 private:
 
 	enum ROOT_PARAMS {

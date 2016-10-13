@@ -5,6 +5,7 @@
 #include "ModelBank.h"
 #include "MaterialBank.h"
 #include "BufferManager.h"
+#include "input/Input.h"
 
 using namespace GeometryProgram;
 
@@ -50,9 +51,9 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	depthDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
 	depthDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 	//rasterstate
-	CD3DX12_RASTERIZER_DESC rasterDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	rasterDesc.CullMode = D3D12_CULL_MODE_NONE;
-	pipeStateFact.SetRasterizerState(rasterDesc);
+	//CD3DX12_RASTERIZER_DESC rasterDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	//rasterDesc.CullMode = D3D12_CULL_MODE_NONE;
+	//pipeStateFact.SetRasterizerState(rasterDesc);
 
 	pipeStateFact.SetDepthStencilFormat(DXGI_FORMAT_D24_UNORM_S8_UINT);
 	pipeStateFact.SetDepthStencilState(depthDesc);
@@ -121,11 +122,10 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* state, RenderQueue* queue, TriangleCullingProgram& cullingProgram) {
 	cmdList->SetGraphicsRootSignature(state->RootSignature.Get());
 	cmdList->SetPipelineState(state->PipelineState.Get());
-	cmdList->SetGraphicsRootConstantBufferView(PER_FRAME_CONST_BUFFER, g_BufferManager.GetGPUHandle("cbPerFrame"));
+	cmdList->SetGraphicsRootConstantBufferView(PER_FRAME_CONST_BUFFER, g_BufferManager.GetGPUHandle("cbPerFrame2"));
 	cmdList->SetGraphicsRootShaderResourceView(SHADER_INPUT_STRUCT_BUFFER, g_BufferManager.GetGPUHandle("ShaderInputBuffer"));
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	g_ModelBank.ApplyBuffers(cmdList);
-	cmdList->IASetIndexBuffer(&cullingProgram.GetCulledIndexBufferView());
+	g_ModelBank.ApplyVertexBuffers(cmdList);
 
 	ID3D12DescriptorHeap* heaps[] = { state->RenderDescHeap.Get() };
 	cmdList->SetDescriptorHeaps(1, heaps);
@@ -135,8 +135,22 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* st
 	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
 
 	g_BufferManager.SwitchState("IndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+	g_BufferManager.SwitchState("CulledIndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+
+	static bool drawCulled = true;
+	if (g_Input.IsKeyPushed(GLFW_KEY_V))
+		drawCulled = !drawCulled;
 	//draw everything
-	cmdList->ExecuteIndirect(state->CommandSignature.Get(), cullingProgram.GetDrawCount(),
-		cullingProgram.GetDrawArgsBuffer(), 0, nullptr, 0);
+	if(drawCulled){
+		cmdList->IASetIndexBuffer(&cullingProgram.GetCulledIndexBufferView());
+
+		cmdList->ExecuteIndirect(state->CommandSignature.Get(), cullingProgram.GetDrawCount(),
+			g_BufferManager.GetBufferResource("CulledIndirectBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0);
+	} else {
+		g_ModelBank.ApplyIndexBuffers(cmdList);
+		cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(),
+			g_BufferManager.GetBufferResource("IndirectBuffer"), 0, nullptr, 0);
+	}
+	
 }

@@ -131,7 +131,7 @@ void GraphicsEngine::CreateContext() {
 }
 
 void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
-	m_ScreenSize = screenSize * 1.0f;
+	m_ScreenSize = screenSize * 4.0f;
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
 	m_Viewport.MinDepth = 0.0f;
@@ -221,13 +221,15 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	
 	g_BufferManager.Init(&m_Context);
 	g_BufferManager.CreateConstBuffer("cbPerFrame", nullptr, sizeof(cbPerFrame));
+	g_BufferManager.CreateConstBuffer("cbPerFrame2", nullptr, sizeof(cbPerFrame));
 	g_BufferManager.CreateConstBuffer("testBuffer", nullptr, sizeof(IndirectDrawCall) * 100);
 	g_MaterialBank.Initialize(&m_Context);
 	g_ModelBank.Init(&m_Context);
 	m_RenderQueue.Init(&m_Context);
 
-	m_CullingProgram.Init(&m_Context);
 	m_TriangleCullingProgram.Init(&m_Context);
+
+	m_CullingProgram.Init(&m_Context, &m_TriangleCullingProgram);
 
 	m_Profiler.Init(&m_Context);
 
@@ -323,6 +325,7 @@ void GraphicsEngine::Render() {
 	if (m_RenderQueue.GetDrawCount() == 0) {
 		m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
 		HR(m_Context.CommandList->Close(), L"Error closing command list");
 		ID3D12CommandList* commandLists = { m_Context.CommandList.Get() };
 		m_Context.CommandQueue->ExecuteCommandLists(1, &commandLists);
@@ -334,68 +337,50 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	perFrame->ScreenSize = m_ScreenSize;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
-
-	//m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
-
-	//m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
-
-	//m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
-
-	//m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
-
-	//m_Profiler.Step(m_Context.CommandList.Get(), "DrawCulling");
-
-	//m_CullingProgram.Disbatch(&m_RenderQueue);
-
+	m_Profiler.Start();
+	m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
+	m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
+	m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
+	m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
 	m_Profiler.Step(m_Context.CommandList.Get(), "TriangleCulling");
-	
 	m_TriangleCullingProgram.Disbatch(&m_RenderQueue);
+	m_Profiler.Step(m_Context.CommandList.Get(), "DrawCulling");
+	m_CullingProgram.Disbatch(&m_RenderQueue, &m_TriangleCullingProgram);
 
-	//HR(m_Context.CommandList->Close(), L"Error closing command list");
-	//ID3D12CommandList* commandLists = { m_Context.CommandList.Get() };
-	//m_Context.CommandQueue->ExecuteCommandLists(1, &commandLists);
-
+	//ExecuteCmdList(&m_Context);
 	//WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
-
-	//HR(m_Context.CommandAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting command allocator");
-	//HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting command list");
-
-	ExecuteCmdList(&m_Context);
-	
-	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
-
-	ResetCmdList(&m_Context);
+	//ResetCmdList(&m_Context);
 
 	v = m_RenderQueue.GetViews().at(0);
-	perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame");
+	perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame2");
 	perFrame->CamPos = v.Camera.Position;
 	perFrame->LightDir = glm::vec3(0.0f, -1.0f, 0.2f);
 	perFrame->ViewProj = v.Camera.ProjView;
-	g_BufferManager.UnMapBuffer("cbPerFrame");
+	g_BufferManager.UnMapBuffer("cbPerFrame2");
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_Context.FrameIndex, m_SwapChain.RenderTargetHeapSize);
 	m_Context.CommandList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
 
 	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
 	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
-
+	
 	m_Profiler.Step(m_Context.CommandList.Get(), "Geometry");
 
 	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, m_TriangleCullingProgram);
 
 	m_Profiler.End(m_Context.CommandList.Get());
-
+	
 	//return to present mode for render target
 	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	
-	//m_Context.CommandList->CopyBufferRegion(g_BufferManager.GetBufferResource("testBuffer"), 0, m_TriangleCullingProgram.GetDrawArgsBuffer(), 0, sizeof(IndirectDrawCall) * 100);
-
+	//m_Context.CommandList->CopyBufferRegion(g_BufferManager.GetBufferResource("testBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0, sizeof(IndirectDrawCall) * 1);
+	//m_Context.CommandList->CopyBufferRegion(g_BufferManager.GetBufferResource("testBuffer"), 0, g_BufferManager.GetBufferResource("CulledIndirectBuffer"), 0, sizeof(IndirectDrawCall) * 100);
+	
 	ExecuteCmdList(&m_Context);
 
 	//IndirectDrawCall* testDraws;
 	//testDraws = (IndirectDrawCall*)g_BufferManager.MapBuffer("testBuffer");
-	//testDraws;
 	//g_BufferManager.UnMapBuffer("testBuffer");
 }
 

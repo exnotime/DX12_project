@@ -21,6 +21,11 @@ void GPUProfiler::Init(DX12Context* context) {
 
 	m_StepCounter = 0;
 }
+void GPUProfiler::Start() {
+	m_StepNames.clear();
+	m_StepCounter = 0;
+}
+
 void GPUProfiler::Step(ID3D12GraphicsCommandList* cmdList, const std::string& name) {
 		cmdList->EndQuery(m_QueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_StepCounter++);
 		m_StepNames.push_back(name);
@@ -31,6 +36,9 @@ void GPUProfiler::End(ID3D12GraphicsCommandList* cmdList) {
 }
 
 void GPUProfiler::PrintResults() {
+	if (m_StepCounter == 0)
+		return;
+
 	UINT64* result;
 	D3D12_RANGE range = { 0, sizeof(UINT64) * m_StepCounter };
 	m_ResultBuffer->Map(0, &range, (void**)&result);
@@ -46,14 +54,12 @@ void GPUProfiler::PrintResults() {
 #endif
 	}
 
-	a = result[0];
-	b = result[m_StepCounter - 1];
+	//a = result[0];
+	//b = result[m_StepCounter - 1];
 
-	double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
-	printf("Entire frame: %4.4f ms\n", res);
+	//double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
+	//printf("Entire frame: %4.4f ms\n", res);
 
 	range.End = 0;
 	m_ResultBuffer->Unmap(0, &range);
-
-	m_StepCounter = 0;
 }

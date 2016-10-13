@@ -11,7 +11,7 @@ DrawCullingProgram::~DrawCullingProgram() {
 
 }
 
-void DrawCullingProgram::Init(DX12Context* context) {
+void DrawCullingProgram::Init(DX12Context* context, TriangleCullingProgram* cullingProgram) {
 
 	m_Shader.LoadFromFile(L"src/shaders/Computeculling.hlsl", COMPUTE_SHADER_BIT, &context->Extensions);
 	//root signature
@@ -60,7 +60,7 @@ void DrawCullingProgram::Init(DX12Context* context) {
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	context->Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_CPUDescriptorHeap));
 
-	g_BufferManager.CreateStructuredBuffer("CulledIndirectBuffer", nullptr, sizeof(IndirectDrawCall) * 10000, sizeof(IndirectDrawCall));
+	g_BufferManager.CreateStructuredBuffer("CulledIndirectBuffer", nullptr, sizeof(IndirectDrawCall) * cullingProgram->GetMaxBatchCount(), sizeof(IndirectDrawCall));
 	g_BufferManager.CreateStructuredBuffer("CullingCounterBuffer", nullptr, 4096 * sizeof(UINT), sizeof(UINT));
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -70,19 +70,19 @@ void DrawCullingProgram::Init(DX12Context* context) {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Buffer.FirstElement = 0;
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	srvDesc.Buffer.NumElements = 10000;
+	srvDesc.Buffer.NumElements = cullingProgram->GetMaxBatchCount();
 	srvDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	context->Device->CreateShaderResourceView(g_BufferManager.GetBufferResource("IndirectBuffer"), &srvDesc, cpuHandle);
-	context->Device->CreateShaderResourceView(g_BufferManager.GetBufferResource("IndirectBuffer"), &srvDesc, gpuHandle);
+	context->Device->CreateShaderResourceView(cullingProgram->GetDrawArgsBuffer(), &srvDesc, cpuHandle);
+	context->Device->CreateShaderResourceView(cullingProgram->GetDrawArgsBuffer(), &srvDesc, gpuHandle);
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.Buffer.CounterOffsetInBytes = 0;
 	uavDesc.Buffer.FirstElement = 0;
 	uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-	uavDesc.Buffer.NumElements = 10000;
+	uavDesc.Buffer.NumElements = cullingProgram->GetMaxBatchCount();
 	uavDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
@@ -116,32 +116,10 @@ void DrawCullingProgram::Init(DX12Context* context) {
 	m_Context = context;
 }
 
-//Naive BitCount think of other method later
-UINT BitCount(UINT bm) {
-	//might need to unroll
-	UINT count = 0;
-	for (int i = 1; i < 32 + 1; i++) {
-		//8-bit example
-		// 00110010 << 6
-		// 10000000 >> 7
-		// cnt += 00000001
-		count += ((bm << (32 - i)) >> (32 - 1));
-	}
-	return count;
-}
-//Naive MBCount think of other method later
-UINT MBCount(UINT bm, UINT laneid) {
-	UINT laneMask = pow(2, laneid) - 1;
-	laneMask &= bm;
-	return BitCount(laneMask);
-}
-
-void DrawCullingProgram::Disbatch(RenderQueue* queue) {
+void DrawCullingProgram::Disbatch(RenderQueue* queue, TriangleCullingProgram* cullingProgram) {
 	g_BufferManager.SwitchState("IndirectBuffer", D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	g_BufferManager.SwitchState("CulledIndirectBuffer", D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
-	UINT test = MBCount(156, 7);
 
 	//clear uav counter
 	UINT vals[4] = { 0,0,0,0 };
@@ -153,7 +131,7 @@ void DrawCullingProgram::Disbatch(RenderQueue* queue) {
 	cmdList->ClearUnorderedAccessViewUint(gpuHandle, cpuHandle, g_BufferManager.GetBufferResource("CulledIndirectBuffer"), vals, 0, nullptr);
 	cmdList->ClearUnorderedAccessViewUint(gpuHandle.Offset(1, m_DescIncSize), cpuHandle.Offset(1, m_DescIncSize), g_BufferManager.GetBufferResource("CullingCounterBuffer"), vals, 0, nullptr);
 
-	cmdList->ClearUnorderedAccessViewUint(gpuHandle.Offset(1, m_DescIncSize), cpuHandle.Offset(1, m_DescIncSize), m_Context->Extensions.NvExtResource.Get(), vals, 0, nullptr);
+	//cmdList->ClearUnorderedAccessViewUint(gpuHandle.Offset(1, m_DescIncSize), cpuHandle.Offset(1, m_DescIncSize), m_Context->Extensions.NvExtResource.Get(), vals, 0, nullptr);
 
 	cmdList->SetPipelineState(m_PipelineState.Get());
 	cmdList->SetComputeRootSignature(m_RootSignature.Get());
@@ -161,18 +139,21 @@ void DrawCullingProgram::Disbatch(RenderQueue* queue) {
 	ID3D12DescriptorHeap* heaps[] = { m_GPUDescriptorHeap.Get() };
 	cmdList->SetDescriptorHeaps(1, heaps);
 
-	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, queue->GetDrawCount(), 0);
+	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, cullingProgram->GetDrawCount(), 0);
 	cmdList->SetComputeRootDescriptorTable(INPUT_DESC, m_GPUDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
-	cmdList->SetComputeRootDescriptorTable(2, gpuHandle);
+	//cmdList->SetComputeRootDescriptorTable(2, gpuHandle);
 
 	const UINT workGroupSize = m_Context->Extensions.WaveSize;
-	const int workGroups = (queue->GetDrawCount() + workGroupSize - 1) / workGroupSize;
+	const int workGroups = (cullingProgram->GetDrawCount() + workGroupSize - 1) / workGroupSize;
 
 	cmdList->Dispatch(workGroups, 1, 1);
 
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(cullingProgram->GetDrawArgsBuffer(),
+		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
+
 	//read back the counter buffer
-	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_COPY_SOURCE);
+	//g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_COPY_SOURCE);
 	//g_BufferManager.SwitchState("CopyBuffer", D3D12_RESOURCE_STATE_COPY_DEST);
 	//cmdList->CopyBufferRegion(g_BufferManager.GetBufferResource("CopyBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0, sizeof(UINT) * 32);
 }

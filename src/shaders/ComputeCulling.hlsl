@@ -40,7 +40,7 @@ GroupMemoryBarrierWithGroupSync();
 	uint waveSlot = 0;
 
 	if(index < g_DrawCallCount){
-		laneActive = g_DrawArgsBuffer[index].DrawIndex & 1;
+		laneActive = g_DrawArgsBuffer[index].IndexCount > 0;
 		BitMask ballot = WaveBallot(laneActive);
 
 		uint outCount = BitCount(ballot);
@@ -58,8 +58,4 @@ GroupMemoryBarrierWithGroupSync();
 	if(laneActive){
 		g_OutDrawArgs[localSlot + waveSlot + g_DisbatchSlot] = g_DrawArgsBuffer[index];
 	}
-GroupMemoryBarrierWithGroupSync();
-
-	if(laneActive)
-		g_OutDrawArgs[index].DrawIndex = laneId;
 }

@@ -9,19 +9,21 @@
 #include "../physics/PhysicsEngine.h"
 #include "../script/ScriptEngine.h"
 
-void SpawnPlayer(const glm::vec3& position, const glm::vec3& size) {
+void SpawnPlayer(const glm::vec3& position, const glm::vec3& size, const glm::quat& orientation) {
 	Entity& e = g_EntityManager.CreateEntity();
 	TransformComponent tc;
 	tc.Position = position;
-	tc.Orientation = glm::quat(1.0f,0.0f,0.0f,0.0f);
+	tc.Orientation = orientation;
 	tc.Scale = size;
 	tc.World = glm::translate(tc.Position) * glm::mat4_cast(tc.Orientation) * glm::scale(tc.Scale);
 	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
 
 	CameraComponent cc;
 	cc.Camera.GetEditableData().Fov = (60.0f / 360.0f) * glm::pi<float>() * 2;
-	cc.Camera.GetEditableData().Far = 1000.0f;
-	cc.Camera.GetEditableData().Near = 0.01f;
+	cc.Camera.GetEditableData().Far = 500.0f;
+	cc.Camera.GetEditableData().Near = 0.1f;
+	cc.Camera.SetOrientation(tc.Orientation);
+	cc.Camera.SetPosition(tc.Position);
 	g_ComponentManager.CreateComponent(&cc, e, CameraComponent::Flag);
 }
 
@@ -220,5 +222,5 @@ void RegisterScriptFunctions() {
 		"int LoadModel(const string file)", AngelScript::asFUNCTION(LoadModel), AngelScript::asCALL_CDECL);
 
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
-		"void SpawnPlayer(vec3 position, vec3 size)", AngelScript::asFUNCTION(SpawnPlayer), AngelScript::asCALL_CDECL);
+		"void SpawnPlayer(vec3 position, vec3 size, quat orientation)", AngelScript::asFUNCTION(SpawnPlayer), AngelScript::asCALL_CDECL);
 }

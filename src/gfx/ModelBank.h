@@ -23,6 +23,8 @@ class ModelBank {
 	void BuildBuffers();
 	void DeleteModel();
 	void ApplyBuffers(ID3D12GraphicsCommandList* cmdList);
+	void ApplyVertexBuffers(ID3D12GraphicsCommandList* cmdList);
+	void ApplyIndexBuffers(ID3D12GraphicsCommandList* cmdList);
 	void Clear();
 
 	float GetScaledRadius(ModelHandle model, const glm::vec3& scale);
