@@ -8,7 +8,7 @@ Shader::~Shader() {
 
 }
 
-void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes, ExtensionContext* extensions) {
+void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes, ExtensionContext* extensions, std::vector<D3D_SHADER_MACRO>* macros) {
 
 	m_ShaderTypes = shaderTypes;
 #ifdef _DEBUG
@@ -17,23 +17,26 @@ void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes, Extens
 	UINT compileFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3 | D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
 #endif
 
-	UINT macroCount = 0;
-	std::vector<D3D_SHADER_MACRO> macros;
+	std::vector<D3D_SHADER_MACRO> shaderMacros;
+	if (macros) {
+		shaderMacros.insert(shaderMacros.begin(), macros->begin(), macros->end());
+	}
+
 	if (extensions) {
 		//AMD
 		if (extensions->Vendor == AMD_VENDOR_ID) {
 			compileFlags &= ~D3DCOMPILE_SKIP_OPTIMIZATION; //cant skip optimizations with amd
-			macros.push_back({"AMD_USE_SHADER_INTRINSICS", "1"});
-			macros.push_back({ nullptr, nullptr });
+			shaderMacros.push_back({"AMD_USE_SHADER_INTRINSICS", "1"});
+			shaderMacros.push_back({ nullptr, nullptr });
 		} //NVIDIA
 		else if (extensions->Vendor == NVIDIA_VENDOR_ID) {
 			compileFlags &= ~D3DCOMPILE_SKIP_OPTIMIZATION;
-			macros.push_back({ "NVIDIA_USE_SHADER_INTRINSICS", "1" });
-			macros.push_back({ nullptr, nullptr });
+			shaderMacros.push_back({ "NVIDIA_USE_SHADER_INTRINSICS", "1" });
+			shaderMacros.push_back({ nullptr, nullptr });
 		}
 	}
 
-	D3D_SHADER_MACRO* macro = (macros.size() > 0 ? macros.data() : nullptr);
+	D3D_SHADER_MACRO* macro = (shaderMacros.size() > 0 ? shaderMacros.data() : nullptr);
 
 	ID3DBlob* errorBlob = nullptr;
 	UINT index;

@@ -69,10 +69,21 @@ void Engine::Run() {
 		double deltaTime = gameTime.Tick();
 		m_SubSystemSet.UpdateSubSystems(deltaTime);
 
-		std::stringstream ss;
-		ss << "A DX12 Window : " << ceil(1.0 / deltaTime);
+		static int counter = 0;
+		static float dt = 0;
 
-		glfwSetWindowTitle(g_Window.GetWindow(), ss.str().c_str());
+		dt += deltaTime;
+		counter++;
+		if (counter == 100) {
+			std::stringstream ss;
+			ss << "FPS : " << ceil(1.0 / (dt / counter));
+			glfwSetWindowTitle(g_Window.GetWindow(), ss.str().c_str());
+			counter = 0;
+			dt = 0;
+		}
+
+
+		
 
 		if (g_Input.IsKeyDown(GLFW_KEY_ESCAPE))
 			break;

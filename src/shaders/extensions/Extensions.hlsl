@@ -41,8 +41,16 @@ uint LaneId(){
 //Naive BitCount think of other method later
 uint BitCount32(uint bits) {
 	uint count = 0;
-	for (int i = 1; i < 32 + 1; i++)
-		count += ((bits << (32 - i)) >> (32 - 1));
+	for (int i = 1; i < 33; i += 8){
+		count += ((bits << (32 - i)) >> (31));
+		count += ((bits << (32 - i + 1)) >> (31));
+		count += ((bits << (32 - i + 2)) >> (31));
+		count += ((bits << (32 - i + 3)) >> (31));
+		count += ((bits << (32 - i + 4)) >> (31));
+		count += ((bits << (32 - i + 5)) >> (31));
+		count += ((bits << (32 - i + 6)) >> (31));
+		count += ((bits << (32 - i + 7)) >> (31));
+	}
 	return count;
 }
 

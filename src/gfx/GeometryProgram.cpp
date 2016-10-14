@@ -6,6 +6,7 @@
 #include "MaterialBank.h"
 #include "BufferManager.h"
 #include "input/Input.h"
+#include "TestParams.h"
 
 using namespace GeometryProgram;
 
@@ -138,11 +139,10 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* st
 	g_BufferManager.SwitchState("CulledIndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 
-	static bool drawCulled = true;
 	if (g_Input.IsKeyPushed(GLFW_KEY_V))
-		drawCulled = !drawCulled;
+		g_TestParams.UseCulling = !g_TestParams.UseCulling;
 	//draw everything
-	if(drawCulled){
+	if(g_TestParams.UseCulling){
 		cmdList->IASetIndexBuffer(&cullingProgram.GetCulledIndexBufferView());
 
 		cmdList->ExecuteIndirect(state->CommandSignature.Get(), cullingProgram.GetDrawCount(),

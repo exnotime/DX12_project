@@ -9,6 +9,7 @@ public:
 	~DrawCullingProgram();
 	void Init(DX12Context* context, TriangleCullingProgram* cullingProgram);
 	void Disbatch(RenderQueue* queue, TriangleCullingProgram* cullingProgram);
+	void ClearCounter();
 private:
 
 	enum ROOT_PARAMS {

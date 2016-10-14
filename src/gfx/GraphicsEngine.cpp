@@ -5,6 +5,7 @@
 #include "ModelBank.h"
 #include "MaterialBank.h"
 #include "BufferManager.h"
+#include "TestParams.h"
 
 //shader extensions
 #include <amd_ags.h>
@@ -131,7 +132,7 @@ void GraphicsEngine::CreateContext() {
 }
 
 void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
-	m_ScreenSize = screenSize * 4.0f;
+	m_ScreenSize = screenSize * 1.0f;
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
 	m_Viewport.MinDepth = 0.0f;
@@ -156,6 +157,7 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 	swapChainDesc.Windowed = true;
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.OutputWindow = hWnd;
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
 	ComPtr<IDXGISwapChain> swapchain;
 	HR(m_Context.DXGIFactory->CreateSwapChain(m_Context.CommandQueue.Get(), &swapChainDesc, &swapchain), L"Error creating swapchain");
@@ -282,7 +284,7 @@ void GraphicsEngine::PrepareForRender() {
 	m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 
-	m_TriangleCullingProgram.CreateDescriptorTable();
+	m_TriangleCullingProgram.CreateDescriptorTable(&m_HiZProgram);
 
 	g_MaterialBank.FreeResources();
 	g_ModelBank.FreeUploadHeaps();
@@ -338,18 +340,18 @@ void GraphicsEngine::Render() {
 	perFrame->ScreenSize = m_ScreenSize;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
 	m_Profiler.Start();
-	m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
-	m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
-	m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
-	m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
-	m_Profiler.Step(m_Context.CommandList.Get(), "TriangleCulling");
-	m_TriangleCullingProgram.Disbatch(&m_RenderQueue);
-	m_Profiler.Step(m_Context.CommandList.Get(), "DrawCulling");
-	m_CullingProgram.Disbatch(&m_RenderQueue, &m_TriangleCullingProgram);
 
-	//ExecuteCmdList(&m_Context);
-	//WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
-	//ResetCmdList(&m_Context);
+	if (g_TestParams.UseCulling) {
+		m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
+		m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
+		m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
+		m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
+		m_Profiler.Step(m_Context.CommandList.Get(), "TriangleCulling");
+		m_CullingProgram.ClearCounter();
+		m_TriangleCullingProgram.Disbatch(&m_RenderQueue);
+		m_Profiler.Step(m_Context.CommandList.Get(), "DrawCulling");
+		m_CullingProgram.Disbatch(&m_RenderQueue, &m_TriangleCullingProgram);
+	}
 
 	v = m_RenderQueue.GetViews().at(0);
 	perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame2");
@@ -374,18 +376,22 @@ void GraphicsEngine::Render() {
 	m_Context.CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	
-	//m_Context.CommandList->CopyBufferRegion(g_BufferManager.GetBufferResource("testBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0, sizeof(IndirectDrawCall) * 1);
+	//m_Context.CommandList->CopyBufferRegion(g_BufferManager.GetBufferResource("testBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0, sizeof(UINT) * 32);
 	//m_Context.CommandList->CopyBufferRegion(g_BufferManager.GetBufferResource("testBuffer"), 0, g_BufferManager.GetBufferResource("CulledIndirectBuffer"), 0, sizeof(IndirectDrawCall) * 100);
 	
 	ExecuteCmdList(&m_Context);
 
-	//IndirectDrawCall* testDraws;
-	//testDraws = (IndirectDrawCall*)g_BufferManager.MapBuffer("testBuffer");
+	//UINT* testDraws;
+	//testDraws = (UINT*)g_BufferManager.MapBuffer("testBuffer");
+	//printf("Triangles culled in 2dh filter: %d \n", testDraws[2]);
+	//printf("Triangles culled in small triangle filter: %d \n", testDraws[3]);
+	//printf("Triangles culled in frustum filter: %d \n", testDraws[4]);
+	//printf("Remaining triangles %d \n", testDraws[1]);
 	//g_BufferManager.UnMapBuffer("testBuffer");
 }
 
 void GraphicsEngine::Swap() {
-	m_SwapChain.SwapChain->Present(1, 0);
+	m_SwapChain.SwapChain->Present(0, DXGI_PRESENT_ALLOW_TEARING);
 	m_RenderQueue.Clear();
 	const UINT64 currentFenceValue = m_Fence.FenceValues[m_Context.FrameIndex];
 	m_Context.CommandQueue->Signal(m_Fence.Fence.Get(), m_Fence.FenceValues[m_Context.FrameIndex]);
@@ -398,5 +404,5 @@ void GraphicsEngine::Swap() {
 	}
 	m_Fence.FenceValues[m_Context.FrameIndex] = currentFenceValue + 1;
 
-	m_Profiler.PrintResults();
+	//m_Profiler.PrintResults();
 }

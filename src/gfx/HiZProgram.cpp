@@ -11,7 +11,7 @@ HiZProgram::~HiZProgram() {
 void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	m_Shader.LoadFromFile(L"src/shaders/HiZGeneration.hlsl", COMPUTE_SHADER_BIT, nullptr);
 
-	m_ScreenSize = screenSize;
+	m_ScreenSize = screenSize * 0.5f;
 	m_MipCount = log2(glm::max(m_ScreenSize.x, m_ScreenSize.y));
 	m_DescIncSize = context->Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
@@ -64,6 +64,7 @@ void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 		context->Device->CreateUnorderedAccessView(m_HiZResource.Get(), nullptr, &uavDesc, uavHandle);
 		uavHandle.Offset(1, m_DescIncSize);
 	}
+
 }
 
 void HiZProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* srcTex) {

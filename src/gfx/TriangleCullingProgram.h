@@ -2,6 +2,7 @@
 #include "DX12Common.h"
 #include "RenderQueue.h"
 #include "Shader.h"
+#include "HiZProgram.h" 
 #define MAX_TRIANGLE_COUNT 10000000
 
 class TriangleCullingProgram {
@@ -9,7 +10,7 @@ public:
 	TriangleCullingProgram();
 	~TriangleCullingProgram();
 	void Init(DX12Context* context, const UINT maxTriangleCount = MAX_TRIANGLE_COUNT, const UINT batchSize = 256);
-	void CreateDescriptorTable();
+	void CreateDescriptorTable(HiZProgram* hizProgram);
 	void Disbatch(RenderQueue* queue);
 
 	ID3D12Resource* GetDrawArgsBuffer() {
@@ -33,14 +34,12 @@ private:
 	ComPtr<ID3D12PipelineState> m_PipeState;
 	ComPtr<ID3D12Resource> m_CulledIndexBuffer;
 	ComPtr<ID3D12Resource> m_CulledDrawArgsBuffer;
-	ComPtr<ID3D12Resource> m_SplitDrawArgsBuffer;
-	ComPtr<ID3D12Resource> m_SplitDrawArgsBufferUpload;
 	ComPtr<ID3D12DescriptorHeap> m_DescHeap;
 	UINT m_DescHeapIncSize;
 	D3D12_INDEX_BUFFER_VIEW m_IBOView;
 
 	UINT m_BatchSize;
-	UINT m_MaxTrianglecount;
+	UINT m_MaxTriangleCount;
 	UINT m_MaxBatchCount;
 	UINT m_BatchCount;
 

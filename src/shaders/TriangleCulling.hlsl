@@ -21,8 +21,13 @@ StructuredBuffer<float3> g_VertexPositions : register(t1);
 StructuredBuffer<uint> g_TriangleIndices : register(t2);
 StructuredBuffer<ShaderInput> g_InputBuffer : register(t3);
 
+Texture2D g_HIZBuffer : register(t4);
+SamplerState g_Sampler : register(s0);
+
 RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
 RWStructuredBuffer<uint> g_OutTriangleIndices : register(u1);
+//instrumentation
+globallycoherent RWByteAddressBuffer g_CounterBuffer : register(u2);
 
 //HI-Z buffer
 
@@ -41,10 +46,12 @@ cbuffer constants : register(b1){
 };
 
 #define BATCH_SIZE 256
+#define INSTRUMENT 1
+
 
 groupshared uint g_WorkGroupCount;
 
-[numthreads(BATCH_SIZE,1,1)]
+[numthreads(BATCH_SIZE, 1, 1)]
 void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_GroupID ) {
 	uint laneId = LaneId();
 
@@ -64,20 +71,24 @@ GroupMemoryBarrierWithGroupSync();
 
 	if(index < draw.IndexCount){
 		//unpack triangle
-		float4x4 wvp = mul(g_ViewProj, g_InputBuffer[draw.DrawIndex].World);
+		float4x4 w = g_InputBuffer[draw.DrawIndex].World;
 
 		uint indices[] = {	g_TriangleIndices[draw.IndexOffset + index],
 							g_TriangleIndices[draw.IndexOffset + index + 1],
 							g_TriangleIndices[draw.IndexOffset + index + 2]};
 
-		float4 v1 = mul( wvp, float4(g_VertexPositions[indices[0]], 1));
-		float4 v2 = mul( wvp, float4(g_VertexPositions[indices[1]], 1));
-		float4 v3 = mul( wvp, float4(g_VertexPositions[indices[2]], 1));
+		float4 v1 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[0]], 1)));
+		float4 v2 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[1]], 1)));
+		float4 v3 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[2]], 1)));
 
 		//backface
 		float det = determinant(float3x3(v1.xyw,v2.xyw,v3.xyw));
 		bool culled = det >= 0.0;
-
+#ifdef INSTRUMENT
+		if(culled){
+			g_CounterBuffer.InterlockedAdd(8, 1);
+		}
+#endif
 		//perspective divide
 		v1.xyz /= v1.w;
 		v2.xyz /= v2.w;
@@ -88,10 +99,34 @@ GroupMemoryBarrierWithGroupSync();
 
 		vertexMax.xy = vertexMax.xy * 0.5 + 0.5;
 		vertexMin.xy = vertexMin.xy * 0.5 + 0.5;
+
+		//occlusion 
+		float longestEdge = max(length(v1.xy - v2.xy), max(length(v2.xy - v3.xy), length(v1.xy - v3.xy)));
+		int mip = min(ceil(log2(max(longestEdge, 1.0))), 9 - 1);
+		float2 samplePos = ((v1.xy + v2.xy + v3.xy) / 3.0);
+		float depth = g_HIZBuffer.SampleLevel(g_Sampler, samplePos, mip).r;
+		culled = culled || !(depth > 0.9);
+
 		//small triangle
+#ifdef INSTRUMENT
+		if(!culled && any(round(vertexMin.xy * g_ScreenSize) == round(vertexMax.xy * g_ScreenSize))){
+			g_CounterBuffer.InterlockedAdd(12, 1);
+			culled = true;
+		}
+#else
 		culled = culled || any(round(vertexMin.xy * g_ScreenSize) == round(vertexMax.xy * g_ScreenSize));
+#endif
+
 		//frustum
-		culled = culled || (any(vertexMin.xy > 1) || any(vertexMax.xy < 0) || vertexMin.z < 0);
+#ifdef INSTRUMENT
+		if(!culled && (any(vertexMin.xy > 1) || any(vertexMax.xy < 0))){
+			g_CounterBuffer.InterlockedAdd(16, 1);
+			culled = true;
+		}
+#else
+		culled = culled || (any(vertexMin.xy > 1) || any(vertexMax.xy < 0));
+#endif
+
 
 		const Predicate laneActive = !culled;
 		BitMask ballot = WaveBallot(laneActive);
@@ -115,8 +150,16 @@ GroupMemoryBarrierWithGroupSync();
 GroupMemoryBarrierWithGroupSync();
 
 	if(groupIndex == 0){
-		g_OutDrawArgs[g_BatchIndex + groupID.x] = draw;
+		g_OutDrawArgs[g_BatchIndex + groupID.x].DrawIndex = draw.DrawIndex;
+		g_OutDrawArgs[g_BatchIndex + groupID.x].MaterialIndex = draw.MaterialIndex;
 		g_OutDrawArgs[g_BatchIndex + groupID.x].IndexCount = g_WorkGroupCount * 3;
+		g_OutDrawArgs[g_BatchIndex + groupID.x].InstanceCount = 1;
 		g_OutDrawArgs[g_BatchIndex + groupID.x].IndexOffset = indexOffset;
+
+#ifdef INSTRUMENT
+		//instrumentation
+		g_CounterBuffer.InterlockedAdd(4, g_WorkGroupCount);
+#endif
+
 	}
 }

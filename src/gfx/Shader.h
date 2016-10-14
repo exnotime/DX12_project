@@ -14,7 +14,7 @@ class Shader {
 public:
 	Shader();
 	~Shader();
-	void LoadFromFile(const std::wstring& filename, UINT shaderTypes, ExtensionContext* extensions);
+	void LoadFromFile(const std::wstring& filename, UINT shaderTypes, ExtensionContext* extensions = nullptr, std::vector<D3D_SHADER_MACRO>* macros = nullptr );
 	D3D12_SHADER_BYTECODE GetByteCode(UINT shaderTypes) const;
 	UINT GetShaderTypes() const { return m_ShaderTypes; };
 private:

@@ -27,13 +27,14 @@ void TriangleCullingProgram::Init(DX12Context* context, const UINT maxTriangleCo
 			rootSignFact.AddConstant(2, 1);
 			break;
 		case INPUT_DT:
-			ranges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 0));
-			ranges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 0, 0, 4));
+			ranges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0));
+			ranges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 3, 0, 0, 5));
 			rootSignFact.AddDescriptorTable(ranges);
 			break;
 		}
 	}
 	rootSignFact.AddExtensions(&context->Extensions);
+	rootSignFact.AddDefaultStaticSampler(0);
 	m_RootSign = rootSignFact.CreateSignture(context->Device.Get());
 	//Pipe state
 	PipelineStateFactory pipeFact;
@@ -42,28 +43,21 @@ void TriangleCullingProgram::Init(DX12Context* context, const UINT maxTriangleCo
 	m_PipeState = pipeFact.CreateComputeState(context);
 	//Resources
 	//index buffer
-	m_MaxTrianglecount = maxTriangleCount;
-	CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_MaxTrianglecount * 3 * sizeof(UINT), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	m_MaxTriangleCount = maxTriangleCount;
+	CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_MaxTriangleCount * 3 * sizeof(UINT), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 		&bufferDesc, D3D12_RESOURCE_STATE_INDEX_BUFFER, nullptr, IID_PPV_ARGS(&m_CulledIndexBuffer));
 	//draw args buffer
 	m_BatchSize = batchSize;
-	m_MaxBatchCount = (m_MaxTrianglecount + m_BatchSize - 1) / m_BatchSize;
+	m_MaxBatchCount = (m_MaxTriangleCount + m_BatchSize - 1) / m_BatchSize;
 
 	bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_MaxBatchCount * sizeof(IndirectDrawCall), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 		&bufferDesc, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, nullptr, IID_PPV_ARGS(&m_CulledDrawArgsBuffer));
 
-	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-		&bufferDesc, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, nullptr, IID_PPV_ARGS(&m_SplitDrawArgsBuffer));
-
-	bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-		&bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_SplitDrawArgsBufferUpload));
-
 	//Descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	heapDesc.NumDescriptors = 6;
+	heapDesc.NumDescriptors = 8;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	context->Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_DescHeap));
@@ -71,12 +65,12 @@ void TriangleCullingProgram::Init(DX12Context* context, const UINT maxTriangleCo
 
 	m_IBOView.BufferLocation = m_CulledIndexBuffer->GetGPUVirtualAddress();
 	m_IBOView.Format = DXGI_FORMAT_R32_UINT;
-	m_IBOView.SizeInBytes = m_MaxTrianglecount * 3 * sizeof(UINT);
+	m_IBOView.SizeInBytes = m_MaxTriangleCount * 3 * sizeof(UINT);
 
 	m_DrawListArray = new IndirectDrawCall[m_MaxBatchCount];
 }
 
-void TriangleCullingProgram::CreateDescriptorTable() {
+void TriangleCullingProgram::CreateDescriptorTable(HiZProgram* hizProgram) {
 	ID3D12Device* device =  m_Context->Device.Get();
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DescHeap->GetCPUDescriptorHandleForHeapStart());
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -100,6 +94,15 @@ void TriangleCullingProgram::CreateDescriptorTable() {
 	srvDesc.Buffer.NumElements = 10000;
 	srvDesc.Buffer.StructureByteStride = sizeof(ShaderInput);
 	device->CreateShaderResourceView(g_BufferManager.GetBufferResource("ShaderInputBuffer"), &srvDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
+	//hi-z
+	srvDesc.Texture2D.MipLevels = hizProgram->GetMipCount();
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.PlaneSlice = 0;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	device->CreateShaderResourceView(hizProgram->GetResource(), &srvDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
 	//draw args output
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.Buffer.CounterOffsetInBytes = 0;
@@ -110,9 +113,19 @@ void TriangleCullingProgram::CreateDescriptorTable() {
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 	device->CreateUnorderedAccessView(m_CulledDrawArgsBuffer.Get(), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
 	//indices output
-	uavDesc.Buffer.NumElements = m_MaxTrianglecount * 3;
+	uavDesc.Buffer.NumElements = m_MaxTriangleCount * 3;
 	uavDesc.Buffer.StructureByteStride = sizeof(UINT);
 	device->CreateUnorderedAccessView(m_CulledIndexBuffer.Get(), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
+	//instrumentation buffer
+	uavDesc.Buffer.CounterOffsetInBytes = 0;
+	uavDesc.Buffer.FirstElement = 0;
+	uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
+	uavDesc.Buffer.NumElements = 32;
+	uavDesc.Buffer.StructureByteStride = 0;
+	uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+	device->CreateUnorderedAccessView(g_BufferManager.GetBufferResource("CullingCounterBuffer"), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
+
 }
 
 void TriangleCullingProgram::Disbatch(RenderQueue* queue) {
@@ -170,22 +183,6 @@ UINT TriangleCullingProgram::SplitMeshes(RenderQueue* queue) {
 		}
 		batchCounter += batchCount;
 	}
-	//transfer to GPU
-	void* data;
-	D3D12_RANGE range = { 0,0 };
-	m_SplitDrawArgsBufferUpload->Map(0, &range, &data);
-	memcpy(data, m_DrawListArray, sizeof(IndirectDrawCall) * batchCounter);
-	range.End = sizeof(IndirectDrawCall) * batchCounter;
-	m_SplitDrawArgsBufferUpload->Unmap(0, &range);
-	ID3D12GraphicsCommandList* cmdList = m_Context->CommandList.Get();
-
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SplitDrawArgsBuffer.Get(),
-		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
-
-	cmdList->CopyBufferRegion(m_SplitDrawArgsBuffer.Get(), 0, m_SplitDrawArgsBufferUpload.Get(), 0, sizeof(IndirectDrawCall) * batchCounter);
-
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SplitDrawArgsBuffer.Get(),
-		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 
 	return batchCounter;
 }
