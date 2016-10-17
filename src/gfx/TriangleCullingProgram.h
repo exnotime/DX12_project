@@ -3,7 +3,7 @@
 #include "RenderQueue.h"
 #include "Shader.h"
 #include "HiZProgram.h" 
-#define MAX_TRIANGLE_COUNT 10000000
+#define MAX_TRIANGLE_COUNT 1000 * 1000
 
 class TriangleCullingProgram {
 public:
@@ -26,8 +26,6 @@ public:
 		return m_MaxBatchCount;
 	}
 private:
-	UINT SplitMeshes(RenderQueue* queue);
-
 	DX12Context* m_Context;
 	Shader m_Shader;
 	ComPtr<ID3D12RootSignature> m_RootSign;
