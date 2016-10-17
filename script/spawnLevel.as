@@ -44,11 +44,11 @@ void main(){
 	//SpawnPhysicsShape(int(CUBE), vec3(0, -1.5f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(100,1,100), vec4(1.0f), 0.0f);
 	/*
 	SpawnPhysicsShape(int(CUBE), vec3(22, 10, 10), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.1f, 0.1f, 60.0f), vec4(1.0f) , 0.0f);
-	
+	*/
 	for(int i = 0; i < SHAPE_COUNT; ++i){
 		SpawnPhysicsShape(i, vec3( -20 + i * 5, 30, 20), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1), vec4(0.5f, 0.2f, 0.7f, 1.0f), 0.0f);
 	}
-	*/
+	
 	/*
 	float size = 3.0f;
 	for(int x = 0; x < size; x++){

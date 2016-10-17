@@ -1,10 +1,12 @@
 #include "GPUProfiler.h"
-
+#include <stdio.h>
 GPUProfiler::GPUProfiler() {
 
 }
 GPUProfiler::~GPUProfiler() {
-
+#ifdef PRINT_TO_FILE
+	fclose(m_File);
+#endif
 }
 void GPUProfiler::Init(DX12Context* context) {
 	D3D12_QUERY_HEAP_DESC queryHeapDesc;
@@ -19,7 +21,11 @@ void GPUProfiler::Init(DX12Context* context) {
 	context->Device->SetStablePowerState(true);
 	context->CommandQueue->GetTimestampFrequency(&m_TimerFreqs);
 
+#ifdef PRINT_TO_FILE
+	m_File = fopen("ProfilerLog.txt", "a");
+#endif
 	m_StepCounter = 0;
+
 }
 void GPUProfiler::Start() {
 	m_StepNames.clear();
@@ -42,7 +48,7 @@ void GPUProfiler::PrintResults() {
 	UINT64* result;
 	D3D12_RANGE range = { 0, sizeof(UINT64) * m_StepCounter };
 	m_ResultBuffer->Map(0, &range, (void**)&result);
-
+	static int counter = 0;
 	UINT64 a, b;
 	for (int i = 0; i < m_StepCounter - 1; i++) {
 		a = result[i];
@@ -52,13 +58,18 @@ void GPUProfiler::PrintResults() {
 #ifndef SILENT_PROFILING
 		printf("Step %s: %2.3f ms\n", m_StepNames[i].c_str(), res);
 #endif
+#ifdef PRINT_TO_FILE
+		fprintf(m_File, "%d %2.3f\n", counter, res);
+#endif
 	}
-
+	counter++;
 	//a = result[0];
 	//b = result[m_StepCounter - 1];
 
 	//double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
 	//printf("Entire frame: %4.4f ms\n", res);
+
+
 
 	range.End = 0;
 	m_ResultBuffer->Unmap(0, &range);

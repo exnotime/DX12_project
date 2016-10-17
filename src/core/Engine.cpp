@@ -81,10 +81,7 @@ void Engine::Run() {
 			counter = 0;
 			dt = 0;
 		}
-
-
 		
-
 		if (g_Input.IsKeyDown(GLFW_KEY_ESCAPE))
 			break;
 

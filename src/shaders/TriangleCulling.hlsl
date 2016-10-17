@@ -48,7 +48,6 @@ cbuffer constants : register(b1){
 #define BATCH_SIZE 256
 #define INSTRUMENT 1
 
-
 groupshared uint g_WorkGroupCount;
 
 [numthreads(BATCH_SIZE, 1, 1)]
@@ -99,13 +98,26 @@ GroupMemoryBarrierWithGroupSync();
 
 		vertexMax.xy = vertexMax.xy * 0.5 + 0.5;
 		vertexMin.xy = vertexMin.xy * 0.5 + 0.5;
+		//occlusion
+		if(!culled){
+			float mipcount;
+			float2 texDim;
+			g_HIZBuffer.GetDimensions(0, texDim.x, texDim.y, mipcount);
 
-		//occlusion 
-		float longestEdge = max(length(v1.xy - v2.xy), max(length(v2.xy - v3.xy), length(v1.xy - v3.xy)));
-		int mip = min(ceil(log2(max(longestEdge, 1.0))), 9 - 1);
-		float2 samplePos = ((v1.xy + v2.xy + v3.xy) / 3.0);
-		float depth = g_HIZBuffer.SampleLevel(g_Sampler, samplePos, mip).r;
-		culled = culled || !(depth > 0.9);
+			float2 edge1 = (v1.xy - v2.xy) * texDim;
+			float2 edge2 = (v2.xy - v3.xy) * texDim;
+			float2 edge3 = (v1.xy - v3.xy) * texDim;
+			float longestEdge = max(length(edge1), max(length(edge2), length(edge3)));
+			int mip = min(floor(log2(max(longestEdge, 1))), mipcount - 1);
+
+			float depth1 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMin.y), mip).r;
+			float depth2 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMin.y), mip).r;
+			float depth3 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMax.y), mip).r;
+			float depth4 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMax.y), mip).r;
+			float maxDepth = max(max(depth1, depth2), max(depth3, depth4));
+
+			culled = (vertexMin.z > maxDepth);
+		}
 
 		//small triangle
 #ifdef INSTRUMENT
@@ -121,12 +133,11 @@ GroupMemoryBarrierWithGroupSync();
 #ifdef INSTRUMENT
 		if(!culled && (any(vertexMin.xy > 1) || any(vertexMax.xy < 0))){
 			g_CounterBuffer.InterlockedAdd(16, 1);
-			culled = true;
+			//culled = true;
 		}
 #else
 		culled = culled || (any(vertexMin.xy > 1) || any(vertexMax.xy < 0));
 #endif
-
 
 		const Predicate laneActive = !culled;
 		BitMask ballot = WaveBallot(laneActive);

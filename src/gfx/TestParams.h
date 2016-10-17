@@ -4,7 +4,7 @@
 
  class TestParams {
  public:
-	bool UseCulling = true;
+	bool UseCulling = false;
 	int BatchSize = 512;
 	bool Instrument = false;
 

@@ -34,10 +34,6 @@ void SSGraphics::Startup() {
 
 void SSGraphics::Update(const double deltaTime) {
 	static bool firstUpdate = true;
-	if (firstUpdate) {
-		m_Graphics->PrepareForRender();
-		firstUpdate = false;
-	}
 
 	int flag = CameraComponent::Flag;
 	static CameraData lastCam;
@@ -49,11 +45,15 @@ void SSGraphics::Update(const double deltaTime) {
 			v.Camera = cc->Camera.GetData();
 			m_RenderQueue->AddView(v);
 
-			if (g_Input.IsKeyPushed(GLFW_KEY_T))
+			if (g_Input.IsKeyPushed(GLFW_KEY_T) || g_Input.IsMousebuttonDown(GLFW_MOUSE_BUTTON_RIGHT) || firstUpdate)
 				lastCam = cc->Camera.GetData();
 			v.Camera = lastCam;
 			m_RenderQueue->AddView(v);
 		}
+	}
+	if (firstUpdate) {
+		m_Graphics->PrepareForRender();
+		firstUpdate = false;
 	}
 	ShaderInput si;
 	flag = TransformComponent::Flag | ModelComponent::Flag;

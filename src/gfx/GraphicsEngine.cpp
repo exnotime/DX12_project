@@ -342,14 +342,14 @@ void GraphicsEngine::Render() {
 	m_Profiler.Start();
 
 	if (g_TestParams.UseCulling) {
-		m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
+		//m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
 		m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
-		m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
+		//m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
 		m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
-		m_Profiler.Step(m_Context.CommandList.Get(), "TriangleCulling");
+		//m_Profiler.Step(m_Context.CommandList.Get(), "TriangleCulling");
 		m_CullingProgram.ClearCounter();
 		m_TriangleCullingProgram.Disbatch(&m_RenderQueue);
-		m_Profiler.Step(m_Context.CommandList.Get(), "DrawCulling");
+		//m_Profiler.Step(m_Context.CommandList.Get(), "DrawCulling");
 		m_CullingProgram.Disbatch(&m_RenderQueue, &m_TriangleCullingProgram);
 	}
 
@@ -404,5 +404,5 @@ void GraphicsEngine::Swap() {
 	}
 	m_Fence.FenceValues[m_Context.FrameIndex] = currentFenceValue + 1;
 
-	//m_Profiler.PrintResults();
+	m_Profiler.PrintResults();
 }

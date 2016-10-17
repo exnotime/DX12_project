@@ -34,7 +34,22 @@ void TriangleCullingProgram::Init(DX12Context* context, const UINT maxTriangleCo
 		}
 	}
 	rootSignFact.AddExtensions(&context->Extensions);
-	rootSignFact.AddDefaultStaticSampler(0);
+
+	D3D12_STATIC_SAMPLER_DESC sampDesc = {};
+	sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampDesc.MipLODBias = 0;
+	sampDesc.MaxAnisotropy = 1.0f;
+	sampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	sampDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+	sampDesc.MinLOD = 0.0f;
+	sampDesc.MaxLOD = D3D12_FLOAT32_MAX;
+	sampDesc.ShaderRegister = 0;
+	sampDesc.RegisterSpace = 0;
+	sampDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootSignFact.AddStaticSampler(sampDesc);
 	m_RootSign = rootSignFact.CreateSignture(context->Device.Get());
 	//Pipe state
 	PipelineStateFactory pipeFact;

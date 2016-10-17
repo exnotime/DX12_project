@@ -19,7 +19,6 @@ private:
 	ComPtr<ID3D12RootSignature> m_RootSignature;
 	ComPtr<ID3D12PipelineState> m_PipelineState;
 	ComPtr<ID3D12CommandSignature>	m_CommandSignature;
-	ComPtr<ID3D12DescriptorHeap> m_MaterialHeap;
 	ComPtr<ID3D12Resource> m_DepthTexture;
 	ComPtr<ID3D12DescriptorHeap> m_DepthHeap;
 	glm::vec2 m_ScreenSize;
@@ -30,7 +29,6 @@ private:
 		PER_FRAME_CB,
 		SHADER_INPUT_SB,
 		DRAW_INDEX_C,
-		MATERIAL_DT,
 		ROOT_PARAMS_SIZE
 	};
 };

@@ -1,6 +1,8 @@
 #pragma once
 #include "DX12Common.h"
+#include <stdio.h>
 //#define SILENT_PROFILING
+#define PRINT_TO_FILE
 #define MAX_PROFILER_STEPS 128
 class GPUProfiler{
 public:
@@ -18,4 +20,7 @@ private:
 	ComPtr<ID3D12QueryHeap> m_QueryHeap;
 	ComPtr<ID3D12Resource> m_ResultBuffer;
 	std::vector<std::string> m_StepNames;
+#ifdef PRINT_TO_FILE
+	FILE* m_File;
+#endif
 };

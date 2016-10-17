@@ -50,7 +50,7 @@ void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-		&resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&m_HiZResource));
+		&resourceDesc, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, nullptr, IID_PPV_ARGS(&m_HiZResource));
 	
 	CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DescHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -70,7 +70,7 @@ void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 void HiZProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* srcTex) {
 	//copy from the src texture to mip 0
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(srcTex, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COPY_SOURCE));
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_HiZResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST));
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_HiZResource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
 
 	D3D12_TEXTURE_COPY_LOCATION dst, src;
 	dst.pResource = m_HiZResource.Get();
@@ -105,4 +105,5 @@ void HiZProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* sr
 
 		cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_HiZResource.Get()));
 	}
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_HiZResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 }

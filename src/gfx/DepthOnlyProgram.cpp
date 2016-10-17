@@ -29,10 +29,7 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	m_ScissorRect.right = (unsigned)m_ScreenSize.x;
 
 
-	m_Shader.LoadFromFile(L"src/shaders/DepthOnly.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT, nullptr);
-
-	Shader testShader;
-	testShader.LoadFromFile(L"src/shaders/ComputeTest.hlsl", COMPUTE_SHADER_BIT, &context->Extensions);
+	m_Shader.LoadFromFile(L"src/shaders/DepthOnly.hlsl", VERTEX_SHADER_BIT, nullptr);
 
 	RootSignatureFactory rootSignFact;
 	rootSignFact.AddDefaultStaticSampler(0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -47,13 +44,7 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 			rootSignFact.AddShaderResourceView(0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 			break;
 		case DepthOnlyProgram::DRAW_INDEX_C:
-			rootSignFact.AddConstant(2, 2, 0, D3D12_SHADER_VISIBILITY_ALL);
-			break;
-		case DepthOnlyProgram::MATERIAL_DT:
-			CD3DX12_DESCRIPTOR_RANGE range = {};
-			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4000, 0, 1);
-			ranges.push_back(range);
-			rootSignFact.AddDescriptorTable(ranges);
+			rootSignFact.AddConstant(2, 2, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 			break;
 		}
 	}
@@ -82,16 +73,10 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	pipeFact.SetDepthStencilFormat(DXGI_FORMAT_D32_FLOAT);
 	pipeFact.SetDepthStencilState(depthDesc);
 	pipeFact.SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-	pipeFact.SetInputLayout(VertexLayout, VertexLayoutSize);
+	pipeFact.SetInputLayout(DepthOnlyVertexLayout, DepthOnlyVertexSize);
 	pipeFact.SetRootSignature(m_RootSignature.Get());
 
 	m_PipelineState = pipeFact.CreateGraphicsState(context);
-	//Material desc heap
-	D3D12_DESCRIPTOR_HEAP_DESC renderHeapDesc = {};
-	renderHeapDesc.NumDescriptors = 4000;
-	renderHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	renderHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	HR(context->Device->CreateDescriptorHeap(&renderHeapDesc, IID_PPV_ARGS(&m_MaterialHeap)), L"Error creating descriptor heap for Rendering");
 
 	D3D12_INDIRECT_ARGUMENT_DESC argsDesc[3];
 	//draw ID
@@ -158,9 +143,6 @@ void DepthOnlyProgram::Render(ID3D12GraphicsCommandList* cmdList, RenderQueue* q
 	cmdList->SetGraphicsRootShaderResourceView(DepthOnlyProgram::SHADER_INPUT_SB, g_BufferManager.GetGPUHandle("ShaderInputBuffer"));
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	g_ModelBank.ApplyBuffers(cmdList);
-	ID3D12DescriptorHeap* heaps[] = { m_MaterialHeap.Get() };
-	cmdList->SetDescriptorHeaps(1, heaps);
-	cmdList->SetGraphicsRootDescriptorTable(DepthOnlyProgram::MATERIAL_DT, m_MaterialHeap->GetGPUDescriptorHandleForHeapStart());
 
 	//draw everything
 	cmdList->ExecuteIndirect(m_CommandSignature.Get(), queue->GetOccluderCount(), g_BufferManager.GetBufferResource("IndirectOccluderBuffer"), 0, nullptr, 0);
