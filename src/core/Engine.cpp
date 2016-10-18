@@ -16,6 +16,7 @@
 #include "script/ScriptEngine.h"
 #include "threading/JobManager.h"
 #include "../gfx/ShapeGenerator.h"
+#include "../gfx/TestParams.h"
 
 using namespace core;
 
@@ -30,7 +31,7 @@ Engine::~Engine() {
 
 void Engine::Init() {
 	//g_JobManager.Init(3);
-
+	g_TestParams.UseCulling = true;
 	g_ComponentManager.Init();
 	g_ScriptEngine.Init();
 	RegisterScriptFunctions();

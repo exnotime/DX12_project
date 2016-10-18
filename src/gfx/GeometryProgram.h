@@ -3,7 +3,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "RenderQueue.h"
-#include "TriangleCullingProgram.h"
+#include "FilterContext.h"
 #include <atomic>
 namespace GeometryProgram {
 	struct GeometryProgramState {
@@ -36,4 +36,4 @@ namespace GeometryProgram {
 
 void InitGeometryState(GeometryProgram::GeometryProgramState* state, DX12Context* context);
 void RenderGeometry(ID3D12GraphicsCommandList*cmdList,
-	GeometryProgram::GeometryProgramState* state, RenderQueue* queue, TriangleCullingProgram& cullingProgram);
+	GeometryProgram::GeometryProgramState* state, RenderQueue* queue, FilterContext* filter);

@@ -2,7 +2,7 @@
 #include "RootSignatureFactory.h"
 #include "PipelineStateFactory.h"
 #include "BufferManager.h"
-
+#include "FilterContext.h"
 DrawCullingProgram::DrawCullingProgram() {
 
 }
@@ -60,7 +60,7 @@ void DrawCullingProgram::Init(DX12Context* context, TriangleCullingProgram* cull
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	context->Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_CPUDescriptorHeap));
 
-	g_BufferManager.CreateStructuredBuffer("CulledIndirectBuffer", nullptr, sizeof(IndirectDrawCall) * cullingProgram->GetMaxBatchCount(), sizeof(IndirectDrawCall));
+	g_BufferManager.CreateStructuredBuffer("CulledIndirectBuffer", nullptr, MAX_DRAW_ARGS_BUFFER_SIZE, sizeof(IndirectDrawCall));
 	g_BufferManager.CreateStructuredBuffer("CullingCounterBuffer", nullptr, 4096 * sizeof(UINT), sizeof(UINT));
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -82,7 +82,7 @@ void DrawCullingProgram::Init(DX12Context* context, TriangleCullingProgram* cull
 	uavDesc.Buffer.CounterOffsetInBytes = 0;
 	uavDesc.Buffer.FirstElement = 0;
 	uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-	uavDesc.Buffer.NumElements = cullingProgram->GetMaxBatchCount();
+	uavDesc.Buffer.NumElements = MAX_BATCH_COUNT;
 	uavDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;

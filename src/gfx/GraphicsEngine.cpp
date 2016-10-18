@@ -229,6 +229,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	g_ModelBank.Init(&m_Context);
 	m_RenderQueue.Init(&m_Context);
 
+	m_FilterContext.Init(&m_Context);
 	m_TriangleCullingProgram.Init(&m_Context);
 
 	m_CullingProgram.Init(&m_Context, &m_TriangleCullingProgram);
@@ -334,6 +335,8 @@ void GraphicsEngine::Render() {
 		return;
 	}
 
+	m_FilterContext.Clear();
+
 	View v = m_RenderQueue.GetViews().at(1);
 	cbPerFrame* perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame");
 	perFrame->ViewProj = v.Camera.ProjView;
@@ -341,17 +344,8 @@ void GraphicsEngine::Render() {
 	g_BufferManager.UnMapBuffer("cbPerFrame");
 	m_Profiler.Start();
 
-	if (g_TestParams.UseCulling) {
-		//m_Profiler.Step(m_Context.CommandList.Get(), "Pre-Z");
-		m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
-		//m_Profiler.Step(m_Context.CommandList.Get(), "Hi-Z");
-		m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
-		//m_Profiler.Step(m_Context.CommandList.Get(), "TriangleCulling");
-		m_CullingProgram.ClearCounter();
-		m_TriangleCullingProgram.Disbatch(&m_RenderQueue);
-		//m_Profiler.Step(m_Context.CommandList.Get(), "DrawCulling");
-		m_CullingProgram.Disbatch(&m_RenderQueue, &m_TriangleCullingProgram);
-	}
+	m_DepthProgram.Render(m_Context.CommandList.Get(), &m_RenderQueue);
+	m_HiZProgram.Disbatch(m_Context.CommandList.Get(), m_DepthProgram.GetDepthTexture());
 
 	v = m_RenderQueue.GetViews().at(0);
 	perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame2");
@@ -365,10 +359,20 @@ void GraphicsEngine::Render() {
 
 	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
 	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
-	
-	m_Profiler.Step(m_Context.CommandList.Get(), "Geometry");
+	m_CullingProgram.ClearCounter();
 
-	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, m_TriangleCullingProgram);
+	m_Profiler.Step(m_Context.CommandList.Get(), "start");
+
+	while (m_TriangleCullingProgram.Disbatch(&m_RenderQueue, &m_FilterContext)) {
+		m_Profiler.Step(m_Context.CommandList.Get(), "render");
+		RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, &m_FilterContext);
+
+		ExecuteCmdList(&m_Context);
+		WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
+		ResetCmdList(&m_Context);
+	}
+	m_Profiler.Step(m_Context.CommandList.Get(), "render");
+	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, &m_FilterContext);
 
 	m_Profiler.End(m_Context.CommandList.Get());
 	

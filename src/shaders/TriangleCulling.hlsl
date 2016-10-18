@@ -43,6 +43,7 @@ cbuffer cbPerFrame : register(b0){
 cbuffer constants : register(b1){
 	uint g_BatchIndex; //what batch this disbatch starts with
 	uint g_BatchDrawId; //what draw id this disbatch is culling
+	uint g_BatchIndexOffset;
 };
 
 #define BATCH_SIZE 256
@@ -72,9 +73,9 @@ GroupMemoryBarrierWithGroupSync();
 		//unpack triangle
 		float4x4 w = g_InputBuffer[draw.DrawIndex].World;
 
-		uint indices[] = {	g_TriangleIndices[draw.IndexOffset + index],
-							g_TriangleIndices[draw.IndexOffset + index + 1],
-							g_TriangleIndices[draw.IndexOffset + index + 2]};
+		uint indices[] = {	g_TriangleIndices[draw.IndexOffset + g_BatchIndexOffset + index],
+							g_TriangleIndices[draw.IndexOffset + g_BatchIndexOffset + index + 1],
+							g_TriangleIndices[draw.IndexOffset + g_BatchIndexOffset + index + 2]};
 
 		float4 v1 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[0]], 1)));
 		float4 v2 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[1]], 1)));

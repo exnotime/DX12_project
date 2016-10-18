@@ -120,7 +120,10 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 
 }
 
-void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* state, RenderQueue* queue, TriangleCullingProgram& cullingProgram) {
+void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* state, RenderQueue* queue, FilterContext* filter) {
+	ID3D12Resource* drawArgs;
+	filter->BeginRender(cmdList, &drawArgs);
+
 	cmdList->SetGraphicsRootSignature(state->RootSignature.Get());
 	cmdList->SetPipelineState(state->PipelineState.Get());
 	cmdList->SetGraphicsRootConstantBufferView(PER_FRAME_CONST_BUFFER, g_BufferManager.GetGPUHandle("cbPerFrame2"));
@@ -136,17 +139,11 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* st
 	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
 
 	g_BufferManager.SwitchState("IndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
-	g_BufferManager.SwitchState("CulledIndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
-	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 
-	if (g_Input.IsKeyPushed(GLFW_KEY_V))
-		g_TestParams.UseCulling = !g_TestParams.UseCulling;
 	//draw everything
 	if(g_TestParams.UseCulling){
-		cmdList->IASetIndexBuffer(&cullingProgram.GetCulledIndexBufferView());
-
-		cmdList->ExecuteIndirect(state->CommandSignature.Get(), cullingProgram.GetDrawCount(),
-			g_BufferManager.GetBufferResource("CulledIndirectBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0);
+		printf("Culling \n");
+		cmdList->ExecuteIndirect(state->CommandSignature.Get(), filter->GetBatchCount(), drawArgs, 0, nullptr, 0);
 	} else {
 		g_ModelBank.ApplyIndexBuffers(cmdList);
 		cmdList->ExecuteIndirect(state->CommandSignature.Get(), queue->GetDrawCount(),
