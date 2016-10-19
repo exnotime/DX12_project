@@ -47,7 +47,7 @@ cbuffer constants : register(b1){
 };
 
 #define BATCH_SIZE 256
-#define INSTRUMENT 1
+//#define INSTRUMENT 1
 
 groupshared uint g_WorkGroupCount;
 
@@ -109,7 +109,7 @@ GroupMemoryBarrierWithGroupSync();
 			float2 edge2 = (v2.xy - v3.xy) * texDim;
 			float2 edge3 = (v1.xy - v3.xy) * texDim;
 			float longestEdge = max(length(edge1), max(length(edge2), length(edge3)));
-			int mip = min(floor(log2(max(longestEdge, 1))), mipcount - 1);
+			int mip = min(ceil(log2(max(longestEdge, 1))), mipcount - 1);
 
 			float depth1 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMin.y), mip).r;
 			float depth2 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMin.y), mip).r;
@@ -134,7 +134,7 @@ GroupMemoryBarrierWithGroupSync();
 #ifdef INSTRUMENT
 		if(!culled && (any(vertexMin.xy > 1) || any(vertexMax.xy < 0))){
 			g_CounterBuffer.InterlockedAdd(16, 1);
-			//culled = true;
+			culled = true;
 		}
 #else
 		culled = culled || (any(vertexMin.xy > 1) || any(vertexMax.xy < 0));

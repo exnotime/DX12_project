@@ -142,7 +142,6 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* st
 
 	//draw everything
 	if(g_TestParams.UseCulling){
-		printf("Culling \n");
 		cmdList->ExecuteIndirect(state->CommandSignature.Get(), filter->GetBatchCount(), drawArgs, 0, nullptr, 0);
 	} else {
 		g_ModelBank.ApplyIndexBuffers(cmdList);

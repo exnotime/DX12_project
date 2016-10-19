@@ -15,7 +15,8 @@ void TriangleCullingProgram::Init(DX12Context* context, const UINT maxTriangleCo
 	m_Shader.LoadFromFile(L"src/shaders/TriangleCulling.hlsl", COMPUTE_SHADER_BIT, &context->Extensions);
 	//Root sign
 	RootSignatureFactory rootSignFact;
-	std::vector<CD3DX12_DESCRIPTOR_RANGE> ranges;
+	std::vector<CD3DX12_DESCRIPTOR_RANGE> inputRanges;
+	std::vector<CD3DX12_DESCRIPTOR_RANGE> outputRanges;
 	for (int i = 0; i < ROOT_PARAM_COUNT; ++i) {
 		switch (i)
 		{
@@ -26,9 +27,12 @@ void TriangleCullingProgram::Init(DX12Context* context, const UINT maxTriangleCo
 			rootSignFact.AddConstant(3, 1);
 			break;
 		case INPUT_DT:
-			ranges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0));
-			ranges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 3, 0, 0, 5));
-			rootSignFact.AddDescriptorTable(ranges);
+			inputRanges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0));
+			rootSignFact.AddDescriptorTable(inputRanges);
+			break;
+		case OUTPUT_DT:
+			outputRanges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 3, 0, 0, 0));
+			rootSignFact.AddDescriptorTable(outputRanges);
 			break;
 		}
 	}
@@ -57,7 +61,7 @@ void TriangleCullingProgram::Init(DX12Context* context, const UINT maxTriangleCo
 
 	//Descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	heapDesc.NumDescriptors = 8;
+	heapDesc.NumDescriptors = 11;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	context->Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_DescHeap));
@@ -104,7 +108,7 @@ bool TriangleCullingProgram::Disbatch(RenderQueue* queue, FilterContext* filterC
 	ID3D12GraphicsCommandList* cmdList = m_Context->CommandList.Get();
 	filterContext->BeginFilter(cmdList);
 	// copy in descriptors
-	m_Context->Device->CopyDescriptorsSimple(3, CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DescHeap->GetCPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * 5),
+	m_Context->Device->CopyDescriptorsSimple(3, CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DescHeap->GetCPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * (5 + 3 * filterContext->GetFilterIndex())),
 		filterContext->GetFilterDescriptors(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	ID3D12DescriptorHeap* heaps[] = { m_DescHeap.Get() };
@@ -114,6 +118,7 @@ bool TriangleCullingProgram::Disbatch(RenderQueue* queue, FilterContext* filterC
 	cmdList->SetComputeRootConstantBufferView(PER_FRAME_CB, g_BufferManager.GetGPUHandle("cbPerFrame"));
 	cmdList->SetComputeRootDescriptorTable(INPUT_DT, m_DescHeap->GetGPUDescriptorHandleForHeapStart());
 
+	cmdList->SetComputeRootDescriptorTable(OUTPUT_DT, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * ( 5 + 3 * filterContext->GetFilterIndex())));
 	UINT batchCounter = 0;
 	for (int i = filterContext->GetCurrentDraw(); i < queue->GetDrawCount(); i++) {
 
@@ -121,6 +126,7 @@ bool TriangleCullingProgram::Disbatch(RenderQueue* queue, FilterContext* filterC
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, i, 1); // draw id
 
 		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / 3) + BATCH_SIZE - 1) / BATCH_SIZE;
+
 		if(filterContext->GetRemainder() > 0)
 			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * BATCH_SIZE * 3, 2); // batch offset
 		else

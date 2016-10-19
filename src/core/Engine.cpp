@@ -75,7 +75,7 @@ void Engine::Run() {
 
 		dt += deltaTime;
 		counter++;
-		if (counter == 100) {
+		if (counter == 50) {
 			std::stringstream ss;
 			ss << "FPS : " << ceil(1.0 / (dt / counter));
 			glfwSetWindowTitle(g_Window.GetWindow(), ss.str().c_str());

@@ -361,17 +361,14 @@ void GraphicsEngine::Render() {
 	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
 	m_CullingProgram.ClearCounter();
 
-	m_Profiler.Step(m_Context.CommandList.Get(), "start");
+	m_Profiler.Step(m_Context.CommandList.Get(), "Culling");
 
 	while (m_TriangleCullingProgram.Disbatch(&m_RenderQueue, &m_FilterContext)) {
-		m_Profiler.Step(m_Context.CommandList.Get(), "render");
+		m_Profiler.Step(m_Context.CommandList.Get(), "Render");
 		RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, &m_FilterContext);
-
-		ExecuteCmdList(&m_Context);
-		WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
-		ResetCmdList(&m_Context);
+		m_Profiler.Step(m_Context.CommandList.Get(), "Culling");
 	}
-	m_Profiler.Step(m_Context.CommandList.Get(), "render");
+	m_Profiler.Step(m_Context.CommandList.Get(), "Render");
 	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, &m_FilterContext);
 
 	m_Profiler.End(m_Context.CommandList.Get());

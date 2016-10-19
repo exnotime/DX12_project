@@ -46,6 +46,7 @@ private:
 		PER_FRAME_CB,
 		CONSTANTS_C,
 		INPUT_DT,
+		OUTPUT_DT,
 		ROOT_PARAM_COUNT
 	};
 };

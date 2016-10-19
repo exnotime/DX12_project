@@ -4,7 +4,7 @@
 //The filter context synchronises the rendering and the culling as well as hold the resources
 #define MAX_SIMUL_PASSES 2
 #define BATCH_SIZE 256
-#define MAX_BATCH_COUNT 512
+#define MAX_BATCH_COUNT 1024
 #define MAX_INDEX_BUFFER_SIZE BATCH_SIZE * 3 * MAX_BATCH_COUNT * sizeof(UINT)
 #define MAX_DRAW_ARGS_BUFFER_SIZE MAX_BATCH_COUNT * sizeof(IndirectDrawCall)
 class FilterContext {
@@ -17,6 +17,9 @@ public:
 	void BeginRender(ID3D12GraphicsCommandList* cmdList, ID3D12Resource** drawArgsOut);
 	bool AddBatches(UINT batchCount, UINT& batchCountOut);
 
+	UINT GetFilterIndex() {
+		return m_CurrentFilterIndex;
+	}
 	UINT GetCounterRenderOffset() {
 		return m_CurrentRenderIndex * sizeof(UINT);
 	}
