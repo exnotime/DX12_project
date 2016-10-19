@@ -20,7 +20,6 @@ StructuredBuffer<DrawCallArgs> g_DrawArgsBuffer : register(t0);
 StructuredBuffer<float3> g_VertexPositions : register(t1);
 StructuredBuffer<uint> g_TriangleIndices : register(t2);
 StructuredBuffer<ShaderInput> g_InputBuffer : register(t3);
-
 Texture2D g_HIZBuffer : register(t4);
 SamplerState g_Sampler : register(s0);
 
@@ -46,7 +45,7 @@ cbuffer constants : register(b1){
 	uint g_BatchIndexOffset;
 };
 
-#define BATCH_SIZE 256
+#define BATCH_SIZE 512
 //#define INSTRUMENT 1
 
 groupshared uint g_WorkGroupCount;

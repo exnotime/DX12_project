@@ -359,18 +359,19 @@ void GraphicsEngine::Render() {
 
 	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
 	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
-	m_CullingProgram.ClearCounter();
+	if (g_TestParams.UseCulling) {
+		m_CullingProgram.ClearCounter();
 
-	m_Profiler.Step(m_Context.CommandList.Get(), "Culling");
-
-	while (m_TriangleCullingProgram.Disbatch(&m_RenderQueue, &m_FilterContext)) {
-		m_Profiler.Step(m_Context.CommandList.Get(), "Render");
-		RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, &m_FilterContext);
 		m_Profiler.Step(m_Context.CommandList.Get(), "Culling");
+
+		while (m_TriangleCullingProgram.Disbatch(&m_RenderQueue, &m_FilterContext)) {
+			m_Profiler.Step(m_Context.CommandList.Get(), "Render");
+			RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, &m_FilterContext);
+			m_Profiler.Step(m_Context.CommandList.Get(), "Culling");
+		}
 	}
 	m_Profiler.Step(m_Context.CommandList.Get(), "Render");
 	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, &m_FilterContext);
-
 	m_Profiler.End(m_Context.CommandList.Get());
 	
 	//return to present mode for render target

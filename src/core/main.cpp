@@ -3,9 +3,16 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
-int main(){
+void InterpArgs(int count, char** args) {
+	if (count > 0)
+		int i = 0;
+}
+
+int main(int argc, char** args){
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(9101);
+
+	InterpArgs(argc, args);
+
 	core::Engine engine;
 	engine.Init();
 	engine.Run();

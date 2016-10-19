@@ -12,6 +12,7 @@
 #include "subsystem/systems/SSGraphics.h"
 #include "subsystem/systems/SSPhysics.h"
 #include "subsystem/systems/SSScript.h"
+#include "subsystem/systems/SSCullingTest.h"
 #include "entity/EntityFactory.h"
 #include "script/ScriptEngine.h"
 #include "threading/JobManager.h"
@@ -31,7 +32,6 @@ Engine::~Engine() {
 
 void Engine::Init() {
 	//g_JobManager.Init(3);
-	g_TestParams.UseCulling = true;
 	g_ComponentManager.Init();
 	g_ScriptEngine.Init();
 	RegisterScriptFunctions();
@@ -49,6 +49,7 @@ void Engine::Init() {
 	m_SubSystemSet.AddSubSystem( new SSGraphics() );
 	m_SubSystemSet.AddSubSystem( new SSCamera() );
 	m_SubSystemSet.AddSubSystem( new SSScript() );
+	m_SubSystemSet.AddSubSystem( new SSCullingTest() );
 	m_SubSystemSet.StartSubSystems();
 
 	g_ShapeGenerator.LoadAllShapes();

@@ -63,11 +63,11 @@ void GPUProfiler::PrintResults() {
 #endif
 	}
 	counter++;
-	//a = result[0];
-	//b = result[m_StepCounter - 1];
+	a = result[0];
+	b = result[m_StepCounter - 1];
 
-	//double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
-	//printf("Entire frame: %4.4f ms\n", res);
+	double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
+	printf("Entire frame: %4.4f ms\n", res);
 
 
 
