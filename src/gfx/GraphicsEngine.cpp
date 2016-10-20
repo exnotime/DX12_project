@@ -232,7 +232,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	m_FilterContext.Init(&m_Context);
 	m_TriangleCullingProgram.Init(&m_Context);
 
-	m_CullingProgram.Init(&m_Context, &m_TriangleCullingProgram);
+	//m_CullingProgram.Init(&m_Context, &m_TriangleCullingProgram);
 
 	m_Profiler.Init(&m_Context);
 
@@ -360,7 +360,7 @@ void GraphicsEngine::Render() {
 	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
 	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
 	if (g_TestParams.UseCulling) {
-		m_CullingProgram.ClearCounter();
+		//m_CullingProgram.ClearCounter();
 
 		m_Profiler.Step(m_Context.CommandList.Get(), "Culling");
 

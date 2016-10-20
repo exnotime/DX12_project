@@ -5,8 +5,10 @@
  class TestParams {
  public:
 	bool UseCulling = false;
-	int BatchSize = 512;
+	int BatchSize = 1024;
+	int BatchCount = 1024;
 	bool Instrument = false;
+	bool AsyncCompute = false;
 
 	static TestParams& GetInstance();
  };

@@ -1,5 +1,6 @@
 #include "FilterContext.h"
 #include "ModelBank.h"
+#include "TestParams.h"
 FilterContext::FilterContext() {
 
 }
@@ -10,8 +11,8 @@ FilterContext::~FilterContext() {
 
 void FilterContext::Init(DX12Context* context) {
 	//create resources
-	CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(MAX_INDEX_BUFFER_SIZE, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-	CD3DX12_RESOURCE_DESC drawBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(MAX_DRAW_ARGS_BUFFER_SIZE, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(g_TestParams.BatchSize * 3 * g_TestParams.BatchCount * sizeof(UINT), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	CD3DX12_RESOURCE_DESC drawBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(g_TestParams.BatchCount * sizeof(IndirectDrawCall), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	for (int i = 0; i < MAX_SIMUL_PASSES; i++) {
 		context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 			&indexBufferDesc, D3D12_RESOURCE_STATE_INDEX_BUFFER, nullptr, IID_PPV_ARGS(&m_IndexBuffers[i]));
@@ -39,13 +40,13 @@ void FilterContext::Init(DX12Context* context) {
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 		uavDesc.Buffer.CounterOffsetInBytes = 0;
 		uavDesc.Buffer.FirstElement = 0;
-		uavDesc.Buffer.NumElements = MAX_BATCH_COUNT;
+		uavDesc.Buffer.NumElements = g_TestParams.BatchCount;
 		uavDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 		context->Device->CreateUnorderedAccessView(m_DrawArgsBuffers[i].Get(), nullptr, &uavDesc, cpuHandle);
 		//indices output
-		uavDesc.Buffer.NumElements = MAX_BATCH_COUNT * BATCH_SIZE * 3;
+		uavDesc.Buffer.NumElements = g_TestParams.BatchCount * g_TestParams.BatchSize * 3;
 		uavDesc.Buffer.StructureByteStride = sizeof(UINT);
 		context->Device->CreateUnorderedAccessView(m_IndexBuffers[i].Get(), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
 		//counter buffer
@@ -63,7 +64,7 @@ void FilterContext::Init(DX12Context* context) {
 	for (int i = 0; i < MAX_SIMUL_PASSES; i++) {
 		m_IndexBufferViews[i].BufferLocation = m_IndexBuffers[i]->GetGPUVirtualAddress();
 		m_IndexBufferViews[i].Format = DXGI_FORMAT_R32_UINT;
-		m_IndexBufferViews[i].SizeInBytes = MAX_INDEX_BUFFER_SIZE;
+		m_IndexBufferViews[i].SizeInBytes = indexBufferDesc.Width;
 	}
 
 }
@@ -124,8 +125,8 @@ bool FilterContext::AddBatches(UINT batchCount, UINT& batchCountOut) {
 		m_CurrentBatchCount = 0;
 	}
 
-	if (m_CurrentBatchCount + batchCount > MAX_BATCH_COUNT) {
-		m_BatchRemainder = (m_CurrentBatchCount + batchCount) - MAX_BATCH_COUNT;
+	if (m_CurrentBatchCount + batchCount > g_TestParams.BatchCount) {
+		m_BatchRemainder = (m_CurrentBatchCount + batchCount) - g_TestParams.BatchCount;
 		batchCountOut = batchCount - m_BatchRemainder;
 		m_CurrentBatch += batchCountOut;
 		m_CurrentBatchCount += batchCountOut;

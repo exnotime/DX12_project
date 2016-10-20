@@ -7,7 +7,7 @@ public:
 	~$1();
 
 	virtual void Startup();
-	virtual void Update(const float deltaTime);
+	virtual void Update(const double deltaTime);
 	virtual void Shutdown();
 private:
 
@@ -26,7 +26,7 @@ $1::~$1(){
 void $1::Startup() {
 }
 
-void $1::Update(const float deltaTime) {
+void $1::Update(const double deltaTime) {
 }
 
 void $1::Shutdown() {

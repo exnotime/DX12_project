@@ -3,6 +3,8 @@
 #include "PipelineStateFactory.h"
 #include "BufferManager.h"
 #include "ModelBank.h"
+#include "TestParams.h"
+#include <sstream>
 TriangleCullingProgram::TriangleCullingProgram() {
 
 }
@@ -10,9 +12,23 @@ TriangleCullingProgram::TriangleCullingProgram() {
 TriangleCullingProgram::~TriangleCullingProgram() {
 }
 
-void TriangleCullingProgram::Init(DX12Context* context, const UINT maxTriangleCount, const UINT batchSize) {
+void TriangleCullingProgram::Init(DX12Context* context) {
 	m_Context = context;
-	m_Shader.LoadFromFile(L"src/shaders/TriangleCulling.hlsl", COMPUTE_SHADER_BIT, &context->Extensions);
+	//build shader macros
+	std::vector<D3D_SHADER_MACRO> macros;
+	if (g_TestParams.Instrument) {
+		macros.push_back({ "INSTRUMENT","1" });
+	}
+	D3D_SHADER_MACRO macro;
+	macro.Name = "BATCH_SIZE";
+	std::string s;
+	std::stringstream ss;
+	ss << g_TestParams.BatchSize;
+	s = ss.str();
+	macro.Definition = s.c_str();
+	macros.push_back(macro);
+	
+	m_Shader.LoadFromFile(L"src/shaders/TriangleCulling.hlsl", COMPUTE_SHADER_BIT, &context->Extensions, &macros);
 	//Root sign
 	RootSignatureFactory rootSignFact;
 	std::vector<CD3DX12_DESCRIPTOR_RANGE> inputRanges;
@@ -125,10 +141,10 @@ bool TriangleCullingProgram::Disbatch(RenderQueue* queue, FilterContext* filterC
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, batchCounter, 0); //batch id
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, i, 1); // draw id
 
-		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / 3) + BATCH_SIZE - 1) / BATCH_SIZE;
+		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / 3) + g_TestParams.BatchSize - 1) / g_TestParams.BatchSize;
 
 		if(filterContext->GetRemainder() > 0)
-			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * BATCH_SIZE * 3, 2); // batch offset
+			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * g_TestParams.BatchSize * 3, 2); // batch offset
 		else
 			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, 0, 2);
 

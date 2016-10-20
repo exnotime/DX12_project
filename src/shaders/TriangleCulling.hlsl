@@ -45,7 +45,7 @@ cbuffer constants : register(b1){
 	uint g_BatchIndexOffset;
 };
 
-#define BATCH_SIZE 512
+//#define BATCH_SIZE 512
 //#define INSTRUMENT 1
 
 groupshared uint g_WorkGroupCount;
@@ -60,7 +60,7 @@ void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_Dispatc
 
 GroupMemoryBarrierWithGroupSync();
 
-	uint index = (groupIndex + (groupID.x * BATCH_SIZE)) * 3;
+	uint index = (groupIndex + (groupID.x * BATCH_SIZE)) * 3 + g_BatchIndexOffset;
 	uint waveSlot = 0;
 	uint localSlot = 0;
 	uint outCount = 0;
@@ -72,9 +72,9 @@ GroupMemoryBarrierWithGroupSync();
 		//unpack triangle
 		float4x4 w = g_InputBuffer[draw.DrawIndex].World;
 
-		uint indices[] = {	g_TriangleIndices[draw.IndexOffset + g_BatchIndexOffset + index],
-							g_TriangleIndices[draw.IndexOffset + g_BatchIndexOffset + index + 1],
-							g_TriangleIndices[draw.IndexOffset + g_BatchIndexOffset + index + 2]};
+		uint indices[] = {	g_TriangleIndices[draw.IndexOffset + index],
+							g_TriangleIndices[draw.IndexOffset + index + 1],
+							g_TriangleIndices[draw.IndexOffset + index + 2]};
 
 		float4 v1 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[0]], 1)));
 		float4 v2 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[1]], 1)));
@@ -98,6 +98,27 @@ GroupMemoryBarrierWithGroupSync();
 
 		vertexMax.xy = vertexMax.xy * 0.5 + 0.5;
 		vertexMin.xy = vertexMin.xy * 0.5 + 0.5;
+
+		//small triangle
+#ifdef INSTRUMENT
+		if(!culled && any(round(vertexMin.xy * g_ScreenSize) == round(vertexMax.xy * g_ScreenSize))){
+			g_CounterBuffer.InterlockedAdd(12, 1);
+			culled = true;
+		}
+#else
+		culled = culled || any(round(vertexMin.xy * g_ScreenSize) == round(vertexMax.xy * g_ScreenSize));
+#endif
+
+		//frustum
+#ifdef INSTRUMENT
+		if(!culled && (vertexMin.x >= 1 || vertexMin.y >= 1 || vertexMax.x <= 0 || vertexMax.y <= 0 || vertexMax.z < 0)){
+			g_CounterBuffer.InterlockedAdd(16, 1);
+			culled = true;
+		}
+#else
+		culled = culled || (any(vertexMin.xy > 1) || any(vertexMax.xy < 0));
+
+#endif
 		//occlusion
 		if(!culled){
 			float mipcount;
@@ -119,25 +140,7 @@ GroupMemoryBarrierWithGroupSync();
 			culled = (vertexMin.z > maxDepth);
 		}
 
-		//small triangle
-#ifdef INSTRUMENT
-		if(!culled && any(round(vertexMin.xy * g_ScreenSize) == round(vertexMax.xy * g_ScreenSize))){
-			g_CounterBuffer.InterlockedAdd(12, 1);
-			culled = true;
-		}
-#else
-		culled = culled || any(round(vertexMin.xy * g_ScreenSize) == round(vertexMax.xy * g_ScreenSize));
-#endif
 
-		//frustum
-#ifdef INSTRUMENT
-		if(!culled && (any(vertexMin.xy > 1) || any(vertexMax.xy < 0))){
-			g_CounterBuffer.InterlockedAdd(16, 1);
-			culled = true;
-		}
-#else
-		culled = culled || (any(vertexMin.xy > 1) || any(vertexMax.xy < 0));
-#endif
 
 		const Predicate laneActive = !culled;
 		BitMask ballot = WaveBallot(laneActive);
