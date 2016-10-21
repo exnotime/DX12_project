@@ -50,9 +50,15 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 	for (auto& mesh : mod.Meshes) {
 		glm::vec4 max = input.World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
 		glm::vec4 min = input.World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
-		bool frustum = AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
+		bool boxfrustum = AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
 
-		if (frustum) {
+		//glm::vec4 minToMax = (max - min);
+		//float rad = glm::length(minToMax) * 0.5f;
+		//glm::vec4 center = (min + minToMax * 0.5f);// +glm::vec4(m_Views[1].Camera.Position, 0);
+		//center = m_Views[1].Camera.View * center;
+		//bool spherefrustum = SpherevsFrustum(center,rad);
+
+		if (boxfrustum) {
 			drawCall.DrawIndex = m_ShaderInputBuffer.size();
 			drawCall.MaterialOffset = g_MaterialBank.GetMaterial(mod.MaterialHandle + mesh.MaterialOffset)->Offset * MATERIAL_SIZE;
 
@@ -133,7 +139,7 @@ void RenderQueue::AddView(const View& v) {
 
 bool RenderQueue::AABBvsFrustum(const glm::vec3& max, const glm::vec3 min) {
 
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 6; ++i) {
 		int out = 0;
 		out += glm::dot(m_FrustumPlanes[i], glm::vec4(min.x, min.y, min.z, 1.0f)) < 0.0f ? 1 : 0;
 		out += glm::dot(m_FrustumPlanes[i], glm::vec4(max.x, min.y, min.z, 1.0f)) < 0.0f ? 1 : 0;
@@ -154,5 +160,14 @@ bool RenderQueue::AABBvsFrustum(const glm::vec3& max, const glm::vec3 min) {
 	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z > max.z) ? 1 : 0); if (out == 8) return false;
 	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z < min.z) ? 1 : 0); if (out == 8) return false;
 
+	return true;
+}
+
+bool RenderQueue::SpherevsFrustum(const glm::vec4& pos, const float radius) {
+	for(int i = 0; i < 6; ++i){
+		float d = glm::dot(pos, m_FrustumPlanes[i]);
+		if (d < -radius)
+   			return false;
+	}
 	return true;
 }

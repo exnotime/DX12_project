@@ -11,6 +11,7 @@
 #include "DrawCullingProgram.h"
 #include "TriangleCullingProgram.h"
 #include "FilterContext.h"
+#include <Timer.h>
 #define SIGNAL_BEGIN_COPY 0
 #define SIGNAL_END_COPY 1
 
@@ -67,4 +68,5 @@ private:
 	DrawCullingProgram m_CullingProgram;
 	TriangleCullingProgram m_TriangleCullingProgram;
 	FilterContext m_FilterContext;
+	Timer m_CullingTimer;
 };

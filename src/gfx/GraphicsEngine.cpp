@@ -359,9 +359,12 @@ void GraphicsEngine::Render() {
 
 	m_Context.CommandList->RSSetViewports(1, &m_Viewport);
 	m_Context.CommandList->RSSetScissorRects(1, &m_ScissorRect);
+
+	m_CullingTimer.Reset();
+
 	if (g_TestParams.UseCulling) {
 		//m_CullingProgram.ClearCounter();
-
+		
 		m_Profiler.Step(m_Context.CommandList.Get(), "Culling");
 
 		while (m_TriangleCullingProgram.Disbatch(&m_RenderQueue, &m_FilterContext)) {
@@ -372,6 +375,9 @@ void GraphicsEngine::Render() {
 	}
 	m_Profiler.Step(m_Context.CommandList.Get(), "Render");
 	RenderGeometry(m_Context.CommandList.Get(), &m_ProgramState, &m_RenderQueue, &m_FilterContext);
+
+	double cullingTime = m_CullingTimer.Reset() * 1000.0;
+	printf("Culling CPU time %f \n", cullingTime);
 	m_Profiler.End(m_Context.CommandList.Get());
 	
 	//return to present mode for render target

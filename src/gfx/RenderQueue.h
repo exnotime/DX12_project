@@ -68,6 +68,7 @@ class RenderQueue {
 
   private:
 	  bool AABBvsFrustum(const glm::vec3& max, const glm::vec3 min);
+	  bool SpherevsFrustum(const glm::vec4& pos, const float radius);
 
 	std::vector<View>					m_Views;
 	glm::vec4							m_FrustumPlanes[6];
