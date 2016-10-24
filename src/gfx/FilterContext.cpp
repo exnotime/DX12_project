@@ -9,19 +9,19 @@ FilterContext::~FilterContext() {
 
 }
 
-void FilterContext::Init(DX12Context* context) {
+void FilterContext::Init(ID3D12Device* device) {
 	//create resources
 	CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(g_TestParams.BatchSize * 3 * g_TestParams.BatchCount * sizeof(UINT), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	CD3DX12_RESOURCE_DESC drawBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(g_TestParams.BatchCount * sizeof(IndirectDrawCall), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	for (int i = 0; i < MAX_SIMUL_PASSES; i++) {
-		context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
+		device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 			&indexBufferDesc, D3D12_RESOURCE_STATE_INDEX_BUFFER, nullptr, IID_PPV_ARGS(&m_IndexBuffers[i]));
-		context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
+		device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 			&drawBufferDesc, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, nullptr, IID_PPV_ARGS(&m_DrawArgsBuffers[i]));
 	}
 	//counter resource
 	CD3DX12_RESOURCE_DESC counterBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * MAX_SIMUL_PASSES * 64, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
+	device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 		&counterBufferDesc, D3D12_RESOURCE_STATE_INDEX_BUFFER, nullptr, IID_PPV_ARGS(&m_CounterBuffer));
 	//Descriptor heaps
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
@@ -30,9 +30,9 @@ void FilterContext::Init(DX12Context* context) {
 	heapDesc.NumDescriptors = 3;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	for (int i = 0; i < MAX_SIMUL_PASSES; i++) {
-		context->Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_FilterDescriptorHeaps[i]));
+		device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_FilterDescriptorHeaps[i]));
 	}
-	m_DescHeapIncSize = context->Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_DescHeapIncSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	//fill descriptorheaps
 	for (int i = 0; i < MAX_SIMUL_PASSES; i++) {
 		CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_FilterDescriptorHeaps[i]->GetCPUDescriptorHandleForHeapStart());
@@ -44,11 +44,11 @@ void FilterContext::Init(DX12Context* context) {
 		uavDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-		context->Device->CreateUnorderedAccessView(m_DrawArgsBuffers[i].Get(), nullptr, &uavDesc, cpuHandle);
+		device->CreateUnorderedAccessView(m_DrawArgsBuffers[i].Get(), nullptr, &uavDesc, cpuHandle);
 		//indices output
 		uavDesc.Buffer.NumElements = g_TestParams.BatchCount * g_TestParams.BatchSize * 3;
 		uavDesc.Buffer.StructureByteStride = sizeof(UINT);
-		context->Device->CreateUnorderedAccessView(m_IndexBuffers[i].Get(), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
+		device->CreateUnorderedAccessView(m_IndexBuffers[i].Get(), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
 		//counter buffer
 		uavDesc.Buffer.CounterOffsetInBytes = 0;
 		uavDesc.Buffer.FirstElement = i * 64; //make the first element i offset in to make the passes alternate between two indices
@@ -57,7 +57,7 @@ void FilterContext::Init(DX12Context* context) {
 		uavDesc.Buffer.StructureByteStride = 0;
 		uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-		context->Device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
+		device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
 	}
 
 	//index buffer views
@@ -90,7 +90,7 @@ void FilterContext::BeginFilter(ID3D12GraphicsCommandList* cmdList) {
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(g_ModelBank.GetIndexBufferResource(),
 		D3D12_RESOURCE_STATE_INDEX_BUFFER, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 
-	g_BufferManager.SwitchState("IndirectBuffer", D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	g_BufferManager.SwitchState(cmdList, "IndirectBuffer", D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 }
 
 void FilterContext::BeginRender(ID3D12GraphicsCommandList* cmdList, ID3D12Resource** drawArgsOut) {
@@ -111,7 +111,7 @@ void FilterContext::BeginRender(ID3D12GraphicsCommandList* cmdList, ID3D12Resour
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(g_ModelBank.GetIndexBufferResource(),
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_INDEX_BUFFER));
-	g_BufferManager.SwitchState("IndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+	g_BufferManager.SwitchState(cmdList, "IndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 
 	cmdList->IASetIndexBuffer(&m_IndexBufferViews[m_CurrentRenderIndex]);
 }

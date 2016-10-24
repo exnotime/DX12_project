@@ -15,43 +15,18 @@ BufferManager::~BufferManager() {
 	}
 }
 
-void BufferManager::Init(DX12Context* context, UINT maxBuffers) {
-	m_Context = context;
+void BufferManager::Init(ID3D12Device* device, UINT maxBuffers) {
 	D3D12_DESCRIPTOR_HEAP_DESC bufferHeapDesc = {};
 	bufferHeapDesc.NumDescriptors = maxBuffers;
 	bufferHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	bufferHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	HR(context->Device->CreateDescriptorHeap(&bufferHeapDesc, IID_PPV_ARGS(&m_DescriptorHeap)), L"Error creating descriptor heap for buffer manager");
+	HR(device->CreateDescriptorHeap(&bufferHeapDesc, IID_PPV_ARGS(&m_DescriptorHeap)), L"Error creating descriptor heap for buffer manager");
 	
-	m_HeapIncrementSize = context->Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_HeapIncrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_Device = device;
 }
 
-void BufferManager::CreateBuffer(const std::string& name, const BufferInfo& info) {
-	if (info.SizeInBytes == 0) {
-		return;
-	}
-	auto& buf = m_Buffers.find(name);
-	if (buf != m_Buffers.end()) {
-		//buffer already exist
-		return;
-	}
-	switch (info.Type)
-	{
-	case CONST_BUFFER:
-		if (info.DoubleBuffered || info.GPUOnly)
-			return;
-		CreateConstBuffer(name, info.Data, info.SizeInBytes);
-		break;
-	case STRUCTURED_BUFFER:
-		
-		break;
-	default:
-		break;
-	}
-
-}
-
-void BufferManager::CreateConstBuffer(const std::string& name, void* data, UINT size) {
+void BufferManager::CreateConstBuffer(const std::string& name, UINT size) {
 	if (size == 0) {
 		return;
 	}
@@ -62,7 +37,7 @@ void BufferManager::CreateConstBuffer(const std::string& name, void* data, UINT 
 	}
 	UINT realSize = (size + 255) & ~255;
 	Buffer* buffer = new Buffer();
-	HR(m_Context->Device->CreateCommittedResource(
+	HR(m_Device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
 		&CD3DX12_RESOURCE_DESC::Buffer(realSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&buffer->Resource[0])),
 		L"Error creating constant buffer");
@@ -74,15 +49,8 @@ void BufferManager::CreateConstBuffer(const std::string& name, void* data, UINT 
 	viewDesc.SizeInBytes = realSize;
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_DescriptorHeap->GetCPUDescriptorHandleForHeapStart(), buffer->Offset * m_HeapIncrementSize);
-	m_Context->Device->CreateConstantBufferView(&viewDesc, handle);
+	m_Device->CreateConstantBufferView(&viewDesc, handle);
 
-	if (data != nullptr) {
-		//transfer data
-		void* gpuPtr;
-		buffer->Resource[0]->Map(0, nullptr, &gpuPtr);
-		memcpy(gpuPtr, data, realSize);
-		buffer->Resource[0]->Unmap(0, nullptr);
-	}
 #ifdef _DEBUG
 	wchar_t* wName = convertCharArrayToLPCWSTR(name.c_str());
 	buffer->Resource[0]->SetName(wName);
@@ -92,7 +60,7 @@ void BufferManager::CreateConstBuffer(const std::string& name, void* data, UINT 
 	m_Buffers.emplace(name, buffer);
 }
 
-void BufferManager::CreateIndirectBuffer(const std::string& name, void* data, UINT size) {
+void BufferManager::CreateIndirectBuffer(const std::string& name, UINT size) {
 	if (size == 0) {
 		return;
 	}
@@ -104,30 +72,18 @@ void BufferManager::CreateIndirectBuffer(const std::string& name, void* data, UI
 	UINT realSize = (size + 255) & ~255;
 	Buffer* buffer = new Buffer();
 	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(realSize);
-	HR(m_Context->Device->CreateCommittedResource(
+	HR(m_Device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 		&resourceDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&buffer->Resource[0])),
 		L"Error creating indirect buffer");
 
-	HR(m_Context->Device->CreateCommittedResource(
+	HR(m_Device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
 		&CD3DX12_RESOURCE_DESC::Buffer(realSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&buffer->UploadHeap)),
 		L"Error creating indirect buffer upload heap");
 	buffer->Offset = m_BufferCounter++;
 	buffer->Type = INDIRECT_BUFFER;
 	buffer->State = D3D12_RESOURCE_STATE_COPY_DEST;
-	if (data != nullptr) {
-		D3D12_SUBRESOURCE_DATA sub_data = {};
-		sub_data.pData = data;
-		sub_data.RowPitch = realSize;
-		sub_data.SlicePitch = sub_data.RowPitch;
-
-		UpdateSubresources(m_Context->CommandList.Get(), buffer->Resource[0].Get(), buffer->UploadHeap.Get(), 0, 0, 1, &sub_data);
-
-		m_Context->CommandList->ResourceBarrier(1,
-			&CD3DX12_RESOURCE_BARRIER::Transition(buffer->Resource[0].Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
-		buffer->State = D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
-	}
 #ifdef _DEBUG
 	wchar_t* wName = convertCharArrayToLPCWSTR(name.c_str());
 	buffer->Resource[0]->SetName(wName);
@@ -137,7 +93,7 @@ void BufferManager::CreateIndirectBuffer(const std::string& name, void* data, UI
 	m_Buffers.emplace(name, buffer);
 }
 
-void BufferManager::CreateStructuredBuffer(const std::string& name, void* data, UINT size, UINT structureSize, bool doubleBuffered, bool GPUOnly) {
+void BufferManager::CreateStructuredBuffer(const std::string& name, UINT size, UINT structureSize) {
 	if (size == 0) {
 		return;
 	}
@@ -150,24 +106,14 @@ void BufferManager::CreateStructuredBuffer(const std::string& name, void* data, 
 	Buffer* buffer = new Buffer();
 	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(realSize);
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-	HR(m_Context->Device->CreateCommittedResource(
+	HR(m_Device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 		&resourceDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&buffer->Resource[0])),
 		L"Error creating structured buffer");
-
-	if (doubleBuffered) {
-		HR(m_Context->Device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-			&resourceDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&buffer->Resource[1])),
-			L"Error creating structured buffer");
-	}
-
-	if (!GPUOnly) {
-		HR(m_Context->Device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(realSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&buffer->UploadHeap)),
-			L"Error creating structured buffer upload heap");
-	}
+	HR(m_Device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(realSize), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&buffer->UploadHeap)),
+		L"Error creating structured buffer upload heap");
 
 	buffer->Offset = m_BufferCounter++;
 	buffer->Type = STRUCTURED_BUFFER;
@@ -184,34 +130,17 @@ void BufferManager::CreateStructuredBuffer(const std::string& name, void* data, 
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_DescriptorHeap->GetCPUDescriptorHandleForHeapStart(), buffer->Offset * m_HeapIncrementSize);
 
-	m_Context->Device->CreateShaderResourceView( buffer->Resource[0].Get(), &viewDesc, handle);
-	if (doubleBuffered) {
-		m_Context->Device->CreateShaderResourceView(buffer->Resource[1].Get(), &viewDesc, handle.Offset(1, m_HeapIncrementSize));
-	}
-	if (data != nullptr && !GPUOnly) {
-		D3D12_SUBRESOURCE_DATA sub_data = {};
-		sub_data.pData = data;
-		sub_data.RowPitch = realSize;
-		sub_data.SlicePitch = sub_data.RowPitch;
-
-		UpdateSubresources(m_Context->CommandList.Get(), buffer->Resource[0].Get(), buffer->UploadHeap.Get(), 0, 0, 1, &sub_data);
-
-		m_Context->CommandList->ResourceBarrier(1,
-			&CD3DX12_RESOURCE_BARRIER::Transition(buffer->Resource[0].Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
-		buffer->State = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-	}
+	m_Device->CreateShaderResourceView( buffer->Resource[0].Get(), &viewDesc, handle);
 #ifdef _DEBUG
 	wchar_t* wName = convertCharArrayToLPCWSTR(name.c_str());
 	buffer->Resource[0]->SetName(wName);
-	if(!GPUOnly)
-		buffer->UploadHeap->SetName(L"Structured buffer upload heap");
 	delete[] wName;
 #endif
 
 	m_Buffers.emplace(name, buffer);
 }
 
-void BufferManager::UpdateBuffer(const std::string& name, void* data, UINT size) {
+void BufferManager::UpdateBuffer(ID3D12GraphicsCommandList* cmdList, const std::string& name, void* data, UINT size) {
 	if (size == 0) {
 		return;
 	}
@@ -231,22 +160,22 @@ void BufferManager::UpdateBuffer(const std::string& name, void* data, UINT size)
 			break;
 		}
 		case STRUCTURED_BUFFER: {
-			SwitchState(name, D3D12_RESOURCE_STATE_COPY_DEST);
+			SwitchState(cmdList,name, D3D12_RESOURCE_STATE_COPY_DEST);
 			void* gpuPtr;
 			buffer->second->UploadHeap->Map(0, nullptr, &gpuPtr);
 			memcpy(gpuPtr, data, size);
 			buffer->second->UploadHeap->Unmap(0, nullptr);
-			m_Context->CommandList->CopyBufferRegion(buffer->second->Resource[0].Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
+			cmdList->CopyBufferRegion(buffer->second->Resource[0].Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
 			buffer->second->State = D3D12_RESOURCE_STATE_COPY_DEST;
 			break;
 		}
 		case INDIRECT_BUFFER: {
-			SwitchState(name, D3D12_RESOURCE_STATE_COPY_DEST);
+			SwitchState(cmdList, name, D3D12_RESOURCE_STATE_COPY_DEST);
 			void* gpuPtr;
 			buffer->second->UploadHeap->Map(0, nullptr, &gpuPtr);
 			memcpy(gpuPtr, data, size);
 			buffer->second->UploadHeap->Unmap(0, nullptr);
-			m_Context->CommandList->CopyBufferRegion(buffer->second->Resource[0].Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
+			cmdList->CopyBufferRegion(buffer->second->Resource[0].Get(), 0, buffer->second->UploadHeap.Get(), 0, size);
 			buffer->second->State = D3D12_RESOURCE_STATE_COPY_DEST;
 			break;
 		}
@@ -298,12 +227,12 @@ ID3D12Resource* BufferManager::GetBufferResource(const std::string& name) {
 	return nullptr;
 }
 
-void BufferManager::SwitchState(const std::string& name, D3D12_RESOURCE_STATES state) {
+void BufferManager::SwitchState(ID3D12GraphicsCommandList* cmdList, const std::string& name, D3D12_RESOURCE_STATES state) {
 	auto& buffer = m_Buffers.find(name);
 	if (buffer != m_Buffers.end()) {
 		if (state == buffer->second->State)
 			return;
-		m_Context->CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+		cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
 			buffer->second->Resource[0].Get(), buffer->second->State, state));
 		buffer->second->State = state;
 	}

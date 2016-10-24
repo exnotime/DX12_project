@@ -21,9 +21,10 @@ MaterialBank& MaterialBank::GetInstance() {
 	return m_Bank;
 }
 
-void MaterialBank::Initialize(DX12Context* context){
-	m_Context = context;
-	m_DescSize = context->Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+void MaterialBank::Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList){
+	m_Device = device;
+	m_LoadingCmdList = cmdList;
+	m_DescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	m_MaterialCount = 0;
 
 	m_DefaultAlbedo = LoadTexture("assets/textures/albedo.png");
@@ -38,15 +39,15 @@ void MaterialBank::Initialize(DX12Context* context){
 	srvHeapDesc.NumDescriptors = MAX_MATERIAL_COUNT * MATERIAL_SIZE;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	HR(m_Context->Device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_MaterialHeap)), L"Error creating descriptor heap for material");
+	HR(device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_MaterialHeap)), L"Error creating descriptor heap for material");
 
 	//CreateDescHeap(m_DefaultMaterial);
 	m_MaterialHandle = m_MaterialHeap->GetCPUDescriptorHandleForHeapStart();
 
-	m_Textures[m_DefaultAlbedo]->CreateSRV(context, m_MaterialHandle);
-	m_Textures[m_DefaultNormal]->CreateSRV(context, m_MaterialHandle.Offset(1, m_DescSize));
-	m_Textures[m_DefaultRoughness]->CreateSRV(context, m_MaterialHandle.Offset(1, m_DescSize));
-	m_Textures[m_DefaultMetal]->CreateSRV(context, m_MaterialHandle.Offset(1, m_DescSize));
+	m_Textures[m_DefaultAlbedo]->CreateSRV(device, m_MaterialHandle);
+	m_Textures[m_DefaultNormal]->CreateSRV(device, m_MaterialHandle.Offset(1, m_DescSize));
+	m_Textures[m_DefaultRoughness]->CreateSRV(device, m_MaterialHandle.Offset(1, m_DescSize));
+	m_Textures[m_DefaultMetal]->CreateSRV(device, m_MaterialHandle.Offset(1, m_DescSize));
 	m_Materials.push_back(m_DefaultMaterial);
 	m_MaterialCount++;
 	m_Updated = true;
@@ -74,10 +75,10 @@ void MaterialBank::LoadMaterials(Model& model, std::string filename, const aiSce
 			if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
 				std::string fullpath = GetDirectoryFromFilePath(filename) + "/" + path.data;
 				TextureHandle a = LoadTexture(fullpath.c_str());
-				m_Textures[a]->CreateSRV(m_Context, m_MaterialHandle.Offset(1, m_DescSize));
+				m_Textures[a]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));
 			}
 		} else {
-			m_Textures[m_DefaultAlbedo]->CreateSRV(m_Context, m_MaterialHandle.Offset(1, m_DescSize));
+			m_Textures[m_DefaultAlbedo]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));
 		}
 		//normal map
 		if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0) {
@@ -85,10 +86,10 @@ void MaterialBank::LoadMaterials(Model& model, std::string filename, const aiSce
 			if (mat->GetTexture(aiTextureType_HEIGHT, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
 				std::string fullpath = GetDirectoryFromFilePath(filename) + "/" + path.data;
 				TextureHandle n = LoadTexture(fullpath.c_str());
-				m_Textures[n]->CreateSRV(m_Context, m_MaterialHandle.Offset(1, m_DescSize));
+				m_Textures[n]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));
 			}
 		} else {
-			m_Textures[m_DefaultNormal]->CreateSRV(m_Context, m_MaterialHandle.Offset(1, m_DescSize));
+			m_Textures[m_DefaultNormal]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));
 		}
 		//roughness map
 		if (mat->GetTextureCount(aiTextureType_SPECULAR) > 0) {
@@ -96,10 +97,10 @@ void MaterialBank::LoadMaterials(Model& model, std::string filename, const aiSce
 			if (mat->GetTexture(aiTextureType_SPECULAR, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
 				std::string fullpath = GetDirectoryFromFilePath(filename) + "/" + path.data;
 				TextureHandle r = LoadTexture(fullpath.c_str());
-				m_Textures[r]->CreateSRV(m_Context, m_MaterialHandle.Offset(1, m_DescSize));
+				m_Textures[r]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));
 			}
 		} else {
-			m_Textures[m_DefaultRoughness]->CreateSRV(m_Context, m_MaterialHandle.Offset(1, m_DescSize));
+			m_Textures[m_DefaultRoughness]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));
 		}
 		//Metal map
 		if (mat->GetTextureCount(aiTextureType_AMBIENT) > 0) { //use ambient texture as metal map for now
@@ -107,10 +108,10 @@ void MaterialBank::LoadMaterials(Model& model, std::string filename, const aiSce
 			if (mat->GetTexture(aiTextureType_AMBIENT, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
 				std::string fullpath = GetDirectoryFromFilePath(filename) + "/" + path.data;
 				TextureHandle m = LoadTexture(fullpath.c_str());
-				m_Textures[m]->CreateSRV(m_Context, m_MaterialHandle.Offset(1, m_DescSize));
+				m_Textures[m]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));
 			}
 		} else {
-			m_Textures[m_DefaultMetal]->CreateSRV(m_Context, m_MaterialHandle.Offset(1, m_DescSize));
+			m_Textures[m_DefaultMetal]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));
 		}
 		m_Materials.push_back(modelMat);
 		m_MaterialCount++;
@@ -147,7 +148,7 @@ Material* MaterialBank::GetMaterial(const std::string& name) {
 
 TextureHandle MaterialBank::LoadTexture(const char* filename) {
 	Texture* tex = new Texture();
-	if (!tex->Init(filename, m_Context)) {
+	if (!tex->Init(filename, m_Device, m_LoadingCmdList)) {
 		return m_DefaultAlbedo;
 	}
 	m_Textures.push_back(tex);
@@ -167,5 +168,5 @@ void MaterialBank::FreeResources() {
 }
 
 void MaterialBank::CopyMaterialDescriptors(D3D12_CPU_DESCRIPTOR_HANDLE dest) {
-	m_Context->Device->CopyDescriptorsSimple(m_MaterialCount * MATERIAL_SIZE, dest, m_MaterialHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_Device->CopyDescriptorsSimple(m_MaterialCount * MATERIAL_SIZE, dest, m_MaterialHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }

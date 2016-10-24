@@ -8,8 +8,8 @@ public:
 	DrawCullingProgram();
 	~DrawCullingProgram();
 	void Init(DX12Context* context, TriangleCullingProgram* cullingProgram);
-	void Disbatch(RenderQueue* queue, TriangleCullingProgram* cullingProgram);
-	void ClearCounter();
+	void Disbatch(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue, TriangleCullingProgram* cullingProgram);
+	void ClearCounter(ID3D12GraphicsCommandList* cmdList);
 private:
 
 	enum ROOT_PARAMS {

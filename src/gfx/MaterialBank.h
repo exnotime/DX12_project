@@ -15,7 +15,7 @@ class MaterialBank {
   public:
 	~MaterialBank();
  	static MaterialBank& GetInstance();
-	void Initialize(DX12Context* context);
+	void Initialize(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	void LoadMaterials(Model& model, std::string filename, const aiScene* scene);
 	void ClearMaterials();
 	Material* GetMaterial(int matIndex);
@@ -42,7 +42,9 @@ class MaterialBank {
 	Material*										m_DefaultMaterial;
 	bool											m_Updated = false;
 
-	DX12Context*									m_Context;
+	ID3D12Device*									m_Device;
+	ID3D12GraphicsCommandList*						m_LoadingCmdList;
+
 	CD3DX12_CPU_DESCRIPTOR_HANDLE					m_MaterialHandle;
 	ComPtr<ID3D12DescriptorHeap>					m_MaterialHeap;
 	UINT											m_MaterialCount;

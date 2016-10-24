@@ -58,9 +58,7 @@ void FullscreenPass::Init(DX12Context* context) {
 	context->Device->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&m_DescriptorHeap));
 }
 
-void FullscreenPass::Render(DX12Context* context) {
-	ID3D12GraphicsCommandList* cmdList = context->CommandList.Get();
-
+void FullscreenPass::Render(ID3D12GraphicsCommandList* cmdList) {
 	cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
 	cmdList->SetPipelineState(m_PipelineState.Get());
 	ID3D12DescriptorHeap* heaps[] = { m_DescriptorHeap.Get() };

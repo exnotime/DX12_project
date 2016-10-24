@@ -5,7 +5,7 @@ class VertexBuffer {
 public:
 	VertexBuffer();
 	~VertexBuffer();
-	void Init(const std::vector<Vertex>& vertices, DX12Context context);
+	void Init(const std::vector<Vertex>& vertices,ID3D12Device* device, ID3D12GraphicsCommandList* cmdList);
 	D3D12_VERTEX_BUFFER_VIEW GetView();
 	void FreeUploadHeap();
 	void Release();

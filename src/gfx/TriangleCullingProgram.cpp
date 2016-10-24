@@ -120,8 +120,7 @@ void TriangleCullingProgram::CreateDescriptorTable(HiZProgram* hizProgram) {
 
 }
 
-bool TriangleCullingProgram::Disbatch(RenderQueue* queue, FilterContext* filterContext) {
-	ID3D12GraphicsCommandList* cmdList = m_Context->CommandList.Get();
+bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue, FilterContext* filterContext) {
 	filterContext->BeginFilter(cmdList);
 	// copy in descriptors
 	m_Context->Device->CopyDescriptorsSimple(3, CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DescHeap->GetCPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * (5 + 3 * filterContext->GetFilterIndex())),

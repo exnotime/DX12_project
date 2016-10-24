@@ -51,7 +51,7 @@ void GPUProfiler::PrintResults() {
 	static int counter = 0;
 	UINT64 a, b;
 	for (int i = 0; i < m_StepCounter - 1; i++) {
-		a = result[i];
+ 		a = result[i];
 		b = result[i + 1];
 
 		double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;

@@ -6,7 +6,7 @@ public:
 	FullscreenPass();
 	~FullscreenPass();
 	void Init(DX12Context* context);
-	void Render(DX12Context* context);
+	void Render(ID3D12GraphicsCommandList* cmdList);
 	//temp maybe
 	void CreateSRV(DX12Context* context, ID3D12Resource* resource, DXGI_FORMAT format, UINT mipCount = 1);
 

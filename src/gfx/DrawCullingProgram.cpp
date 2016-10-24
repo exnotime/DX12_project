@@ -61,8 +61,8 @@ void DrawCullingProgram::Init(DX12Context* context, TriangleCullingProgram* cull
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	context->Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_CPUDescriptorHeap));
 
-	g_BufferManager.CreateStructuredBuffer("CulledIndirectBuffer", nullptr, g_TestParams.BatchCount * sizeof(IndirectDrawCall), sizeof(IndirectDrawCall));
-	g_BufferManager.CreateStructuredBuffer("CullingCounterBuffer", nullptr, 4096 * sizeof(UINT), sizeof(UINT));
+	g_BufferManager.CreateStructuredBuffer("CulledIndirectBuffer", g_TestParams.BatchCount * sizeof(IndirectDrawCall), sizeof(IndirectDrawCall));
+	g_BufferManager.CreateStructuredBuffer("CullingCounterBuffer", 4096 * sizeof(UINT), sizeof(UINT));
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	CD3DX12_CPU_DESCRIPTOR_HANDLE gpuHandle(m_GPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -117,12 +117,12 @@ void DrawCullingProgram::Init(DX12Context* context, TriangleCullingProgram* cull
 	m_Context = context;
 }
 
-void DrawCullingProgram::Disbatch(RenderQueue* queue, TriangleCullingProgram* cullingProgram) {
-	g_BufferManager.SwitchState("IndirectBuffer", D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-	g_BufferManager.SwitchState("CulledIndirectBuffer", D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+void DrawCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue, TriangleCullingProgram* cullingProgram) {
+	g_BufferManager.SwitchState(cmdList,"IndirectBuffer", D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	g_BufferManager.SwitchState(cmdList,"CulledIndirectBuffer", D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	g_BufferManager.SwitchState(cmdList,"CullingCounterBuffer", D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
-	ID3D12GraphicsCommandList* cmdList = m_Context->CommandList.Get();
+	
 	cmdList->SetPipelineState(m_PipelineState.Get());
 	cmdList->SetComputeRootSignature(m_RootSignature.Get());
 
@@ -143,14 +143,12 @@ void DrawCullingProgram::Disbatch(RenderQueue* queue, TriangleCullingProgram* cu
 	//	D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
 }
 
-void DrawCullingProgram::ClearCounter() {
-	g_BufferManager.SwitchState("CullingCounterBuffer", D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+void DrawCullingProgram::ClearCounter(ID3D12GraphicsCommandList* cmdList) {
+	g_BufferManager.SwitchState(cmdList, "CullingCounterBuffer", D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	//clear uav counter
 	UINT vals[4] = { 0,0,0,0 };
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CPUDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_DescIncSize);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_GPUDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_DescIncSize);
-
-	ID3D12GraphicsCommandList* cmdList = m_Context->CommandList.Get();
 
 	//cmdList->ClearUnorderedAccessViewUint(gpuHandle, cpuHandle, g_BufferManager.GetBufferResource("CulledIndirectBuffer"), vals, 0, nullptr);
 	cmdList->ClearUnorderedAccessViewUint(gpuHandle.Offset(1, m_DescIncSize), cpuHandle.Offset(1, m_DescIncSize), g_BufferManager.GetBufferResource("CullingCounterBuffer"), vals, 0, nullptr);

@@ -40,14 +40,14 @@ class RenderQueue {
   public:
 	RenderQueue();
 	~RenderQueue();
-	void Init(DX12Context* context);
+	void Init();
 	void Enqueue(ModelHandle model, const std::vector<ShaderInput>& inputs);
 	void Enqueue(ModelHandle model, const ShaderInput& input);
 
 	void EnqueueOccluder(ModelHandle occluderModel);
 
 	void Clear();
-	void UpdateBuffer();
+	void UpdateBuffer(ID3D12GraphicsCommandList* cmdList);
 
 	void AddView(const View& v);
 
@@ -67,7 +67,7 @@ class RenderQueue {
 	}
 
   private:
-	  bool AABBvsFrustum(const glm::vec3& max, const glm::vec3 min);
+	  bool AABBvsFrustum(const glm::vec4& max, const glm::vec4& min);
 	  bool SpherevsFrustum(const glm::vec4& pos, const float radius);
 
 	std::vector<View>					m_Views;

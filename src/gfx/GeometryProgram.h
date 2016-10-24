@@ -34,6 +34,6 @@ namespace GeometryProgram {
 	const int ENVIRONMENT_MATERIAL_SIZE = 3;
 };
 
-void InitGeometryState(GeometryProgram::GeometryProgramState* state, DX12Context* context);
+void InitGeometryState(GeometryProgram::GeometryProgramState* state, DX12Context* context, ID3D12GraphicsCommandList* cmdList);
 void RenderGeometry(ID3D12GraphicsCommandList*cmdList,
 	GeometryProgram::GeometryProgramState* state, RenderQueue* queue, FilterContext* filter);

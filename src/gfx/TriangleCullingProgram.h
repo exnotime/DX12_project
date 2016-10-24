@@ -11,7 +11,7 @@ public:
 	~TriangleCullingProgram();
 	void Init(DX12Context* context);
 	void CreateDescriptorTable(HiZProgram* hizProgram);
-	bool Disbatch(RenderQueue* queue, FilterContext* filterContext);
+	bool Disbatch(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue, FilterContext* filterContext);
 private:
 	DX12Context* m_Context;
 	Shader m_Shader;

@@ -10,7 +10,7 @@
 
 using namespace GeometryProgram;
 
-void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
+void InitGeometryState(GeometryProgramState* state, DX12Context* context, ID3D12GraphicsCommandList* cmdList) {
 	state->DescHeapIncSize = context->Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	state->Shader.LoadFromFile(L"src/shaders/Color.hlsl", VERTEX_SHADER_BIT | PIXEL_SHADER_BIT, nullptr);
@@ -67,9 +67,9 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 	pipeStateFact.SetAllShaders(state->Shader);
 	state->PipelineState = pipeStateFact.CreateGraphicsState(context);
 
-	state->DiffSkyTex.Init("assets/cubemaps/skybox_irr.dds", context);
-	state->SpecSkyTex.Init("assets/cubemaps/skybox_rad.dds", context);
-	state->IBLTex.Init("assets/textures/IBLTex.dds", context);
+	state->DiffSkyTex.Init("assets/cubemaps/skybox_irr.dds", context->Device.Get(), cmdList);
+	state->SpecSkyTex.Init("assets/cubemaps/skybox_rad.dds", context->Device.Get(), cmdList);
+	state->IBLTex.Init("assets/textures/IBLTex.dds", context->Device.Get(), cmdList);
 
 	D3D12_DESCRIPTOR_HEAP_DESC skyHeapDesc = {};
 	skyHeapDesc.NumDescriptors = ENVIRONMENT_MATERIAL_SIZE;
@@ -79,9 +79,9 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context) {
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE skyHandle(state->SkyDescHeap->GetCPUDescriptorHandleForHeapStart());
 
-	state->DiffSkyTex.CreateSRV(context, skyHandle);
-	state->SpecSkyTex.CreateSRV(context, skyHandle.Offset(1, state->DescHeapIncSize));
-	state->IBLTex.CreateSRV(context, skyHandle.Offset(1, state->DescHeapIncSize));
+	state->DiffSkyTex.CreateSRV(context->Device.Get(), skyHandle);
+	state->SpecSkyTex.CreateSRV(context->Device.Get(), skyHandle.Offset(1, state->DescHeapIncSize));
+	state->IBLTex.CreateSRV(context->Device.Get(), skyHandle.Offset(1, state->DescHeapIncSize));
 
 	D3D12_DESCRIPTOR_HEAP_DESC renderHeapDesc = {};
 	renderHeapDesc.NumDescriptors = MAX_RENDER_OBJECTS * MATERIAL_SIZE + ENVIRONMENT_MATERIAL_SIZE;
@@ -138,7 +138,7 @@ void RenderGeometry(ID3D12GraphicsCommandList* cmdList, GeometryProgramState* st
 	cmdList->SetGraphicsRootDescriptorTable(ENVIROMENT_DESC_TABLE, gpuHandle);
 	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
 
-	g_BufferManager.SwitchState("IndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+	g_BufferManager.SwitchState(cmdList, "IndirectBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 
 	//draw everything
 	if(g_TestParams.UseCulling){

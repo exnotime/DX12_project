@@ -17,8 +17,7 @@ ModelBank& ModelBank::GetInstance() {
 	return m_Bank;
 }
 
-void ModelBank::Init(DX12Context* context) {
-	m_Context = context;
+void ModelBank::Init() {
 }
 
 ModelHandle ModelBank::LoadModel(const char* filename) {
@@ -342,13 +341,13 @@ void ModelBank::Clear() {
 	m_VertexBufferResource.Reset();
 }
 
-void ModelBank::BuildBuffers() {
+void ModelBank::BuildBuffers(ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) {
 	// Vertex buffers
 	size_t vertexCount = m_VertexPositions.size();
 	size_t vboSize = (vertexCount) * (sizeof(glm::vec3) * 3 + sizeof(glm::vec2));
 
 	CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vboSize);
-	HR(m_Context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
+	HR(device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 		&vertexBufferDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_VertexBufferResource)), L"Error creating Vertex buffer resource");
 
 	//perform multiple uploads if the size is too big
@@ -356,7 +355,7 @@ void ModelBank::BuildBuffers() {
 	size_t uploadSize = (vboSize < maxUploadSize) ? vboSize : maxUploadSize;
 
 	CD3DX12_RESOURCE_DESC vertexBufferUploadDesc = CD3DX12_RESOURCE_DESC::Buffer(vboSize);
-	HR(m_Context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
+	HR(device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
 		&vertexBufferUploadDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_VertexBufferUpload)), L"Error creating Vertex buffer upload resource");
 	
 #ifdef _DEBUG
@@ -434,9 +433,9 @@ void ModelBank::BuildBuffers() {
 	m_VertexBufferView[3].StrideInBytes = sizeof(glm::vec2);
 
 
-	m_Context->CommandList->CopyResource(m_VertexBufferResource.Get() , m_VertexBufferUpload.Get());
+	cmdList->CopyResource(m_VertexBufferResource.Get() , m_VertexBufferUpload.Get());
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_VertexBufferResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-	m_Context->CommandList->ResourceBarrier(1, &barrier);
+	cmdList->ResourceBarrier(1, &barrier);
 	//Index Buffer
 	int staticId = 0;
 	for (std::map<ModelHandle, Model>::iterator it = m_Models.begin(); it != m_Models.end(); ++it) {
@@ -447,9 +446,9 @@ void ModelBank::BuildBuffers() {
 	size_t indexBufferSize = m_Indices.size() * sizeof(UINT);
 	CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
 
-	HR(m_Context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
+	HR(device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 		&indexBufferDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_IndexBufferResource)), L"Error creating index buffer resource");
-	HR(m_Context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
+	HR(device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
 		&indexBufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_IndexbufferUpload)), L"Error creating index buffer upload resource");
 
 	D3D12_SUBRESOURCE_DATA indexData = {};
@@ -457,14 +456,14 @@ void ModelBank::BuildBuffers() {
 	indexData.RowPitch = indexBufferSize;
 	indexData.SlicePitch = indexData.RowPitch;
 
-	UpdateSubresources(m_Context->CommandList.Get(), m_IndexBufferResource.Get(), m_IndexbufferUpload.Get(), 0, 0, 1, &indexData);
+	UpdateSubresources(cmdList, m_IndexBufferResource.Get(), m_IndexbufferUpload.Get(), 0, 0, 1, &indexData);
 #ifdef _DEBUG
 	m_IndexbufferUpload->SetName(L"Index buffer upload heap");
 	m_IndexBufferResource->SetName(L"Index buffer");
 #endif
 
 	barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_IndexBufferResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-	m_Context->CommandList->ResourceBarrier(1, &barrier);
+	cmdList->ResourceBarrier(1, &barrier);
 
 	m_IndexBufferView.BufferLocation = m_IndexBufferResource->GetGPUVirtualAddress();
 	m_IndexBufferView.Format = DXGI_FORMAT_R32_UINT;

@@ -9,18 +9,17 @@ RenderQueue::RenderQueue() {
 RenderQueue::~RenderQueue() {
 }
 
-void RenderQueue::Init(DX12Context* context) {
-	m_Context = context;
+void RenderQueue::Init() {
 	m_InstanceCounter = 0;
-	g_BufferManager.CreateIndirectBuffer("IndirectBuffer", nullptr, sizeof(IndirectDrawCall) * MAX_SHADER_INPUT_COUNT);
-	g_BufferManager.CreateIndirectBuffer("IndirectOccluderBuffer", nullptr, sizeof(IndirectDrawCall) * MAX_SHADER_INPUT_COUNT);
-	g_BufferManager.CreateStructuredBuffer("ShaderInputBuffer", nullptr, MAX_SHADER_INPUT_COUNT * sizeof(ShaderInput), sizeof(ShaderInput));
+	g_BufferManager.CreateIndirectBuffer("IndirectBuffer", sizeof(IndirectDrawCall) * MAX_SHADER_INPUT_COUNT);
+	g_BufferManager.CreateIndirectBuffer("IndirectOccluderBuffer", sizeof(IndirectDrawCall) * MAX_SHADER_INPUT_COUNT);
+	g_BufferManager.CreateStructuredBuffer("ShaderInputBuffer", MAX_SHADER_INPUT_COUNT * sizeof(ShaderInput), sizeof(ShaderInput));
 }
 
-void RenderQueue::UpdateBuffer() {
-	g_BufferManager.UpdateBuffer("ShaderInputBuffer", m_ShaderInputBuffer.data(), (unsigned)(m_ShaderInputBuffer.size() * sizeof(ShaderInput)));
-	g_BufferManager.UpdateBuffer("IndirectBuffer", m_DrawCalls.data(), (unsigned)(m_DrawCalls.size() * sizeof(IndirectDrawCall)));
-	g_BufferManager.UpdateBuffer("IndirectOccluderBuffer", m_OccluderDrawCalls.data(), (unsigned)(m_OccluderDrawCalls.size() * sizeof(IndirectDrawCall)));
+void RenderQueue::UpdateBuffer(ID3D12GraphicsCommandList* cmdList) {
+	g_BufferManager.UpdateBuffer(cmdList,"ShaderInputBuffer", m_ShaderInputBuffer.data(), (unsigned)(m_ShaderInputBuffer.size() * sizeof(ShaderInput)));
+	g_BufferManager.UpdateBuffer(cmdList,"IndirectBuffer", m_DrawCalls.data(), (unsigned)(m_DrawCalls.size() * sizeof(IndirectDrawCall)));
+	g_BufferManager.UpdateBuffer(cmdList,"IndirectOccluderBuffer", m_OccluderDrawCalls.data(), (unsigned)(m_OccluderDrawCalls.size() * sizeof(IndirectDrawCall)));
 }
 
 void RenderQueue::Enqueue(ModelHandle model, const std::vector<ShaderInput>& inputs) {
@@ -50,7 +49,7 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 	for (auto& mesh : mod.Meshes) {
 		glm::vec4 max = input.World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
 		glm::vec4 min = input.World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
-		bool boxfrustum = AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z));
+		bool boxfrustum = AABBvsFrustum(max, min);
 
 		//glm::vec4 minToMax = (max - min);
 		//float rad = glm::length(minToMax) * 0.5f;
@@ -83,7 +82,7 @@ void RenderQueue::EnqueueOccluder(ModelHandle occluderModel) {
 		glm::vec4 max = m_ShaderInputBuffer.back().World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
 		glm::vec4 min = m_ShaderInputBuffer.back().World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
 
-		if (!AABBvsFrustum(glm::vec3(max.x, max.y, max.z), glm::vec3(min.x, min.y, min.z)))
+		if (!AABBvsFrustum(max, min))
 			continue;
 
 		drawCall.DrawIndex = m_ShaderInputBuffer.size() - 1;
@@ -137,7 +136,7 @@ void RenderQueue::AddView(const View& v) {
 
 }
 
-bool RenderQueue::AABBvsFrustum(const glm::vec3& max, const glm::vec3 min) {
+bool RenderQueue::AABBvsFrustum(const glm::vec4& max, const glm::vec4& min) {
 
 	for (int i = 0; i < 6; ++i) {
 		int out = 0;
@@ -149,16 +148,17 @@ bool RenderQueue::AABBvsFrustum(const glm::vec3& max, const glm::vec3 min) {
 		out += glm::dot(m_FrustumPlanes[i], glm::vec4(max.x, min.y, max.z, 1.0f)) < 0.0f ? 1 : 0;
 		out += glm::dot(m_FrustumPlanes[i], glm::vec4(min.x, max.y, max.z, 1.0f)) < 0.0f ? 1 : 0;
 		out += glm::dot(m_FrustumPlanes[i], glm::vec4(max.x, max.y, max.z, 1.0f)) < 0.0f ? 1 : 0;
-		if (out == 8) return false;
+		if (out == 8) 
+			return false;
 	}
 
-	int out;
-	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x > max.x) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x < min.x) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].y > max.y) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].y < min.y) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z > max.z) ? 1 : 0); if (out == 8) return false;
-	out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z < min.z) ? 1 : 0); if (out == 8) return false;
+	//int out;
+	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x > max.x) ? 1 : 0); if (out == 8) return false;
+	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x < min.x) ? 1 : 0); if (out == 8) return false;
+	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].y > max.y) ? 1 : 0); if (out == 8) return false;
+	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].y < min.y) ? 1 : 0); if (out == 8) return false;
+	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z > max.z) ? 1 : 0); if (out == 8) return false;
+	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z < min.z) ? 1 : 0); if (out == 8) return false;
 
 	return true;
 }

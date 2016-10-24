@@ -35,7 +35,7 @@ public:
 	void PrepareForRender();
 
 	void TransferFrame();
-	void ClearScreen();
+	void ClearScreen(ID3D12GraphicsCommandList* cmdList);
 	void Render();
 	void Swap();
 

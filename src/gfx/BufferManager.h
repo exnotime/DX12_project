@@ -24,21 +24,19 @@ public:
 	BufferManager();
 	static BufferManager& GetInstance();
 	
-	void Init(DX12Context* context, UINT maxBuffers = 100);
+	void Init(ID3D12Device* device, UINT maxBuffers = 100);
 
-	void CreateConstBuffer( const std::string& name, void* data, UINT size);
-	void CreateIndirectBuffer(const std::string& name, void* data, UINT size);
-	void CreateStructuredBuffer( const std::string& name, void* data, UINT size, UINT structureSize, bool doubleBuffered = false, bool GPUOnly = false);
+	void CreateConstBuffer( const std::string& name, UINT size);
+	void CreateIndirectBuffer(const std::string& name, UINT size);
+	void CreateStructuredBuffer( const std::string& name, UINT size, UINT structureSize);
 
-	void CreateBuffer(const std::string& name, const BufferInfo& info);
-
-	void UpdateBuffer(const std::string& name, void* data, UINT size);
+	void UpdateBuffer(ID3D12GraphicsCommandList* cmdList, const std::string& name, void* data, UINT size);
 	void* MapBuffer(const std::string& name);
 	void UnMapBuffer(const std::string& name);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(const std::string& name);
 	D3D12_GPU_VIRTUAL_ADDRESS GetGPUHandle(const std::string& name);
 	ID3D12Resource* GetBufferResource(const std::string& name);
-	void SwitchState(const std::string& name, D3D12_RESOURCE_STATES state);
+	void SwitchState(ID3D12GraphicsCommandList* cmdList,const std::string& name, D3D12_RESOURCE_STATES state);
 private:
 	~BufferManager();
 
@@ -51,8 +49,7 @@ private:
 		bool DoubleBuffered;
 		bool GPUOnly;
 	};
-
-	DX12Context* m_Context;
+	ID3D12Device* m_Device;
 	ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
 	std::unordered_map<std::string, Buffer*> m_Buffers;
 	UINT m_BufferCounter = 0;

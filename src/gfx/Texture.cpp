@@ -9,7 +9,7 @@ Texture::~Texture() {
 	m_Resource.Reset();
 }
 
-bool Texture::Init(const std::string& filename, DX12Context* context) {
+bool Texture::Init(const std::string& filename, ID3D12Device* device, ID3D12GraphicsCommandList* cmdList) {
 	if (strstr(filename.c_str(), ".dds")) {
 		DirectX::ScratchImage scratchImage;
 		DirectX::TexMetadata meta;
@@ -35,7 +35,7 @@ bool Texture::Init(const std::string& filename, DX12Context* context) {
 		m_Height = meta.height;
 		m_Format = meta.format;
 		HRESULT hr;
-		hr = context->Device->CreateCommittedResource(
+		hr = device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
 			&texDesc,
@@ -49,7 +49,7 @@ bool Texture::Init(const std::string& filename, DX12Context* context) {
 
 		const UINT64 uploadSize = GetRequiredIntermediateSize(m_Resource.Get(), 0, meta.mipLevels * meta.arraySize);
 
-		hr = context->Device->CreateCommittedResource(
+		hr = device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
 			&CD3DX12_RESOURCE_DESC::Buffer(uploadSize),
@@ -70,10 +70,10 @@ bool Texture::Init(const std::string& filename, DX12Context* context) {
 				texDataArray[index].SlicePitch = image->slicePitch;
 			}
 		}
-		int size = UpdateSubresources(context->CommandList.Get(), m_Resource.Get(), m_UploadHeap.Get(), 0, 0, meta.mipLevels * meta.arraySize, texDataArray);
+		int size = UpdateSubresources(cmdList, m_Resource.Get(), m_UploadHeap.Get(), 0, 0, meta.mipLevels * meta.arraySize, texDataArray);
 
 		delete [] texDataArray;
-		context->CommandList->ResourceBarrier(1,
+		cmdList->ResourceBarrier(1,
 			&CD3DX12_RESOURCE_BARRIER::Transition(m_Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 #ifdef _DEBUG
 		wchar_t* wname = convertCharArrayToLPCWSTR(filename.c_str());
@@ -100,7 +100,7 @@ bool Texture::Init(const std::string& filename, DX12Context* context) {
 		
 		m_Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		HRESULT hr;
-		hr = context->Device->CreateCommittedResource(
+		hr = device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
 			&texDesc,
@@ -114,7 +114,7 @@ bool Texture::Init(const std::string& filename, DX12Context* context) {
 
 		const UINT64 uploadSize = GetRequiredIntermediateSize(m_Resource.Get(), 0, 1);
 
-		hr = context->Device->CreateCommittedResource(
+		hr = device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
 			&CD3DX12_RESOURCE_DESC::Buffer(uploadSize),
@@ -129,9 +129,9 @@ bool Texture::Init(const std::string& filename, DX12Context* context) {
 		texData.RowPitch = m_Width * 4;
 		texData.SlicePitch = texData.RowPitch * m_Height;
 
-		UpdateSubresources(context->CommandList.Get(), m_Resource.Get(), m_UploadHeap.Get(), 0, 0, 1, &texData);
+		UpdateSubresources(cmdList, m_Resource.Get(), m_UploadHeap.Get(), 0, 0, 1, &texData);
 
-		context->CommandList->ResourceBarrier(1,
+		cmdList->ResourceBarrier(1,
 			&CD3DX12_RESOURCE_BARRIER::Transition(m_Resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 #ifdef _DEBUG
 		wchar_t* name = convertCharArrayToLPCWSTR(filename.c_str());
@@ -150,7 +150,7 @@ bool Texture::Init(const std::string& filename, DX12Context* context) {
 	return true;
 }
 
-void Texture::CreateSRV(DX12Context* context, D3D12_CPU_DESCRIPTOR_HANDLE handle) {
+void Texture::CreateSRV(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE handle) {
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvView = {};
 	srvView.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -165,7 +165,7 @@ void Texture::CreateSRV(DX12Context* context, D3D12_CPU_DESCRIPTOR_HANDLE handle
 		srvView.Texture2D.MipLevels = m_Miplevels;
 	}
 	
-	context->Device->CreateShaderResourceView(m_Resource.Get(), &srvView, handle);
+	device->CreateShaderResourceView(m_Resource.Get(), &srvView, handle);
 }
 
 void Texture::FreeUploadHeap() {

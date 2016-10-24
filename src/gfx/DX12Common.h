@@ -34,13 +34,13 @@ struct DX12Context {
 	ComPtr<ID3D12CommandQueue> CopyQueue;
 	ComPtr<ID3D12CommandQueue> ComputeQueue;
 
-	ComPtr<ID3D12CommandAllocator> CommandAllocator[g_FrameCount];
-	ComPtr<ID3D12CommandAllocator> CopyAllocator[g_FrameCount];
-	ComPtr<ID3D12CommandAllocator> ComputeAllocator[g_FrameCount];
+	//ComPtr<ID3D12CommandAllocator> CommandAllocator[g_FrameCount];
+	//ComPtr<ID3D12CommandAllocator> CopyAllocator[g_FrameCount];
+	//ComPtr<ID3D12CommandAllocator> ComputeAllocator[g_FrameCount];
 
-	ComPtr<ID3D12GraphicsCommandList> CommandList;
-	ComPtr<ID3D12GraphicsCommandList> CopyCommandList;
-	ComPtr<ID3D12GraphicsCommandList> ComputeCommandList;
+	//ComPtr<ID3D12GraphicsCommandList> CommandList;
+	//ComPtr<ID3D12GraphicsCommandList> CopyCommandList;
+	//ComPtr<ID3D12GraphicsCommandList> ComputeCommandList;
 
 	ComPtr<ID3D12Fence> CopyFence;
 	ComPtr<IDXGIFactory> DXGIFactory;
@@ -61,25 +61,25 @@ struct DX12Fence {
 	HANDLE FenceEvent;
 };
 
-static void ExecuteAndResetCmdList(DX12Context* context) {
-	HR(context->CommandList->Close(), L"Error closing command list");
-	ID3D12CommandList* commandLists = { context->CommandList.Get() };
-	context->CommandQueue->ExecuteCommandLists(1, &commandLists);
-
-	HR(context->CommandAllocator[context->FrameIndex]->Reset(), L"Error resetting command allocator");
-	HR(context->CommandList->Reset(context->CommandAllocator[context->FrameIndex].Get(), nullptr), L"Error resetting command list");
-}
-
-static void ExecuteCmdList(DX12Context* context) {
-	HR(context->CommandList->Close(), L"Error closing command list");
-	ID3D12CommandList* commandLists = { context->CommandList.Get() };
-	context->CommandQueue->ExecuteCommandLists(1, &commandLists);
-}
-
-static void ResetCmdList(DX12Context* context) {
-	HR(context->CommandAllocator[context->FrameIndex]->Reset(), L"Error resetting command allocator");
-	HR(context->CommandList->Reset(context->CommandAllocator[context->FrameIndex].Get(), nullptr), L"Error resetting command list");
-}
+//static void ExecuteAndResetCmdList(DX12Context* context) {
+//	HR(context->CommandList->Close(), L"Error closing command list");
+//	ID3D12CommandList* commandLists = { context->CommandList.Get() };
+//	context->CommandQueue->ExecuteCommandLists(1, &commandLists);
+//
+//	HR(context->CommandAllocator[context->FrameIndex]->Reset(), L"Error resetting command allocator");
+//	HR(context->CommandList->Reset(context->CommandAllocator[context->FrameIndex].Get(), nullptr), L"Error resetting command list");
+//}
+//
+//static void ExecuteCmdList(DX12Context* context) {
+//	HR(context->CommandList->Close(), L"Error closing command list");
+//	ID3D12CommandList* commandLists = { context->CommandList.Get() };
+//	context->CommandQueue->ExecuteCommandLists(1, &commandLists);
+//}
+//
+//static void ResetCmdList(DX12Context* context) {
+//	HR(context->CommandAllocator[context->FrameIndex]->Reset(), L"Error resetting command allocator");
+//	HR(context->CommandList->Reset(context->CommandAllocator[context->FrameIndex].Get(), nullptr), L"Error resetting command list");
+//}
 
 static void WaitForGPU(DX12Fence& fence, DX12Context context, UINT frameIndex) {
 	context.CommandQueue->Signal(fence.Fence.Get(), fence.FenceValues[frameIndex]);
