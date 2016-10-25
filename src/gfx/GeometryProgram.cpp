@@ -5,7 +5,6 @@
 #include "ModelBank.h"
 #include "MaterialBank.h"
 #include "BufferManager.h"
-#include "input/Input.h"
 #include "TestParams.h"
 
 using namespace GeometryProgram;

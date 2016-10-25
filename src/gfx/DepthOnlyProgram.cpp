@@ -143,7 +143,7 @@ void DepthOnlyProgram::Render(ID3D12GraphicsCommandList* cmdList, RenderQueue* q
 	cmdList->SetGraphicsRootShaderResourceView(DepthOnlyProgram::SHADER_INPUT_SB, g_BufferManager.GetGPUHandle("ShaderInputBuffer"));
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	g_ModelBank.ApplyBuffers(cmdList);
-
+	g_BufferManager.SwitchState(cmdList, "IndirectOccluderBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 	//draw everything
 	cmdList->ExecuteIndirect(m_CommandSignature.Get(), queue->GetOccluderCount(), g_BufferManager.GetBufferResource("IndirectOccluderBuffer"), 0, nullptr, 0);
 }

@@ -11,7 +11,7 @@
 #include "DrawCullingProgram.h"
 #include "TriangleCullingProgram.h"
 #include "FilterContext.h"
-#include <Timer.h>
+#include <core/Timer.h>
 #define SIGNAL_BEGIN_COPY 0
 #define SIGNAL_END_COPY 1
 
@@ -45,6 +45,7 @@ private:
 	void CheckExtensions();
 	void CreateContext();
 	void CreateSwapChain(HWND hWnd, const glm::vec2& screenSize);
+	void SetRenderTarget(ID3D12GraphicsCommandList* cmdList);
 
 	glm::vec2 m_ScreenSize;
 	D3D12_VIEWPORT m_Viewport;

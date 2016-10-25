@@ -45,11 +45,13 @@ void Engine::Init() {
 	ws.Fullscreen = false;
 	g_Window.Initialize(ws);
 
+	
+	m_SubSystemSet.AddSubSystem(new SSCullingTest());
 	m_SubSystemSet.AddSubSystem( new SSPhysics() );
 	m_SubSystemSet.AddSubSystem( new SSGraphics() );
 	m_SubSystemSet.AddSubSystem( new SSCamera() );
-	m_SubSystemSet.AddSubSystem( new SSScript() );
-	m_SubSystemSet.AddSubSystem( new SSCullingTest() );
+	m_SubSystemSet.AddSubSystem(new SSScript());
+
 	m_SubSystemSet.StartSubSystems();
 
 	g_ShapeGenerator.LoadAllShapes();
@@ -72,13 +74,13 @@ void Engine::Run() {
 		m_SubSystemSet.UpdateSubSystems(deltaTime);
 
 		static int counter = 0;
-		static float dt = 0;
+		static double dt = 0;
 
 		dt += deltaTime;
 		counter++;
-		if (counter == 50) {
+		if (counter == 200) {
 			std::stringstream ss;
-			ss << "FPS : " << ceil(1.0 / (dt / counter));
+			ss << "FPS : " << 1.0 / (dt / counter);
 			glfwSetWindowTitle(g_Window.GetWindow(), ss.str().c_str());
 			counter = 0;
 			dt = 0;

@@ -2,16 +2,16 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
-#include "datasystem/ComponentManager.h"
-#include "../../Window.h"
-#include "../core/components/CameraComponent.h"
-#include "../core/components/TransformComponent.h"
-#include "../core/components/ModelComponent.h"
-#include "../core/entity/EntityManager.h"
-#include "../core/entity/EntityFactory.h"
-#include "../../../gfx/ModelBank.h"
+#include <gfx/ModelBank.h>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_access.hpp>
+#include "../../datasystem/ComponentManager.h"
+#include "../../Window.h"
+#include "../../components/CameraComponent.h"
+#include "../../components/TransformComponent.h"
+#include "../../components/ModelComponent.h"
+#include "../../entity/EntityManager.h"
+#include "../../entity/EntityFactory.h"
 #include "../../input/Input.h"
 
 SSGraphics::SSGraphics(){
@@ -45,7 +45,7 @@ void SSGraphics::Update(const double deltaTime) {
 			v.Camera = cc->Camera.GetData();
 			m_RenderQueue->AddView(v);
 
-			if (g_Input.IsKeyPushed(GLFW_KEY_T) || g_Input.IsMousebuttonDown(GLFW_MOUSE_BUTTON_RIGHT) || firstUpdate)
+			//if (g_Input.IsKeyPushed(GLFW_KEY_T) || g_Input.IsMousebuttonDown(GLFW_MOUSE_BUTTON_RIGHT) || firstUpdate)
 				lastCam = cc->Camera.GetData();
 			v.Camera = lastCam;
 			m_RenderQueue->AddView(v);

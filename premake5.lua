@@ -1,5 +1,5 @@
 solution "Exjobb_GPU_Culling"
-    configurations { "Debug", "Release" }
+    configurations { "Debug", "Release", "Dev" }
         flags{ "Unicode", "NoPCH" }
         libdirs { "lib" }
         includedirs { "include"}
@@ -22,13 +22,20 @@ solution "Exjobb_GPU_Culling"
         
     configuration { "Release" }
         defines { "NDEBUG", "RELEASE" }
-        flags { "Optimize", "FloatFast" }
+        flags { "OptimizeSpeed", "FloatFast" }
+
+    configuration { "Dev" }
+        defines { "NDEBUG", "DEV" }
+        flags { "OptimizeSpeed", "FloatFast", "Symbols" }
 
     configuration { "Debug" }
         targetdir ( "bin/" .. "/debug" )
 
     configuration { "Release" }
         targetdir ( "bin/" .. "/release" )
+
+        configuration { "Dev" }
+        targetdir ( "bin/" .. "/dev" )
 
 
 	project "Exjobb_Engine"
@@ -38,11 +45,13 @@ solution "Exjobb_GPU_Culling"
 		language "C++"
 		kind "ConsoleApp"
 		files { "src/**"}
-		includedirs { "include/*", "src/*" }
+		includedirs { "include/", "src/" }
 		systemversion "10.0.14393.0"
 		links { "glfw3", "d3d12", "dxgi", "d3dcompiler", "assimp", "amd_ags_x64", "nvapi64" }
 	configuration { "Release" }
 		links {"DirectXTex", "BulletCollision", "BulletDynamics", "BulletLinearMath", "angelscript64", "as_integration"}
+    configuration { "Dev" }
+        links {"DirectXTex", "BulletCollision", "BulletDynamics", "BulletLinearMath", "angelscript64", "as_integration"}
 	configuration {"Debug"}
 		links {"DirectXTexD", "BulletCollision_Debug", "BulletDynamics_Debug", "BulletLinearMath_Debug", "angelscript64d", "as_integrationD"}
       	

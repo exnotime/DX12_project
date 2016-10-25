@@ -110,21 +110,7 @@ void GraphicsEngine::CreateContext() {
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
 	HR(m_Context.Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_Context.ComputeQueue)), L"Error creating compute queue");
 
-	//for (int i = 0; i < g_FrameCount; i++) {
-	//	HR(m_Context.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_Context.CommandAllocator[i])), L"Error creating command allocator");
-	//	HR(m_Context.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&m_Context.CopyAllocator[i])), L"Error creating copy allocator");
-	//	HR(m_Context.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&m_Context.ComputeAllocator[i])), L"Error creating compute allocator");
-	//}
-
-	//HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.CommandList)), L"Error creating command list");
-	//HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, m_Context.CopyAllocator[m_Context.FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.CopyCommandList)), L"Error creating copy list");
-	//HR(m_Context.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, m_Context.ComputeAllocator[m_Context.FrameIndex].Get(), nullptr, IID_PPV_ARGS(&m_Context.ComputeCommandList)), L"Error creating compute list");
-
-	////m_Context.CommandList->Close();
-	//m_Context.CopyCommandList->Close();
-	//m_Context.ComputeCommandList->Close();
-
-	g_CommandBufferManager.Init(&m_Context, 8, 8, 1);
+	g_CommandBufferManager.Init(&m_Context, 64, 64, 1);
 	g_CommandBufferManager.ResetAllCommandBuffers();
 
 	HR(m_Context.Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence.Fence)), L"Error creating fence");
@@ -136,7 +122,7 @@ void GraphicsEngine::CreateContext() {
 }
 
 void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
-	m_ScreenSize = screenSize * 1.0f;
+	m_ScreenSize = screenSize * 2.0f;
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
 	m_Viewport.MinDepth = 0.0f;
@@ -167,6 +153,8 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 	HR(m_Context.DXGIFactory->CreateSwapChain(m_Context.CommandQueue.Get(), &swapChainDesc, &swapchain), L"Error creating swapchain");
 	swapchain.As(&m_SwapChain.SwapChain);
 	m_Context.FrameIndex = m_SwapChain.SwapChain->GetCurrentBackBufferIndex();
+
+	m_SwapChain.RenderTargets;
 
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 	rtvHeapDesc.NumDescriptors = g_FrameCount;
@@ -212,13 +200,16 @@ void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
 		m_Context.Device->CreateRenderTargetView(m_SwapChain.RenderTargets[i].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_SwapChain.RenderTargetHeapSize); //offset with size
 	}
+#ifdef _DEBUG
+	m_SwapChain.RenderTargets[0]->SetName(L"RenderTarget0");
+	m_SwapChain.RenderTargets[1]->SetName(L"RenderTarget1");
+#endif
 }
 
 void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	CreateContext();
 	CreateSwapChain(hWnd, screenSize);
 
-	
 	m_DepthProgram.Init(&m_Context, m_ScreenSize);
 
 	m_HiZProgram.Init(&m_Context, m_ScreenSize);
@@ -230,7 +221,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	g_BufferManager.CreateConstBuffer("cbPerFrame2", sizeof(cbPerFrame));
 	g_BufferManager.CreateConstBuffer("testBuffer", sizeof(IndirectDrawCall) * 100);
 
-	ID3D12GraphicsCommandList* cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
+	ID3D12GraphicsCommandList* cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE); //cmd is closed when we get it here!!
 	InitGeometryState(&m_ProgramState, &m_Context, cmdList);
 	g_MaterialBank.Initialize(m_Context.Device.Get(), cmdList);
 	g_ModelBank.Init();
@@ -245,15 +236,10 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 
 	cmdList->Close();
 	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
-	//ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
-	//m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
 
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 
 	g_CommandBufferManager.ResetAllCommandBuffers();
-
-	//HR(m_Context.CommandAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting command allocator");
-	//HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting command list");
 }
 
 void GraphicsEngine::ResizeFrameBuffer(const glm::vec2& screenSize) {
@@ -295,8 +281,6 @@ void GraphicsEngine::PrepareForRender() {
 	cmdList->Close();
 
 	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
-	//ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
-	//m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
 
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 
@@ -307,9 +291,6 @@ void GraphicsEngine::PrepareForRender() {
 }
 
 void GraphicsEngine::TransferFrame() {
-	//HR(m_Context.CommandAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting copy allocator");
-	//HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting copy list");
-
 	g_CommandBufferManager.ResetAllCommandBuffers();
 	ID3D12GraphicsCommandList* cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
 
@@ -317,10 +298,6 @@ void GraphicsEngine::TransferFrame() {
 
 	cmdList->Close();
 	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
-
-	//ID3D12CommandList* ppCommandList[] = { m_Context.CommandList.Get() };
-	//m_Context.CommandQueue->ExecuteCommandLists(1, ppCommandList);
-
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 }
 
@@ -337,10 +314,16 @@ void GraphicsEngine::ClearScreen(ID3D12GraphicsCommandList* cmdList) {
 }
 
 void GraphicsEngine::Render() {
+	//culling test stuff
+	if (g_TestParams.Reset) {
+		m_Profiler.Reset();
+		//reset the filter context and triangle culling program as well
+
+		g_TestParams.Reset = false;
+	}
+
 	TransferFrame();
 
-	//HR(m_Context.CommandAllocator[m_Context.FrameIndex]->Reset(), L"Error resetting command allocator");
-	//HR(m_Context.CommandList->Reset(m_Context.CommandAllocator[m_Context.FrameIndex].Get(), nullptr), L"Error resetting command list");
 	ID3D12GraphicsCommandList* cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
 
 	ClearScreen(cmdList);
@@ -373,49 +356,46 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame2");
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_Context.FrameIndex, m_SwapChain.RenderTargetHeapSize);
-	cmdList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
-
-	cmdList->RSSetViewports(1, &m_Viewport);
-	cmdList->RSSetScissorRects(1, &m_ScissorRect);
-
 	m_CullingTimer.Reset();
 
 	if (g_TestParams.UseCulling) {
-		//m_CullingProgram.ClearCounter();
-		
-		m_Profiler.Step(cmdList, "Culling");
+		cmdList->Close();
+		cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
 
+		m_Profiler.Step(cmdList, "Culling");
 		while (m_TriangleCullingProgram.Disbatch(cmdList, &m_RenderQueue, &m_FilterContext)) {
+
+			cmdList->Close();
+			cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
+
+			SetRenderTarget(cmdList);
 			m_Profiler.Step(cmdList, "Render");
 			RenderGeometry(cmdList, &m_ProgramState, &m_RenderQueue, &m_FilterContext);
+
+			cmdList->Close();
+			cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
+
 			m_Profiler.Step(cmdList, "Culling");
 		}
 	}
+	cmdList->Close();
+	cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
+
+	SetRenderTarget(cmdList);
 	m_Profiler.Step(cmdList, "Render");
 	RenderGeometry(cmdList, &m_ProgramState, &m_RenderQueue, &m_FilterContext);
 
 	double cullingTime = m_CullingTimer.Reset() * 1000.0;
 	printf("Culling CPU time %f \n", cullingTime);
-	m_Profiler.End(cmdList);
+
+	m_Profiler.End(cmdList, m_Context.FrameIndex);
 	
 	//return to present mode for render target
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	
-	//m_Context.CommandList->CopyBufferRegion(g_BufferManager.GetBufferResource("testBuffer"), 0, g_BufferManager.GetBufferResource("CullingCounterBuffer"), 0, sizeof(UINT) * 32);
-	//m_Context.CommandList->CopyBufferRegion(g_BufferManager.GetBufferResource("testBuffer"), 0, g_BufferManager.GetBufferResource("CulledIndirectBuffer"), 0, sizeof(IndirectDrawCall) * 100);
-	
 	cmdList->Close();
-	//ExecuteCmdList(&m_Context);
 	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
-	//UINT* testDraws;
-	//testDraws = (UINT*)g_BufferManager.MapBuffer("testBuffer");
-	//printf("Triangles culled in 2dh filter: %d \n", testDraws[2]);
-	//printf("Triangles culled in small triangle filter: %d \n", testDraws[3]);
-	//printf("Triangles culled in frustum filter: %d \n", testDraws[4]);
-	//printf("Remaining triangles %d \n", testDraws[1]);
-	//g_BufferManager.UnMapBuffer("testBuffer");
 }
 
 void GraphicsEngine::Swap() {
@@ -425,7 +405,8 @@ void GraphicsEngine::Swap() {
 	//signal when this frame is done
 	const UINT64 currentFenceValue = m_Fence.FenceValues[m_Context.FrameIndex];
 	m_Context.CommandQueue->Signal(m_Fence.Fence.Get(), m_Fence.FenceValues[m_Context.FrameIndex]);
-	
+
+	m_Profiler.PrintResults(m_Context.FrameIndex);
 	//wait for last frame to finish
 	m_Context.FrameIndex = m_SwapChain.SwapChain->GetCurrentBackBufferIndex();
 	if (m_Fence.Fence->GetCompletedValue() < m_Fence.FenceValues[m_Context.FrameIndex]) {
@@ -434,5 +415,12 @@ void GraphicsEngine::Swap() {
 	}
 	m_Fence.FenceValues[m_Context.FrameIndex] = currentFenceValue + 1;
 
-	m_Profiler.PrintResults();
+	
+}
+
+void GraphicsEngine::SetRenderTarget(ID3D12GraphicsCommandList* cmdList) {
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChain.RenderTargetDescHeap->GetCPUDescriptorHandleForHeapStart(), m_Context.FrameIndex, m_SwapChain.RenderTargetHeapSize);
+	cmdList->OMSetRenderTargets(1, &rtvHandle, false, &m_DSVHeap->GetCPUDescriptorHandleForHeapStart());
+	cmdList->RSSetViewports(1, &m_Viewport);
+	cmdList->RSSetScissorRects(1, &m_ScissorRect);
 }

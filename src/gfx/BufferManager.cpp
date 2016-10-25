@@ -74,7 +74,7 @@ void BufferManager::CreateIndirectBuffer(const std::string& name, UINT size) {
 	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(realSize);
 	HR(m_Device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-		&resourceDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&buffer->Resource[0])),
+		&resourceDesc, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, nullptr, IID_PPV_ARGS(&buffer->Resource[0])),
 		L"Error creating indirect buffer");
 
 	HR(m_Device->CreateCommittedResource(
@@ -83,7 +83,7 @@ void BufferManager::CreateIndirectBuffer(const std::string& name, UINT size) {
 		L"Error creating indirect buffer upload heap");
 	buffer->Offset = m_BufferCounter++;
 	buffer->Type = INDIRECT_BUFFER;
-	buffer->State = D3D12_RESOURCE_STATE_COPY_DEST;
+	buffer->State = D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
 #ifdef _DEBUG
 	wchar_t* wName = convertCharArrayToLPCWSTR(name.c_str());
 	buffer->Resource[0]->SetName(wName);

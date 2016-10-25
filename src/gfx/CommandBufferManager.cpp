@@ -17,9 +17,9 @@ void CommandBufferManager::Init(DX12Context* context, UINT graphicsCount, UINT c
 	m_Context = context;
 	ID3D12Device* device = context->Device.Get();
 
-	m_CommandBuffers[GRAPHICS_TYPE].Init(device, GRAPHICS_TYPE, 8);
-	m_CommandBuffers[COMPUTE_TYPE].Init(device, COMPUTE_TYPE, 8);
-	m_CommandBuffers[COPY_TYPE].Init(device, COPY_TYPE, 1);
+	m_CommandBuffers[GRAPHICS_TYPE].Init(device, GRAPHICS_TYPE, graphicsCount);
+	m_CommandBuffers[COMPUTE_TYPE].Init(device, COMPUTE_TYPE, computeCount);
+	m_CommandBuffers[COPY_TYPE].Init(device, COPY_TYPE, copyCount);
 
 	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[GRAPHICS_TYPE])), L"Error creating fence");
 	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[COMPUTE_TYPE])), L"Error creating fence");
@@ -32,8 +32,7 @@ ID3D12GraphicsCommandList* CommandBufferManager::GetNextCommandList(COMMAND_BUFF
 
 void CommandBufferManager::ResetAllCommandBuffers() {
 	for (auto& buffer : m_CommandBuffers) {
-		buffer.ResetAllocator(m_Context->FrameIndex);
-		buffer.ResetCommandLists(m_Context->FrameIndex);
+		buffer.ResetBuffer(m_Context->FrameIndex);
 	}
 }
 
@@ -55,7 +54,9 @@ void CommandBufferManager::ExecuteCommandBuffers(COMMAND_BUFFER_TYPE type) {
 }
 
 void CommandBufferManager::SignalFence(UINT64 signal, COMMAND_BUFFER_TYPE sender, COMMAND_BUFFER_TYPE reciever){
-
+	if (sender == reciever) {
+		printf("sender and receiver is the same\n");
+	}
 	ID3D12CommandQueue* queue;
 	switch (sender) {
 	case GRAPHICS_TYPE:

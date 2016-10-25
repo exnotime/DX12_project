@@ -1,6 +1,7 @@
 bin/
 solution/
 AS_DEBUG/
+testdata/*.dat
 
 # Compiled Object files
 *.slo

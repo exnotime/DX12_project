@@ -1,12 +1,12 @@
 #include "EntityFactory.h"
 #include "EntityManager.h"
-#include "components/TransformComponent.h"
-#include "components/ModelComponent.h"
-#include "components/RigidBodyComponent.h"
-#include "components/CameraComponent.h"
-#include "datasystem/ComponentManager.h"
-#include "../gfx/ModelBank.h"
-#include "../physics/PhysicsEngine.h"
+#include "../components/TransformComponent.h"
+#include "../components/ModelComponent.h"
+#include "../components/RigidBodyComponent.h"
+#include "../components/CameraComponent.h"
+#include "../datasystem/ComponentManager.h"
+#include <gfx/ModelBank.h>
+#include <physics/PhysicsEngine.h>
 #include "../script/ScriptEngine.h"
 
 void SpawnPlayer(const glm::vec3& position, const glm::vec3& size, const glm::quat& orientation) {

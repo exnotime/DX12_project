@@ -28,7 +28,6 @@ void SSCamera::Update(const double deltaTime) {
 			cc->Camera.PitchRelative(g_Input.GetMouseDelta().y * TURN_SPEED * -1);
 			cc->Camera.YawWorld(g_Input.GetMouseDelta().x * TURN_SPEED * -1);
 
-			
 			//set velocity
 			glm::vec3 velocity = glm::vec3(0);
 			if (g_Input.IsKeyDown(GLFW_KEY_W)) {

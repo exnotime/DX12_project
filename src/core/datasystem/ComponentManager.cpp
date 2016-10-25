@@ -1,8 +1,8 @@
 #include "ComponentManager.h"
-#include "components/CameraComponent.h"
-#include "components/TransformComponent.h"
-#include "components/RigidBodyComponent.h"
-#include "components/ModelComponent.h"
+#include "../components/CameraComponent.h"
+#include "../components/TransformComponent.h"
+#include "../components/RigidBodyComponent.h"
+#include "../components/ModelComponent.h"
 #include <cmath>
 ComponentManager::ComponentManager() {
 

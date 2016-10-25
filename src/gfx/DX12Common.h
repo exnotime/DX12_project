@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <d3d12.h>
-#include <d3dx12.h>
+#include "d3dx12.h"
 #include <dxgi1_5.h>
 #include <wrl/client.h>
 #include <vector>
@@ -84,7 +84,7 @@ struct DX12Fence {
 static void WaitForGPU(DX12Fence& fence, DX12Context context, UINT frameIndex) {
 	context.CommandQueue->Signal(fence.Fence.Get(), fence.FenceValues[frameIndex]);
 	fence.Fence->SetEventOnCompletion(fence.FenceValues[frameIndex], fence.FenceEvent);
-	WaitForSingleObject(fence.FenceEvent, INFINITE);
+	WaitForSingleObjectEx(fence.FenceEvent, INFINITE,false);
 	fence.FenceValues[frameIndex]++;
 }
 

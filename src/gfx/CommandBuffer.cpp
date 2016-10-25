@@ -23,24 +23,25 @@ void CommandBuffer::Init(ID3D12Device* device, COMMAND_BUFFER_TYPE type, UINT cm
 		break;
 	}
 
-	device->CreateCommandAllocator(listType, IID_PPV_ARGS(&m_CommandAllocators[0]));
-	device->CreateCommandAllocator(listType, IID_PPV_ARGS(&m_CommandAllocators[1]));
+	
 
 	m_CmdLists.resize(cmdListCount);
+	m_CommandAllocators[0].resize(cmdListCount);
+	m_CommandAllocators[1].resize(cmdListCount);
 	for (int i = 0; i < cmdListCount; i++) {
-		device->CreateCommandList(0, listType, m_CommandAllocators[0].Get(), nullptr, IID_PPV_ARGS(&m_CmdLists[i]));
-		m_CmdLists[i]->Close();
-		m_CommandAllocators[0]->Reset();
+		device->CreateCommandAllocator(listType, IID_PPV_ARGS(&m_CommandAllocators[0][i]));
+		device->CreateCommandAllocator(listType, IID_PPV_ARGS(&m_CommandAllocators[1][i]));
+
+		device->CreateCommandList(0, listType, m_CommandAllocators[0][i].Get(), nullptr, IID_PPV_ARGS(&m_CmdLists[i]));
+		//m_CmdLists[i]->Close();
+		//m_CommandAllocators[0][i]->Reset();
 	}
 }
 
-void CommandBuffer::ResetAllocator(int frameIndex) {
-	m_CommandAllocators[frameIndex]->Reset();
-}
-
-void CommandBuffer::ResetCommandLists(int frameIndex) {
-	for (auto& list : m_ClosedCmdLists) {
-		list->Reset(m_CommandAllocators[frameIndex].Get(), nullptr);
+void CommandBuffer::ResetBuffer(int frameIndex) {
+	for (int i = 0; i < m_ClosedCmdLists.size(); ++i) {
+		m_CommandAllocators[frameIndex][i]->Reset();
+		m_ClosedCmdLists[i]->Reset(m_CommandAllocators[frameIndex][i].Get(), nullptr);
 	}
 	m_ClosedCmdLists.clear();
 	m_Numerator = 0;
@@ -48,6 +49,7 @@ void CommandBuffer::ResetCommandLists(int frameIndex) {
 
 ID3D12GraphicsCommandList* CommandBuffer::GetNextCmdList() {
 	ID3D12GraphicsCommandList* list = m_CmdLists[m_Numerator].Get();
+	//list->Reset(m_CommandAllocators[0][m_Numerator].Get(), nullptr);
 	m_Numerator++;
 	m_ClosedCmdLists.push_back(list);
 	return list;

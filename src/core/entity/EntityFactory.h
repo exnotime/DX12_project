@@ -3,7 +3,7 @@
 #include <glm/gtx/transform.hpp>
 #include <string>
 #include <glm/gtc/quaternion.hpp>
-#include "../gfx/ShapeGenerator.h"
+#include <gfx/ShapeGenerator.h>
 
 void SpawnPlayer(const glm::vec3& pos, const glm::vec3& size, const glm::quat& orientation);
 
