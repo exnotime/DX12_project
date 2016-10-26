@@ -10,6 +10,7 @@ public:
 	TriangleCullingProgram();
 	~TriangleCullingProgram();
 	void Init(DX12Context* context);
+	void Reset(DX12Context* context);
 	void CreateDescriptorTable(HiZProgram* hizProgram);
 	bool Disbatch(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue, FilterContext* filterContext);
 private:

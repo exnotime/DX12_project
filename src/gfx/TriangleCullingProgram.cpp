@@ -84,6 +84,29 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 	m_DescHeapIncSize = context->Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
+void TriangleCullingProgram::Reset(DX12Context* context) {
+	//recompile shader and pipeline state
+	std::vector<D3D_SHADER_MACRO> macros;
+	if (g_TestParams.Instrument) {
+		macros.push_back({ "INSTRUMENT","1" });
+	}
+	D3D_SHADER_MACRO macro;
+	macro.Name = "BATCH_SIZE";
+	std::string s;
+	std::stringstream ss;
+	ss << g_TestParams.BatchSize;
+	s = ss.str();
+	macro.Definition = s.c_str();
+	macros.push_back(macro);
+
+	m_Shader.LoadFromFile(L"src/shaders/TriangleCulling.hlsl", COMPUTE_SHADER_BIT, &context->Extensions, &macros);
+
+	PipelineStateFactory pipeFact;
+	pipeFact.SetRootSignature(m_RootSign.Get());
+	pipeFact.SetShader(m_Shader.GetByteCode(COMPUTE_SHADER_BIT), COMPUTE_SHADER_BIT);
+	m_PipeState = pipeFact.CreateComputeState(context);
+}
+
 void TriangleCullingProgram::CreateDescriptorTable(HiZProgram* hizProgram) {
 	ID3D12Device* device =  m_Context->Device.Get();
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DescHeap->GetCPUDescriptorHandleForHeapStart());

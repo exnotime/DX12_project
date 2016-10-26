@@ -22,7 +22,7 @@ void FilterContext::Init(ID3D12Device* device) {
 	//counter resource
 	CD3DX12_RESOURCE_DESC counterBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(UINT) * MAX_SIMUL_PASSES * 64, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-		&counterBufferDesc, D3D12_RESOURCE_STATE_INDEX_BUFFER, nullptr, IID_PPV_ARGS(&m_CounterBuffer));
+		&counterBufferDesc, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, nullptr, IID_PPV_ARGS(&m_CounterBuffer));
 	//Descriptor heaps
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -66,7 +66,17 @@ void FilterContext::Init(ID3D12Device* device) {
 		m_IndexBufferViews[i].Format = DXGI_FORMAT_R32_UINT;
 		m_IndexBufferViews[i].SizeInBytes = indexBufferDesc.Width;
 	}
+}
 
+void FilterContext::Reset(ID3D12Device* device) {
+	for (int i = 0; i < MAX_SIMUL_PASSES; i++) {
+		m_IndexBuffers[i].Reset();
+		m_DrawArgsBuffers[i].Reset();
+		m_FilterDescriptorHeaps[i].Reset();
+	}
+	m_CounterBuffer.Reset();
+
+	Init(device);
 }
 
 void FilterContext::Clear() {

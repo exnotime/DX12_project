@@ -234,7 +234,6 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 
 	m_Profiler.Init(&m_Context);
 
-	cmdList->Close();
 	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
 
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
@@ -278,8 +277,6 @@ void GraphicsEngine::PrepareForRender() {
 	g_ModelBank.BuildBuffers(m_Context.Device.Get(), cmdList);
 	g_MaterialBank.CopyMaterialDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_ProgramState.RenderDescHeap->GetCPUDescriptorHandleForHeapStart()).Offset(3, m_ProgramState.DescHeapIncSize));
 
-	cmdList->Close();
-
 	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
 
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
@@ -291,12 +288,10 @@ void GraphicsEngine::PrepareForRender() {
 }
 
 void GraphicsEngine::TransferFrame() {
-	g_CommandBufferManager.ResetAllCommandBuffers();
+	
 	ID3D12GraphicsCommandList* cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
 
 	m_RenderQueue.UpdateBuffer(cmdList);
-
-	cmdList->Close();
 	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 }
@@ -317,11 +312,13 @@ void GraphicsEngine::Render() {
 	//culling test stuff
 	if (g_TestParams.Reset) {
 		m_Profiler.Reset();
+		m_FilterContext.Reset(m_Context.Device.Get());
+		m_TriangleCullingProgram.Reset(&m_Context);
 		//reset the filter context and triangle culling program as well
 
 		g_TestParams.Reset = false;
 	}
-
+	g_CommandBufferManager.ResetAllCommandBuffers();
 	TransferFrame();
 
 	ID3D12GraphicsCommandList* cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
@@ -331,8 +328,6 @@ void GraphicsEngine::Render() {
 	if (m_RenderQueue.GetDrawCount() == 0) {
 		cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
-		HR(cmdList->Close(), L"Error closing command list");
 		g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
 		return;
 	}
@@ -345,10 +340,6 @@ void GraphicsEngine::Render() {
 	perFrame->ScreenSize = m_ScreenSize;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
 	m_Profiler.Start();
-
-	m_DepthProgram.Render(cmdList, &m_RenderQueue);
-	m_HiZProgram.Disbatch(cmdList, m_DepthProgram.GetDepthTexture());
-
 	v = m_RenderQueue.GetViews().at(0);
 	perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame2");
 	perFrame->CamPos = v.Camera.Position;
@@ -356,45 +347,51 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame2");
 
-	m_CullingTimer.Reset();
+	m_DepthProgram.Render(cmdList, &m_RenderQueue);
+
+	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
+	g_CommandBufferManager.SignalFence(0xDE974, GRAPHICS_TYPE, COMPUTE_TYPE);
+
+	cmdList = g_CommandBufferManager.GetNextCommandList(COMPUTE_TYPE);
+	m_HiZProgram.Disbatch(cmdList, m_DepthProgram.GetDepthTexture());
+
+	g_CommandBufferManager.WaitOnFenceSignal(0xDE974, COMPUTE_TYPE);
+	g_CommandBufferManager.ExecuteCommandBuffers(COMPUTE_TYPE);
+
+	//m_CullingTimer.Reset();
+	g_CommandBufferManager.SignalFence(0xFA1, COMPUTE_TYPE, GRAPHICS_TYPE);
+	g_CommandBufferManager.WaitOnFenceSignal(0xFA1, GRAPHICS_TYPE);
 
 	if (g_TestParams.UseCulling) {
-		cmdList->Close();
 		cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
 
 		m_Profiler.Step(cmdList, "Culling");
 		while (m_TriangleCullingProgram.Disbatch(cmdList, &m_RenderQueue, &m_FilterContext)) {
-
-			cmdList->Close();
 			cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
 
 			SetRenderTarget(cmdList);
 			m_Profiler.Step(cmdList, "Render");
 			RenderGeometry(cmdList, &m_ProgramState, &m_RenderQueue, &m_FilterContext);
 
-			cmdList->Close();
 			cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
 
 			m_Profiler.Step(cmdList, "Culling");
 		}
 	}
-	cmdList->Close();
 	cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
 
 	SetRenderTarget(cmdList);
 	m_Profiler.Step(cmdList, "Render");
 	RenderGeometry(cmdList, &m_ProgramState, &m_RenderQueue, &m_FilterContext);
 
-	double cullingTime = m_CullingTimer.Reset() * 1000.0;
-	printf("Culling CPU time %f \n", cullingTime);
+	//double cullingTime = m_CullingTimer.Reset() * 1000.0;
+	//printf("Culling CPU time %f \n", cullingTime);
 
 	m_Profiler.End(cmdList, m_Context.FrameIndex);
-	
 	//return to present mode for render target
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-	
-	cmdList->Close();
+
 	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
 }
 
@@ -406,9 +403,9 @@ void GraphicsEngine::Swap() {
 	const UINT64 currentFenceValue = m_Fence.FenceValues[m_Context.FrameIndex];
 	m_Context.CommandQueue->Signal(m_Fence.Fence.Get(), m_Fence.FenceValues[m_Context.FrameIndex]);
 
-	
 	//wait for last frame to finish
 	m_Context.FrameIndex = m_SwapChain.SwapChain->GetCurrentBackBufferIndex();
+
 	if (m_Fence.Fence->GetCompletedValue() < m_Fence.FenceValues[m_Context.FrameIndex]) {
 		m_Fence.Fence->SetEventOnCompletion(m_Fence.FenceValues[m_Context.FrameIndex], m_Fence.FenceEvent);
 		WaitForSingleObjectEx(m_Fence.FenceEvent, INFINITE, false);

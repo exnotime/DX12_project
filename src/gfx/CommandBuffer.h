@@ -20,5 +20,6 @@ private:
 	std::vector<ComPtr<ID3D12CommandAllocator>> m_CommandAllocators[g_FrameCount];
 	std::vector<ComPtr<ID3D12GraphicsCommandList>> m_CmdLists;
 	std::vector<ID3D12GraphicsCommandList*> m_ClosedCmdLists;
+	std::vector<ID3D12GraphicsCommandList*> m_OpenCmdLists;
 	UINT m_Numerator = 0;
 };

@@ -69,7 +69,7 @@ void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 
 void HiZProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* srcTex) {
 	//copy from the src texture to mip 0
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(srcTex, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COPY_SOURCE));
+	//cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(srcTex, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COPY_SOURCE));
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_HiZResource.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
 
 	D3D12_TEXTURE_COPY_LOCATION dst, src;
@@ -81,7 +81,7 @@ void HiZProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* sr
 	src.pResource = srcTex;
 	cmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(srcTex, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	//cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(srcTex, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_HiZResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
 
 

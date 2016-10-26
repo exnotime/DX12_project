@@ -115,7 +115,7 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	clearVal.Format = DXGI_FORMAT_D32_FLOAT;
 
 	HR(context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-		&dsvResDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearVal, IID_PPV_ARGS(&m_DepthTexture)), L"Error creating depth resource");
+		&dsvResDesc, D3D12_RESOURCE_STATE_COPY_SOURCE, &clearVal, IID_PPV_ARGS(&m_DepthTexture)), L"Error creating depth resource");
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 	dsvHeapDesc.NumDescriptors = 1;
@@ -132,6 +132,7 @@ void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 }
 
 void DepthOnlyProgram::Render(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue) {
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthTexture.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 	cmdList->OMSetRenderTargets(0, nullptr, false, &m_DepthHeap->GetCPUDescriptorHandleForHeapStart());
 	cmdList->ClearDepthStencilView(m_DepthHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0x0, 0, nullptr);
 	cmdList->RSSetViewports(1, &m_Viewport);
@@ -146,4 +147,6 @@ void DepthOnlyProgram::Render(ID3D12GraphicsCommandList* cmdList, RenderQueue* q
 	g_BufferManager.SwitchState(cmdList, "IndirectOccluderBuffer", D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
 	//draw everything
 	cmdList->ExecuteIndirect(m_CommandSignature.Get(), queue->GetOccluderCount(), g_BufferManager.GetBufferResource("IndirectOccluderBuffer"), 0, nullptr, 0);
+
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthTexture.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COPY_SOURCE));
 }

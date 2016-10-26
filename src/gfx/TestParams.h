@@ -19,7 +19,7 @@ struct TestData {
 	bool Instrument = false;
 	bool AsyncCompute = false;
 	bool LogToFile = false;
-	std::string Filename;
+	std::string Filename = "default.dat";
 	bool Reset = false;
 
 	static TestParams& GetInstance();

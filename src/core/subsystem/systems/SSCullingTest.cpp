@@ -56,7 +56,7 @@ void SSCullingTest::GetNextTest() {
 	if (m_TestCounter >= g_TestParams.Tests.size()) {
 		exit(0); // no more tests either quit or just idle
 		//m_CurrentTest.Duration = INT_MAX;
-		//return;
+		return;
 	}
 
 	m_CurrentTest = g_TestParams.Tests[m_TestCounter];

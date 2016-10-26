@@ -8,6 +8,7 @@ public:
 	FilterContext();
 	~FilterContext();
 	void Init(ID3D12Device* device);
+	void Reset(ID3D12Device* device);
 	void Clear();
 	void BeginFilter(ID3D12GraphicsCommandList* cmdList);
 	void BeginRender(ID3D12GraphicsCommandList* cmdList, ID3D12Resource** drawArgsOut);

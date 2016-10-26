@@ -50,10 +50,6 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context, ID3D12
 	depthDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_REPLACE;
 	depthDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
 	depthDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-	//rasterstate
-	//CD3DX12_RASTERIZER_DESC rasterDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	//rasterDesc.CullMode = D3D12_CULL_MODE_NONE;
-	//pipeStateFact.SetRasterizerState(rasterDesc);
 
 	pipeStateFact.SetDepthStencilFormat(DXGI_FORMAT_D24_UNORM_S8_UINT);
 	pipeStateFact.SetDepthStencilState(depthDesc);
@@ -66,8 +62,8 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context, ID3D12
 	pipeStateFact.SetAllShaders(state->Shader);
 	state->PipelineState = pipeStateFact.CreateGraphicsState(context);
 
-	state->DiffSkyTex.Init("assets/cubemaps/skybox_irr.dds", context->Device.Get(), cmdList);
-	state->SpecSkyTex.Init("assets/cubemaps/skybox_rad.dds", context->Device.Get(), cmdList);
+	state->DiffSkyTex.Init("assets/cubemaps/sanmiguel_irr.dds", context->Device.Get(), cmdList);
+	state->SpecSkyTex.Init("assets/cubemaps/sanmiguel_rad.dds", context->Device.Get(), cmdList);
 	state->IBLTex.Init("assets/textures/IBLTex.dds", context->Device.Get(), cmdList);
 
 	D3D12_DESCRIPTOR_HEAP_DESC skyHeapDesc = {};
