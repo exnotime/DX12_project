@@ -406,7 +406,7 @@ void GraphicsEngine::Swap() {
 	const UINT64 currentFenceValue = m_Fence.FenceValues[m_Context.FrameIndex];
 	m_Context.CommandQueue->Signal(m_Fence.Fence.Get(), m_Fence.FenceValues[m_Context.FrameIndex]);
 
-	m_Profiler.PrintResults(m_Context.FrameIndex);
+	
 	//wait for last frame to finish
 	m_Context.FrameIndex = m_SwapChain.SwapChain->GetCurrentBackBufferIndex();
 	if (m_Fence.Fence->GetCompletedValue() < m_Fence.FenceValues[m_Context.FrameIndex]) {
@@ -414,7 +414,7 @@ void GraphicsEngine::Swap() {
 		WaitForSingleObjectEx(m_Fence.FenceEvent, INFINITE, false);
 	}
 	m_Fence.FenceValues[m_Context.FrameIndex] = currentFenceValue + 1;
-
+	m_Profiler.PrintResults(m_Context.FrameIndex);
 	
 }
 

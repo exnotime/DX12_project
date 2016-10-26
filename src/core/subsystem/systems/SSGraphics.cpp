@@ -45,7 +45,7 @@ void SSGraphics::Update(const double deltaTime) {
 			v.Camera = cc->Camera.GetData();
 			m_RenderQueue->AddView(v);
 
-			//if (g_Input.IsKeyPushed(GLFW_KEY_T) || g_Input.IsMousebuttonDown(GLFW_MOUSE_BUTTON_RIGHT) || firstUpdate)
+			if (g_Input.IsKeyPushed(GLFW_KEY_T) || g_Input.IsMousebuttonDown(GLFW_MOUSE_BUTTON_RIGHT) || firstUpdate)
 				lastCam = cc->Camera.GetData();
 			v.Camera = lastCam;
 			m_RenderQueue->AddView(v);

@@ -5,8 +5,9 @@ set style line 2 lc rgb '#ff6000' lt 1 lw 2 pt 7 ps 1.5   # --- red
 set title "FrameTimes"
 
 set xlabel "Frame"
-set yrange [0 : *]
-set autoscale y
+set yrange [0:12]
 set ylabel "Time(ms)"
 
+set multiplot
 plot 	"Culling.dat" using 1:2 with lines ls 1 title "Culling", "NoCulling.dat" using 1:2 with lines ls 2 title "No Culling"
+unset multiplot

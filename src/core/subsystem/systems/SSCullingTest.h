@@ -3,6 +3,8 @@
 #include <string>
 #include <gfx/TestParams.h>
 
+//#define DO_TESTING
+
 class SSCullingTest : public SubSystem {
 public:
 	SSCullingTest();

@@ -41,11 +41,12 @@ void SSCullingTest::Update(const double deltaTime) {
 		g_TestParams.UseCulling = !g_TestParams.UseCulling;
 	}
 
+#ifdef DO_TESTING
 	m_FrameCounter++;
 	if (m_CurrentTest.Duration <= m_FrameCounter) {
 		GetNextTest();
 	}
-	
+#endif
 }
 
 void SSCullingTest::Shutdown() {

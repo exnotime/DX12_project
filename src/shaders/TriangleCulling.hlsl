@@ -76,28 +76,38 @@ GroupMemoryBarrierWithGroupSync();
 							g_TriangleIndices[draw.IndexOffset + index + 1],
 							g_TriangleIndices[draw.IndexOffset + index + 2]};
 
-		float4 v1 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[0]], 1)));
-		float4 v2 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[1]], 1)));
-		float4 v3 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[2]], 1)));
+		float4 vertices[] = {
+			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[0]], 1))),
+			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[1]], 1))),
+			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[2]], 1)))};
+
+		//float4 v1 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[0]], 1)));
+		//float4 v2 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[1]], 1)));
+		//float4 v3 = mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[2]], 1)));
 
 		//backface
-		float det = determinant(float3x3(v1.xyw,v2.xyw,v3.xyw));
+		float det = determinant(float3x3(	vertices[0].xyw,
+											vertices[1].xyw,
+											vertices[2].xyw));
 		bool culled = det >= 0.0;
 #ifdef INSTRUMENT
 		if(culled){
 			g_CounterBuffer.InterlockedAdd(8, 1);
 		}
 #endif
-		//perspective divide
-		v1.xyz /= v1.w;
-		v2.xyz /= v2.w;
-		v3.xyz /= v3.w;
+		int verticesInFrontOfNearPlane = 0;
+		for(int i = 0; i < 3;++i){
+			//perspective divide
+			vertices[i].xy /= vertices[i].w;
+			vertices[i].xy /= 2;
+			vertices[i].xy += float2(0.5, 0.5);
+			if(vertices[i].w < 0)
+				verticesInFrontOfNearPlane++;
+		}
+		
 
-		float3 vertexMax = max(v1.xyz, max(v2.xyz,v3.xyz));
-		float3 vertexMin = min(v1.xyz, min(v2.xyz,v3.xyz));
-
-		vertexMax.xy = vertexMax.xy * 0.5 + 0.5;
-		vertexMin.xy = vertexMin.xy * 0.5 + 0.5;
+		float2 vertexMax = max(vertices[0].xy, max(vertices[1].xy,vertices[2].xy));
+		float2 vertexMin = min(vertices[0].xy, min(vertices[1].xy,vertices[2].xy));
 
 		//small triangle
 #ifdef INSTRUMENT
@@ -111,12 +121,17 @@ GroupMemoryBarrierWithGroupSync();
 
 		//frustum
 #ifdef INSTRUMENT
-		if(!culled && (vertexMin.x >= 1 || vertexMin.y >= 1 || vertexMax.x <= 0 || vertexMax.y <= 0 || vertexMax.z < 0)){
+		if(!culled && (vertexMin.x > 1 || vertexMin.y > 1 || vertexMax.x < 0 || vertexMax.y < 0)){
 			g_CounterBuffer.InterlockedAdd(16, 1);
 			culled = true;
 		}
 #else
-		culled = culled || (any(vertexMin.xy > 1) || any(vertexMax.xy < 0));
+		if(verticesInFrontOfNearPlane == 3)
+			culled = true;
+		if(verticesInFrontOfNearPlane == 0){
+			culled = culled || (any(vertexMin.xy > 1) || any(vertexMax.xy < 0));
+		}
+		
 
 #endif
 		//occlusion
@@ -136,8 +151,6 @@ GroupMemoryBarrierWithGroupSync();
 			//float maxDepth = max(max(depth1, depth2), max(depth3, depth4));
 			//culled = (vertexMin.z > maxDepth);
 		}
-
-
 
 		const Predicate laneActive = !culled;
 		BitMask ballot = WaveBallot(laneActive);

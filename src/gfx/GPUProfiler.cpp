@@ -26,6 +26,7 @@ void GPUProfiler::Init(DX12Context* context) {
 	m_File = fopen(g_TestParams.Filename.c_str(), "w");
 #endif
 	m_StepCounter = 0;
+	m_LastFrameSteps = 1;
 
 }
 void GPUProfiler::Start() {
@@ -44,17 +45,17 @@ void GPUProfiler::End(ID3D12GraphicsCommandList* cmdList, UINT frameIndex) {
 }
 
 void GPUProfiler::PrintResults(UINT frameIndex) {
-	if (m_StepCounter == 0)
+	if (m_LastFrameSteps == 0)
 		return;
 
 	UINT64* result;
 	UINT index = MAX_PROFILER_STEPS * frameIndex;
 
-	D3D12_RANGE range = { index * sizeof(UINT64),index * sizeof(UINT64) + sizeof(UINT64) * m_StepCounter };
+	D3D12_RANGE range = { index * sizeof(UINT64),index * sizeof(UINT64) + sizeof(UINT64) * m_LastFrameSteps };
 	m_ResultBuffer->Map(0, &range, (void**)&result);
 	
 	UINT64 a, b;
-	for (int i = 0; i < m_StepCounter - 1; i++) {
+	for (int i = 0; i < m_LastFrameSteps - 1; i++) {
  		a = result[index + i];
 		b = result[index + i + 1];
 
@@ -65,10 +66,13 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 	}
 
 	a = result[index];
-	b = result[index + m_StepCounter - 1];
+	b = result[index + m_LastFrameSteps - 1];
 
-	UINT64 delta = b > a ? b - a : a - b;
+	UINT64 delta = b - a;
 	double res = (delta / (double)m_TimerFreqs) * 1000.0;
+	if (res > 1000)
+		int i = 0;
+
 #ifndef SILENT_PROFILING
 	printf("Entire frame: %4.4f ms\n", res);
 #endif
@@ -80,6 +84,7 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 
 	range.End = 0;
 	m_ResultBuffer->Unmap(0, &range);
+	m_LastFrameSteps = m_StepCounter;
 }
 
 void GPUProfiler::Reset() {

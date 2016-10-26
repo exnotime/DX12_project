@@ -17,6 +17,7 @@ public:
 private:
 	UINT64 m_TimerFreqs;
 	UINT m_StepCounter;
+	UINT m_LastFrameSteps;
 	bool m_Started;
 	ComPtr<ID3D12QueryHeap> m_QueryHeap;
 	ComPtr<ID3D12Resource> m_ResultBuffer;
