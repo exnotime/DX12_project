@@ -98,7 +98,7 @@ GroupMemoryBarrierWithGroupSync();
 		int verticesInFrontOfNearPlane = 0;
 		for(int i = 0; i < 3;++i){
 			//perspective divide
-			vertices[i].xy /= vertices[i].w;
+			vertices[i].xyz /= vertices[i].w;
 			vertices[i].xy /= 2;
 			vertices[i].xy += float2(0.5, 0.5);
 			if(vertices[i].w < 0)
@@ -106,8 +106,8 @@ GroupMemoryBarrierWithGroupSync();
 		}
 		
 
-		float2 vertexMax = max(vertices[0].xy, max(vertices[1].xy,vertices[2].xy));
-		float2 vertexMin = min(vertices[0].xy, min(vertices[1].xy,vertices[2].xy));
+		float3 vertexMax = max(vertices[0].xyz, max(vertices[1].xyz,vertices[2].xyz));
+		float3 vertexMin = min(vertices[0].xyz, min(vertices[1].xyz,vertices[2].xyz));
 
 		//small triangle
 #ifdef INSTRUMENT
@@ -136,20 +136,24 @@ GroupMemoryBarrierWithGroupSync();
 #endif
 		//occlusion
 		if(!culled){
-			//float mipcount;
-			//float2 texDim;
-			//g_HIZBuffer.GetDimensions(0, texDim.x, texDim.y, mipcount);
-			//float2 edge1 = (v1.xy - v2.xy) * texDim;
-			//float2 edge2 = (v2.xy - v3.xy) * texDim;
-			//float2 edge3 = (v1.xy - v3.xy) * texDim;
-			//float longestEdge = max(length(edge1), max(length(edge2), length(edge3)));
-			//int mip = min(ceil(log2(max(longestEdge, 1))) + 1, mipcount - 1);
-			//float depth1 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMin.y), mip).r;
-			//float depth2 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMin.y), mip).r;
-			//float depth3 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMax.y), mip).r;
-			//float depth4 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMax.y), mip).r;
-			//float maxDepth = max(max(depth1, depth2), max(depth3, depth4));
-			//culled = (vertexMin.z > maxDepth);
+			float mipcount;
+			float2 texDim;
+			g_HIZBuffer.GetDimensions(0, texDim.x, texDim.y, mipcount);
+
+			float2 edge1 = (vertices[0].xy - vertices[1].xy) * texDim;
+			float2 edge2 = (vertices[1].xy - vertices[2].xy) * texDim;
+			float2 edge3 = (vertices[0].xy - vertices[2].xy) * texDim;
+			float longestEdge = max(length(edge1), max(length(edge2), length(edge3)));
+
+			int mip = min(ceil(log2(max(longestEdge, 1))) + 1, mipcount - 1);
+
+			float depth1 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMin.y), mip).r;
+			float depth2 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMin.y), mip).r;
+			float depth3 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMax.y), mip).r;
+			float depth4 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMax.y), mip).r;
+			float maxDepth = max(max(depth1, depth2), max(depth3, depth4));
+
+			culled = (vertexMin.z > maxDepth);
 		}
 
 		const Predicate laneActive = !culled;

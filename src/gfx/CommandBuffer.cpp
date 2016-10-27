@@ -23,9 +23,6 @@ void CommandBuffer::Init(ID3D12Device* device, COMMAND_BUFFER_TYPE type, UINT cm
 		listType = D3D12_COMMAND_LIST_TYPE_COPY;
 		break;
 	}
-
-	
-
 	m_CmdLists.resize(cmdListCount);
 	m_CommandAllocators[0].resize(cmdListCount);
 	m_CommandAllocators[1].resize(cmdListCount);

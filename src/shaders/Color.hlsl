@@ -132,7 +132,7 @@ float3 CalcDirLight(float3 albedo, float3 normal, float3 toEye, float roughness,
 	}
 	diff = lerp(diff, float3(0.0,0.0,0.0), metallic);
 	spec = lerp(spec, spec * albedo, metallic);
-	return (diff + spec) * 0.5;
+	return (diff + spec);
 }
 
 float3 AproximateIBLSpecular(float3 F0 , float roughness, float3 normal, float3 toeye){
