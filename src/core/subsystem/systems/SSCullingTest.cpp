@@ -58,6 +58,9 @@ void SSCullingTest::GetNextTest() {
 		//m_CurrentTest.Duration = INT_MAX;
 		return;
 	}
+#ifndef DO_TESTING
+	return;
+#endif
 
 	m_CurrentTest = g_TestParams.Tests[m_TestCounter];
 

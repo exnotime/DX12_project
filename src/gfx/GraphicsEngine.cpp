@@ -229,8 +229,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 
 	m_FilterContext.Init(m_Context.Device.Get());
 	m_TriangleCullingProgram.Init(&m_Context);
-
-	//m_CullingProgram.Init(&m_Context, &m_TriangleCullingProgram);
+	m_CullingProgram.Init(&m_Context, &m_FilterContext);
 
 	m_Profiler.Init(&m_Context);
 
@@ -332,7 +331,8 @@ void GraphicsEngine::Render() {
 		return;
 	}
 
-	m_FilterContext.Clear();
+	m_FilterContext.Clear(cmdList);
+	m_CullingProgram.ClearCounters(cmdList);
 
 	View v = m_RenderQueue.GetViews().at(1);
 	cbPerFrame* perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame");
@@ -346,47 +346,39 @@ void GraphicsEngine::Render() {
 	perFrame->LightDir = glm::vec3(0.0f, -1.0f, 0.2f);
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame2");
-	m_Profiler.Step(cmdList, "DepthRender");
-	m_DepthProgram.Render(cmdList, &m_RenderQueue);
 
-	//g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
-	//g_CommandBufferManager.SignalFence(0xDE974, GRAPHICS_TYPE, COMPUTE_TYPE);
+	//m_Profiler.Step(cmdList, "DepthRender");
+	//m_DepthProgram.Render(cmdList, &m_RenderQueue);
 
-	//cmdList = g_CommandBufferManager.GetNextCommandList(COMPUTE_TYPE);
-	m_Profiler.Step(cmdList, "Hi-z");
-	m_HiZProgram.Disbatch(cmdList, m_DepthProgram.GetDepthTexture());
-
-	//g_CommandBufferManager.WaitOnFenceSignal(0xDE974, COMPUTE_TYPE);
-	//g_CommandBufferManager.ExecuteCommandBuffers(COMPUTE_TYPE);
-
-	//m_CullingTimer.Reset();
-	//g_CommandBufferManager.SignalFence(0xFA1, COMPUTE_TYPE, GRAPHICS_TYPE);
-
-	//cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
-
-	if (g_TestParams.UseCulling) {
-		m_Profiler.Step(cmdList, "Culling");
-		while (m_TriangleCullingProgram.Disbatch(cmdList, &m_RenderQueue, &m_FilterContext)) {
-			SetRenderTarget(cmdList);
-			m_Profiler.Step(cmdList, "Render");
-			RenderGeometry(cmdList, &m_ProgramState, &m_RenderQueue, &m_FilterContext);
-			m_Profiler.Step(cmdList, "Culling");
-		}
-	}
+	//m_Profiler.Step(cmdList, "Hi-z");
+	//m_HiZProgram.Disbatch(cmdList, m_DepthProgram.GetDepthTexture());
 
 	SetRenderTarget(cmdList);
-	m_Profiler.Step(cmdList, "Render");
-	RenderGeometry(cmdList, &m_ProgramState, &m_RenderQueue, &m_FilterContext);
+	if (g_TestParams.UseCulling) {
+		m_Profiler.Step(cmdList, "TriangleFilter");
+		while (m_TriangleCullingProgram.Disbatch(cmdList, &m_RenderQueue, &m_FilterContext)) {
+			m_Profiler.Step(cmdList, "DrawCulling");
+			m_CullingProgram.Disbatch(cmdList, &m_FilterContext);
+			m_Profiler.Step(cmdList, "Render");
+			RenderGeometry(cmdList, &m_ProgramState, &m_FilterContext, &m_CullingProgram);
+			m_Profiler.Step(cmdList, "TriangleFilter");
+		}
 
-	//double cullingTime = m_CullingTimer.Reset() * 1000.0;
-	//printf("Culling CPU time %f \n", cullingTime);
+		m_Profiler.Step(cmdList, "DrawCulling");
+		m_CullingProgram.Disbatch(cmdList, &m_FilterContext);
+		m_Profiler.Step(cmdList, "Render");
+		RenderGeometry(cmdList, &m_ProgramState, &m_FilterContext, &m_CullingProgram);
+	}
+	else {
+		m_Profiler.Step(cmdList, "Render");
+		RenderGeometryWithoutCulling(cmdList, &m_ProgramState, &m_RenderQueue);
+	}
 
 	m_Profiler.End(cmdList, m_Context.FrameIndex);
 	//return to present mode for render target
 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
-	//g_CommandBufferManager.WaitOnFenceSignal(0xFA1, GRAPHICS_TYPE);
 	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
 }
 

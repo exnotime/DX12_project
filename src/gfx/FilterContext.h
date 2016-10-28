@@ -9,44 +9,31 @@ public:
 	~FilterContext();
 	void Init(ID3D12Device* device);
 	void Reset(ID3D12Device* device);
-	void Clear();
+	void Clear(ID3D12GraphicsCommandList* cmdList);
 	void BeginFilter(ID3D12GraphicsCommandList* cmdList);
-	void BeginRender(ID3D12GraphicsCommandList* cmdList, ID3D12Resource** drawArgsOut);
+	void BeginRender(ID3D12GraphicsCommandList* cmdList);
 	bool AddBatches(UINT batchCount, UINT& batchCountOut);
+	ID3D12Resource* GetDrawArgsResource(int index);
 
-	UINT GetFilterIndex() {
-		return m_CurrentFilterIndex;
-	}
-	UINT GetCounterRenderOffset() {
-		return m_CurrentRenderIndex * sizeof(UINT);
-	}
-	D3D12_CPU_DESCRIPTOR_HANDLE GetFilterDescriptors() {
-		return m_FilterDescriptorHeaps[m_CurrentFilterIndex]->GetCPUDescriptorHandleForHeapStart();
-	}
-	ID3D12Resource* GetCounterResource() {
-		return m_CounterBuffer.Get();
-	}
-	UINT GetCurrentBatch() {
-		return m_CurrentBatch;
-	}
-	UINT GetCurrentDraw() {
-		return m_CurrentDraw;
-	}
-	UINT GetBatchCount() {
-		return m_CurrentBatchCount;
-	}
-	UINT GetRemainder() {
-		return m_BatchRemainder;
-	}
-	void IncrementDrawCounter() {
-		m_CurrentDraw++;
-	}
+	UINT GetFilterIndex() {return m_CurrentFilterIndex;}
+	UINT GetRenderIndex() {return m_CurrentRenderIndex;}
+	D3D12_CPU_DESCRIPTOR_HANDLE GetFilterDescriptors() {return m_FilterDescriptorHeaps[m_CurrentFilterIndex]->GetCPUDescriptorHandleForHeapStart();}
+	ID3D12Resource* GetCounterResource() {return m_CounterBuffer.Get();}
+	UINT GetCurrentBatch() {return m_CurrentBatch;}
+	UINT GetCurrentDraw() {return m_CurrentDraw;}
+	UINT GetBatchCount() {return m_CurrentBatchCount;}
+	UINT GetRemainder() {return m_BatchRemainder;}
+	UINT GetCounterOffset() {return m_CounterOffset;}
+	void IncrementDrawCounter() {m_CurrentDraw++;}
+	
 private:
 	ComPtr<ID3D12Resource> m_IndexBuffers[MAX_SIMUL_PASSES];
 	ComPtr<ID3D12Resource> m_DrawArgsBuffers[MAX_SIMUL_PASSES];
 	ComPtr<ID3D12Resource> m_CounterBuffer;
 
 	ComPtr<ID3D12DescriptorHeap> m_FilterDescriptorHeaps[MAX_SIMUL_PASSES];
+
+	ComPtr<ID3D12DescriptorHeap> m_CounterClearHeaps[2];
 
 	D3D12_INDEX_BUFFER_VIEW m_IndexBufferViews[MAX_SIMUL_PASSES];
 
@@ -58,4 +45,5 @@ private:
 	UINT m_CurrentBatchCount = 0;
 	UINT m_BatchRemainder = 0;
 	UINT m_DescHeapIncSize = 0;
+	UINT m_CounterOffset = 0;
 };

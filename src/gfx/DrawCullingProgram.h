@@ -2,14 +2,21 @@
 #include "DX12Common.h"
 #include "Shader.h"
 #include "RenderQueue.h"
-#include "TriangleCullingProgram.h"
+#include "FilterContext.h"
 class DrawCullingProgram {
 public:
 	DrawCullingProgram();
 	~DrawCullingProgram();
-	void Init(DX12Context* context, TriangleCullingProgram* cullingProgram);
-	void Disbatch(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue, TriangleCullingProgram* cullingProgram);
-	void ClearCounter(ID3D12GraphicsCommandList* cmdList);
+	void Init(DX12Context* context, FilterContext* filterContext);
+	void Disbatch(ID3D12GraphicsCommandList* cmdList, FilterContext* filterContext);
+	void ClearCounters(ID3D12GraphicsCommandList* cmdList);
+	ID3D12Resource* GetDrawArgsBuffer(int index) {
+		return m_OutputBuffer[index].Get();
+	}
+
+	ID3D12Resource* GetCounterBuffer() {
+		return m_CounterBuffer.Get();
+	}
 private:
 
 	enum ROOT_PARAMS {
@@ -17,14 +24,14 @@ private:
 		INPUT_COUNT_C,
 		ROOT_PARAM_COUNT
 	};
-
-	DX12Context*					m_Context;
 	Shader							m_Shader;
 	ComPtr<ID3D12RootSignature>		m_RootSignature;
 	ComPtr<ID3D12PipelineState>		m_PipelineState;
-	ComPtr<ID3D12DescriptorHeap>	m_GPUDescriptorHeap;
-	ComPtr<ID3D12DescriptorHeap>	m_CPUDescriptorHeap;
-	ComPtr<ID3D12Resource>			m_OutputBuffer;
+	ComPtr<ID3D12Resource>			m_OutputBuffer[MAX_SIMUL_PASSES];
 	ComPtr<ID3D12Resource>			m_CounterBuffer;
-	UINT							m_DescIncSize;
+	ComPtr<ID3D12DescriptorHeap>	m_DescHeap;
+	ComPtr<ID3D12DescriptorHeap>	m_CounterClearHeaps[2];
+	UINT							m_HeapDescIncSize;
+	UINT							m_WaveSize;
+	const UINT DESC_HEAP_SIZE = 3;
 };

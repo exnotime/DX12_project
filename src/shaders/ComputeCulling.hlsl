@@ -19,6 +19,7 @@ globallycoherent RWByteAddressBuffer g_CounterBuffer : register(u1);
 
 cbuffer constants : register(b0){
 	uint g_DrawCallCount;
+	uint g_CounterOffset;
 };
 
 groupshared uint g_WorkGroupCount;
@@ -53,7 +54,7 @@ GroupMemoryBarrierWithGroupSync();
 	}
 
 	if(groupIndex == 0){
-		g_CounterBuffer.InterlockedAdd(0, g_WorkGroupCount, g_DisbatchSlot);
+		g_CounterBuffer.InterlockedAdd(g_CounterOffset, g_WorkGroupCount, g_DisbatchSlot);
 	}
 	if(laneActive){
 		g_OutDrawArgs[localSlot + waveSlot + g_DisbatchSlot] = g_DrawArgsBuffer[index];

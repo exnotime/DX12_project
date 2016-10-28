@@ -4,7 +4,7 @@
 #include "Texture.h"
 #include "RenderQueue.h"
 #include "FilterContext.h"
-#include <atomic>
+#include "DrawCullingProgram.h"
 namespace GeometryProgram {
 	struct GeometryProgramState {
 		Shader Shader;
@@ -17,7 +17,6 @@ namespace GeometryProgram {
 		ComPtr<ID3D12DescriptorHeap> RenderDescHeap;
 		UINT DescHeapIncSize;
 		ComPtr<ID3D12CommandSignature>	CommandSignature;
-		std::atomic_uint_fast32_t DescCounter;
 	};
 
 	enum ROOT_PARAMS {
@@ -35,5 +34,5 @@ namespace GeometryProgram {
 };
 
 void InitGeometryState(GeometryProgram::GeometryProgramState* state, DX12Context* context, ID3D12GraphicsCommandList* cmdList);
-void RenderGeometry(ID3D12GraphicsCommandList*cmdList,
-	GeometryProgram::GeometryProgramState* state, RenderQueue* queue, FilterContext* filter);
+void RenderGeometryWithoutCulling(ID3D12GraphicsCommandList*cmdList, GeometryProgram::GeometryProgramState* state, RenderQueue* queue);
+void RenderGeometry(ID3D12GraphicsCommandList*cmdList, GeometryProgram::GeometryProgramState* state, FilterContext* filterContext, DrawCullingProgram* cullingProgram);

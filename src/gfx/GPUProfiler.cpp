@@ -47,7 +47,6 @@ void GPUProfiler::End(ID3D12GraphicsCommandList* cmdList, UINT frameIndex) {
 void GPUProfiler::PrintResults(UINT frameIndex) {
 	if (m_LastFrameSteps == 0)
 		return;
-
 	UINT64* result;
 	UINT index = MAX_PROFILER_STEPS * frameIndex;
 
@@ -61,7 +60,7 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 
 		double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
 #ifndef SILENT_PROFILING
-		printf("Step %s: %2.3f ms\n", m_StepNames[i].c_str(), res);
+		printf("Step %s: %2.3f ms\n", m_LastFrameNames[i].c_str(), res);
 #endif
 	}
 
@@ -85,6 +84,7 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 	range.End = 0;
 	m_ResultBuffer->Unmap(0, &range);
 	m_LastFrameSteps = m_StepCounter;
+	m_LastFrameNames = m_StepNames;
 }
 
 void GPUProfiler::Reset() {
