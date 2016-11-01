@@ -1,0 +1,22 @@
+set term png size 1280, 960
+set output "BatchSize.png"
+#set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5   # --- blue
+#set style line 2 lc rgb '#ff6000' lt 1 lw 2 pt 7 ps 1.5   # --- red
+#set style line 3 lc rgb '#06ff00' lt 1 lw 2 pt 7 ps 1.5   # --- green
+#set style line 4 lc rgb '#00deff' lt 1 lw 2 pt 7 ps 1.5   # --- yellow
+set style fill solid 1.00 border lt -1
+
+set title "BatchSize"
+
+set xlabel "Frame"
+#set xrange [0:*]
+
+set ylabel "Time(ms)"
+
+set multiplot
+plot 	"Batch_64_64.dat" using 1:2 with lines title "64",\
+		"Batch_128_128.dat" using 1:2 with lines title "128",\
+		"Batch_256_256.dat" using 1:2 with lines title "256",\
+		"Batch_512_512.dat" using 1:2 with lines title "512",\
+		"Batch_1024_1024.dat" using 1:2 with lines title "1024"
+unset multiplot

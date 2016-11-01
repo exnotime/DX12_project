@@ -11,7 +11,7 @@ GPUProfiler::~GPUProfiler() {
 }
 void GPUProfiler::Init(DX12Context* context) {
 	D3D12_QUERY_HEAP_DESC queryHeapDesc;
-	queryHeapDesc.Count = MAX_PROFILER_STEPS;
+	queryHeapDesc.Count = MAX_PROFILER_STEPS * g_FrameCount;
 	queryHeapDesc.NodeMask = 0;
 	queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
 	context->Device->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&m_QueryHeap));
@@ -36,7 +36,9 @@ void GPUProfiler::Start() {
 
 void GPUProfiler::Step(ID3D12GraphicsCommandList* cmdList, const std::string& name) {
 		cmdList->EndQuery(m_QueryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, m_StepCounter++);
+#ifndef SILENT_PROFILING
 		m_StepNames.push_back(name);
+#endif
 }
 
 void GPUProfiler::End(ID3D12GraphicsCommandList* cmdList, UINT frameIndex) {
@@ -69,8 +71,6 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 
 	UINT64 delta = b - a;
 	double res = (delta / (double)m_TimerFreqs) * 1000.0;
-	if (res > 1000)
-		int i = 0;
 
 #ifndef SILENT_PROFILING
 	printf("Entire frame: %4.4f ms\n", res);
@@ -93,4 +93,8 @@ void GPUProfiler::Reset() {
 	m_File = fopen(g_TestParams.Filename.c_str(), "w");
 	m_LogCounter = 0;
 #endif
+	m_LastFrameSteps = 1;
+	m_LastFrameNames.clear();
+	m_StepCounter = 0;
+	m_StepNames.clear();
 }

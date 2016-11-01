@@ -4,6 +4,7 @@
 #include "BufferManager.h"
 #include "ModelBank.h"
 #include "TestParams.h"
+#include <core/Timer.h>
 #include <sstream>
 TriangleCullingProgram::TriangleCullingProgram() {
 
@@ -86,6 +87,7 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 
 void TriangleCullingProgram::Reset(DX12Context* context) {
 	//recompile shader and pipeline state
+	m_PipeState.Reset();
 	std::vector<D3D_SHADER_MACRO> macros;
 	if (g_TestParams.Instrument) {
 		macros.push_back({ "INSTRUMENT","1" });
@@ -157,6 +159,7 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 	cmdList->SetComputeRootDescriptorTable(INPUT_DT, m_DescHeap->GetGPUDescriptorHandleForHeapStart());
 
 	cmdList->SetComputeRootDescriptorTable(OUTPUT_DT, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * ( 5 + 3 * filterContext->GetFilterIndex())));
+
 	UINT batchCounter = 0;
 	for (int i = filterContext->GetCurrentDraw(); i < queue->GetDrawCount(); i++) {
 
@@ -179,5 +182,6 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 		filterContext->IncrementDrawCounter();
 		batchCounter += batchCount;
 	}
+
 	return false;
 }

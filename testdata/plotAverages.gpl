@@ -1,0 +1,17 @@
+set term png size 1280, 960
+set output "Averages.png"
+#set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5   # --- blue
+#set style line 2 lc rgb '#ff6000' lt 1 lw 2 pt 7 ps 1.5   # --- red
+#set style line 3 lc rgb '#06ff00' lt 1 lw 2 pt 7 ps 1.5   # --- green
+#set style line 4 lc rgb '#00deff' lt 1 lw 2 pt 7 ps 1.5   # --- yellow
+set style fill solid 1.00 border lt -1
+set boxwidth 64 absolute
+set title "Average Frame Time"
+
+set xlabel "BatchSize/Count"
+#set xrange [0:*]
+
+set ylabel "Time(ms)"
+set multiplot
+plot 	"Averages.dat" using 1:2 with boxes
+unset multiplot

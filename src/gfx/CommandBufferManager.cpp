@@ -54,9 +54,9 @@ void CommandBufferManager::ExecuteCommandBuffers(COMMAND_BUFFER_TYPE type) {
 }
 
 void CommandBufferManager::SignalFence(UINT64 signal, COMMAND_BUFFER_TYPE sender, COMMAND_BUFFER_TYPE reciever){
-	if (sender == reciever) {
-		printf("sender and receiver is the same\n");
-	}
+	//if (sender == reciever) {
+	//	printf("sender and receiver is the same\n");
+	//}
 	ID3D12CommandQueue* queue;
 	switch (sender) {
 	case GRAPHICS_TYPE:

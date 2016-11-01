@@ -41,7 +41,5 @@ void main(){
 	//rungholt
 	SpawnPlayer(vec3(0.0f, 20.0f, 0.0f), vec3(0.5f, 1.8f, 0.3f), quat(1.0f, 0.0f, 0.0f, 0.0f));
 	level = LoadModel("assets/models/rungholt/rungholt.obj");
-	//occluder = LoadModel("assets/models/rungholt/rungholt.obj");
 	SpawnLevelObject(level, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
-
 }

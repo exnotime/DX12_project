@@ -8,6 +8,7 @@ public:
 	DrawCullingProgram();
 	~DrawCullingProgram();
 	void Init(DX12Context* context, FilterContext* filterContext);
+	void Reset(DX12Context* context, FilterContext* filterContext);
 	void Disbatch(ID3D12GraphicsCommandList* cmdList, FilterContext* filterContext);
 	void ClearCounters(ID3D12GraphicsCommandList* cmdList);
 	ID3D12Resource* GetDrawArgsBuffer(int index) {

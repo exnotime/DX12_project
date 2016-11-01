@@ -53,8 +53,8 @@ void GraphicsEngine::CreateExtensionContext() {
 		m_Context.Extensions.WaveSize = 32;
 	} else {
 		//Cant run this T.T
-		HR(E_FAIL, L"This computer can not run this program");
-		exit(0);
+		//HR(E_FAIL, L"This computer can not run this program");
+		//exit(0);
 	}
 }
 
@@ -87,7 +87,7 @@ void GraphicsEngine::CheckExtensions() {
 }
 
 void GraphicsEngine::CreateContext() {
-#ifdef _DEBUG
+#if defined(_DEBUG) || defined(DEV)
 	ComPtr<ID3D12Debug> debugController;
 	HR(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), L"debug controller");
 	debugController->EnableDebugLayer();
@@ -310,10 +310,12 @@ void GraphicsEngine::ClearScreen(ID3D12GraphicsCommandList* cmdList) {
 void GraphicsEngine::Render() {
 	//culling test stuff
 	if (g_TestParams.Reset) {
+		WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
+
 		m_Profiler.Reset();
 		m_FilterContext.Reset(m_Context.Device.Get());
 		m_TriangleCullingProgram.Reset(&m_Context);
-		//reset the filter context and triangle culling program as well
+		m_CullingProgram.Reset(&m_Context, &m_FilterContext);
 
 		g_TestParams.Reset = false;
 	}
@@ -362,6 +364,18 @@ void GraphicsEngine::Render() {
 			m_Profiler.Step(cmdList, "Render");
 			RenderGeometry(cmdList, &m_ProgramState, &m_FilterContext, &m_CullingProgram);
 			m_Profiler.Step(cmdList, "TriangleFilter");
+
+			//static int cntr = 0;
+			//static int fenceCntr = 0;
+			//if (cntr == 8) {
+			//	g_CommandBufferManager.WaitOnFenceSignal(fenceCntr, GRAPHICS_TYPE);
+			//	fenceCntr++;
+			//	g_CommandBufferManager.ExecuteCommandBuffers(GRAPHICS_TYPE);
+			//	g_CommandBufferManager.SignalFence(fenceCntr, GRAPHICS_TYPE, GRAPHICS_TYPE);
+			//	cmdList = g_CommandBufferManager.GetNextCommandList(GRAPHICS_TYPE);
+			//	cntr = 0;
+			//}
+			//cntr++;
 		}
 
 		m_Profiler.Step(cmdList, "DrawCulling");

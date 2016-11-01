@@ -1,6 +1,6 @@
 #pragma once
 #define g_TestParams TestParams::GetInstance()
-#include <vector>
+#include <queue>
 #include <string>
 struct TestData {
 	std::string TestName;
@@ -24,6 +24,6 @@ struct TestData {
 
 	static TestParams& GetInstance();
 
-	std::vector<TestData> Tests;
+	std::queue<TestData> Tests;
  };
 

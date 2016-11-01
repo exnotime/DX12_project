@@ -55,7 +55,7 @@ uint BitCount32(uint bits) {
 }
 
 uint BitCount(BitMask bm) {
-	return BitCount32(bm.x) + BitCount32(bm.y);
+	return countbits(bm.x) + countbits(bm.y);
 }
 
 #endif
