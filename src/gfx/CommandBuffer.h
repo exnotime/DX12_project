@@ -1,25 +1,25 @@
 #pragma once
 #include "DX12Common.h"
 enum COMMAND_BUFFER_TYPE {
-	GRAPHICS_TYPE,
-	COMPUTE_TYPE,
-	COPY_TYPE,
-	TYPE_COUNT
+	CMD_BUFFER_TYPE_GRAPHICS,
+	CMD_BUFFER_TYPE_COMPUTE,
+	CMD_BUFFER_TYPE_COPY,
+	CMD_BUFFER_TYPE_COUNT
 };
 
 class CommandBuffer {
 public:
 	CommandBuffer();
 	~CommandBuffer();
-	void Init(ID3D12Device* device, COMMAND_BUFFER_TYPE type, UINT cmdListCount);
+	void Init(ID3D12Device* device, COMMAND_BUFFER_TYPE type);
+	void Close();
 	void ResetBuffer(int frameIndex);
-	ID3D12GraphicsCommandList* GetNextCmdList();
-	void Execute(ID3D12CommandQueue* queue);
+	void ResetCommandList(int frameIndex);
+	ID3D12GraphicsCommandList* CmdList() { return m_CmdList.Get(); }
 
 private:
-	std::vector<ComPtr<ID3D12CommandAllocator>> m_CommandAllocators[g_FrameCount];
-	std::vector<ComPtr<ID3D12GraphicsCommandList>> m_CmdLists;
-	std::vector<ID3D12GraphicsCommandList*> m_ClosedCmdLists;
-	std::vector<ID3D12GraphicsCommandList*> m_OpenCmdLists;
-	UINT m_Numerator = 0;
+	ComPtr<ID3D12CommandAllocator> m_CommandAllocators[g_FrameCount];
+	ComPtr<ID3D12GraphicsCommandList> m_CmdList;
+	COMMAND_BUFFER_TYPE m_Type;
+	bool m_Open;
 };

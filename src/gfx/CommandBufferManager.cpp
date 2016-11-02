@@ -17,40 +17,98 @@ void CommandBufferManager::Init(DX12Context* context, UINT graphicsCount, UINT c
 	m_Context = context;
 	ID3D12Device* device = context->Device.Get();
 
-	m_CommandBuffers[GRAPHICS_TYPE].Init(device, GRAPHICS_TYPE, graphicsCount);
-	m_CommandBuffers[COMPUTE_TYPE].Init(device, COMPUTE_TYPE, computeCount);
-	m_CommandBuffers[COPY_TYPE].Init(device, COPY_TYPE, copyCount);
+	m_GraphicsBuffers.resize(graphicsCount);
+	for (int i = 0; i < graphicsCount; i++) {
+		m_GraphicsBuffers[i].Init(device, CMD_BUFFER_TYPE_GRAPHICS);
+	}
+	m_ComputeBuffers.resize(computeCount);
+	for (int i = 0; i < computeCount; i++) {
+		m_ComputeBuffers[i].Init(device, CMD_BUFFER_TYPE_COMPUTE);
+	}
+	m_CopyBuffers.resize(copyCount);
+	for (int i = 0; i < copyCount; i++) {
+		m_CopyBuffers[i].Init(device, CMD_BUFFER_TYPE_COPY);
+	}
 
-	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[GRAPHICS_TYPE])), L"Error creating fence");
-	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[COMPUTE_TYPE])), L"Error creating fence");
-	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[COPY_TYPE])), L"Error creating fence");
+	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[CMD_BUFFER_TYPE_GRAPHICS])), L"Error creating fence");
+	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[CMD_BUFFER_TYPE_COMPUTE])), L"Error creating fence");
+	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[CMD_BUFFER_TYPE_COPY])), L"Error creating fence");
+
+	m_BufferCounters[CMD_BUFFER_TYPE_GRAPHICS] = 0;
+	m_BufferCounters[CMD_BUFFER_TYPE_COMPUTE] = 0;
+	m_BufferCounters[CMD_BUFFER_TYPE_COPY] = 0;
+
 }
 
-ID3D12GraphicsCommandList* CommandBufferManager::GetNextCommandList(COMMAND_BUFFER_TYPE type) {
-	return m_CommandBuffers[type].GetNextCmdList();
+CommandBuffer* CommandBufferManager::GetNextCommandBuffer(COMMAND_BUFFER_TYPE type) {
+	switch (type) {
+	case CMD_BUFFER_TYPE_GRAPHICS:
+		return &m_GraphicsBuffers[m_BufferCounters[type]++];
+		break;
+	case CMD_BUFFER_TYPE_COMPUTE:
+		return &m_ComputeBuffers[m_BufferCounters[type]++];
+		break;
+	case CMD_BUFFER_TYPE_COPY:
+		return &m_CopyBuffers[m_BufferCounters[type]++];
+		break;
+	}
 }
 
 void CommandBufferManager::ResetAllCommandBuffers() {
-	for (auto& buffer : m_CommandBuffers) {
+
+	for (auto& buffer : m_GraphicsBuffers) {
 		buffer.ResetBuffer(m_Context->FrameIndex);
 	}
+	for (auto& buffer : m_ComputeBuffers) {
+		buffer.ResetBuffer(m_Context->FrameIndex);
+	}
+	for (auto& buffer : m_CopyBuffers) {
+		buffer.ResetBuffer(m_Context->FrameIndex);
+	}
+	m_BufferCounters[CMD_BUFFER_TYPE_GRAPHICS] = 0;
+	m_BufferCounters[CMD_BUFFER_TYPE_COMPUTE] = 0;
+	m_BufferCounters[CMD_BUFFER_TYPE_COPY] = 0;
 }
 
-void CommandBufferManager::ExecuteCommandBuffers(COMMAND_BUFFER_TYPE type) {
+void CommandBufferManager::ExecuteCommandBuffers(const std::vector<CommandBuffer*>& buffers, COMMAND_BUFFER_TYPE type) {
 	ID3D12CommandQueue* queue;
 	switch (type) {
-	case GRAPHICS_TYPE:
+	case CMD_BUFFER_TYPE_GRAPHICS:
 		queue = m_Context->CommandQueue.Get();
 		break;
-	case COMPUTE_TYPE:
+	case CMD_BUFFER_TYPE_COMPUTE:
 		queue = m_Context->ComputeQueue.Get();
 		break;
-	case COPY_TYPE:
+	case CMD_BUFFER_TYPE_COPY:
 		queue = m_Context->CopyQueue.Get();
 		break;
 	}
+	std::vector<ID3D12CommandList*> cmdLists;
+	//build list of cmdlists
+	for (auto& buffer : buffers) {
+		buffer->Close();
+		cmdLists.push_back(buffer->CmdList());
+		//should check if cmdbuffer type matches queue type
+	}
+	queue->ExecuteCommandLists(cmdLists.size(), reinterpret_cast<ID3D12CommandList* const*>(cmdLists.data()));
+}
 
-	m_CommandBuffers[type].Execute(queue);
+void CommandBufferManager::ExecuteCommandBuffer(CommandBuffer* buffer, COMMAND_BUFFER_TYPE type) {
+	ID3D12CommandQueue* queue;
+	switch (type) {
+	case CMD_BUFFER_TYPE_GRAPHICS:
+		queue = m_Context->CommandQueue.Get();
+		break;
+	case CMD_BUFFER_TYPE_COMPUTE:
+		queue = m_Context->ComputeQueue.Get();
+		break;
+	case CMD_BUFFER_TYPE_COPY:
+		queue = m_Context->CopyQueue.Get();
+		break;
+	}
+	buffer->Close();
+	ID3D12CommandList* cmdLists[] = { buffer->CmdList() };
+	queue->ExecuteCommandLists(1, cmdLists);
 }
 
 void CommandBufferManager::SignalFence(UINT64 signal, COMMAND_BUFFER_TYPE sender, COMMAND_BUFFER_TYPE reciever){
@@ -59,29 +117,33 @@ void CommandBufferManager::SignalFence(UINT64 signal, COMMAND_BUFFER_TYPE sender
 	//}
 	ID3D12CommandQueue* queue;
 	switch (sender) {
-	case GRAPHICS_TYPE:
+	case CMD_BUFFER_TYPE_GRAPHICS:
 		queue = m_Context->CommandQueue.Get();
 		break;
-	case COMPUTE_TYPE:
+	case CMD_BUFFER_TYPE_COMPUTE:
 		queue = m_Context->ComputeQueue.Get();
 		break;
-	case COPY_TYPE:
+	case CMD_BUFFER_TYPE_COPY:
 		queue = m_Context->CopyQueue.Get();
 		break;
 	}
 	queue->Signal(m_Fences[reciever].Get(), signal);
 }
 
+void CommandBufferManager::SignalFence(UINT64 signal, COMMAND_BUFFER_TYPE receiver) {
+	m_Fences[receiver]->Signal(signal);
+}
+
 void CommandBufferManager::WaitOnFenceSignal(UINT64 signal, COMMAND_BUFFER_TYPE waiter) {
 	ID3D12CommandQueue* queue;
 	switch (waiter) {
-	case GRAPHICS_TYPE:
+	case CMD_BUFFER_TYPE_GRAPHICS:
 		queue = m_Context->CommandQueue.Get();
 		break;
-	case COMPUTE_TYPE:
+	case CMD_BUFFER_TYPE_COMPUTE:
 		queue = m_Context->ComputeQueue.Get();
 		break;
-	case COPY_TYPE:
+	case CMD_BUFFER_TYPE_COPY:
 		queue = m_Context->CopyQueue.Get();
 		break;
 	}
