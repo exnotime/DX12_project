@@ -13,6 +13,7 @@
 #include "subsystem/systems/SSPhysics.h"
 #include "subsystem/systems/SSScript.h"
 #include "subsystem/systems/SSCullingTest.h"
+#include "subsystem/systems/SSCameraSpline.h"
 #include "entity/EntityFactory.h"
 #include "script/ScriptEngine.h"
 #include "threading/JobManager.h"
@@ -46,11 +47,12 @@ void Engine::Init() {
 	g_Window.Initialize(ws);
 
 	
-	m_SubSystemSet.AddSubSystem(new SSCullingTest());
+	m_SubSystemSet.AddSubSystem( new SSCullingTest() );
+	m_SubSystemSet.AddSubSystem( new SSCameraSpline() );
 	m_SubSystemSet.AddSubSystem( new SSPhysics() );
 	m_SubSystemSet.AddSubSystem( new SSGraphics() );
 	m_SubSystemSet.AddSubSystem( new SSCamera() );
-	m_SubSystemSet.AddSubSystem(new SSScript());
+	m_SubSystemSet.AddSubSystem( new SSScript() );
 
 	m_SubSystemSet.StartSubSystems();
 

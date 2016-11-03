@@ -82,7 +82,7 @@ void DrawCullingProgram::Init(DX12Context* context, FilterContext* filterContext
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
 		srvDesc.Buffer.FirstElement = 0;
 		srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-		srvDesc.Buffer.NumElements = g_TestParams.BatchCount;
+		srvDesc.Buffer.NumElements = g_TestParams.CurrentTest.BatchCount;
 		srvDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 		srvDesc.Format = DXGI_FORMAT_UNKNOWN;
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -95,7 +95,7 @@ void DrawCullingProgram::Init(DX12Context* context, FilterContext* filterContext
 		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 		uavDesc.Buffer.FirstElement = 0;
-		uavDesc.Buffer.NumElements = g_TestParams.BatchCount;
+		uavDesc.Buffer.NumElements = g_TestParams.CurrentTest.BatchCount;
 		uavDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 		context->Device->CreateUnorderedAccessView(m_OutputBuffer[i].Get(), nullptr, &uavDesc, handle.Offset(1, m_HeapDescIncSize));
 		//counter
@@ -119,7 +119,7 @@ void DrawCullingProgram::Reset(DX12Context* context, FilterContext* filterContex
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
 		srvDesc.Buffer.FirstElement = 0;
 		srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-		srvDesc.Buffer.NumElements = g_TestParams.BatchCount;
+		srvDesc.Buffer.NumElements = g_TestParams.CurrentTest.BatchCount;
 		srvDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 		srvDesc.Format = DXGI_FORMAT_UNKNOWN;
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -132,7 +132,7 @@ void DrawCullingProgram::Reset(DX12Context* context, FilterContext* filterContex
 		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 		uavDesc.Buffer.FirstElement = 0;
-		uavDesc.Buffer.NumElements = g_TestParams.BatchCount;
+		uavDesc.Buffer.NumElements = g_TestParams.CurrentTest.BatchCount;
 		uavDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 		context->Device->CreateUnorderedAccessView(m_OutputBuffer[i].Get(), nullptr, &uavDesc, handle.Offset(1, m_HeapDescIncSize));
 	}

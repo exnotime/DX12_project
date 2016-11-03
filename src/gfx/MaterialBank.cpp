@@ -149,12 +149,11 @@ Material* MaterialBank::GetMaterial(const std::string& name) {
 TextureHandle MaterialBank::LoadTexture(const char* filename) {
 	Texture* tex = new Texture();
 	if (!tex->Init(filename, m_Device, m_LoadingCmdList)) {
+		delete tex;
 		return m_DefaultAlbedo;
 	}
 	m_Textures.push_back(tex);
 	return m_Numerator++;
-
-	m_Updated = true;
 }
 
 Texture* MaterialBank::GetTexture(TextureHandle handle) {

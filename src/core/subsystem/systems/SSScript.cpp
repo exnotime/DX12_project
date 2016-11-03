@@ -17,17 +17,15 @@ void SSScript::Startup() {
 }
 
 void SSScript::Update(const double deltaTime) {
-	if (g_Input.IsKeyPushed(GLFW_KEY_F1)) {
+	if (g_Input.IsKeyPushed(GLFW_KEY_KP_7)) {
 		printf("Recompiling all scripts\n");
 		g_ScriptEngine.RecompileAllScripts();
 	}
 
-	if (g_Input.IsKeyPushed(GLFW_KEY_F2)) {
+	if (g_Input.IsKeyPushed(GLFW_KEY_KP_9)) {
 		g_EntityManager.RemoveAllEntities();
 		g_ScriptEngine.RunScript("script/spawnLevel.as");
 	}
-
-	
 }
 
 void SSScript::Shutdown() {

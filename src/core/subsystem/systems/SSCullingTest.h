@@ -16,8 +16,6 @@ public:
 private:
 	void GetNextTest();
 	int m_TestCounter = 0;
-	int m_FrameCounter = 0;
-	TestData m_CurrentTest;
 };
 
 

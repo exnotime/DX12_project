@@ -4,6 +4,8 @@
 #include "../../components/CameraComponent.h"
 #include "../../Input/Input.h"
 #include "../../entity/EntityFactory.h"
+#include <gfx/TestParams.h>
+
 #define MOVE_SPEED 10.0f
 #define TURN_SPEED 0.004f
 SSCamera::SSCamera() {
@@ -19,6 +21,10 @@ void SSCamera::Startup() {
 }
 
 void SSCamera::Update(const double deltaTime) {
+	if (!g_TestParams.FreeCamera) {
+		return;
+	}
+
 	int flag = CameraComponent::Flag;
 	CameraData cd;
 	for (auto& entity : g_EntityManager.GetEntityList()) {
@@ -51,10 +57,10 @@ void SSCamera::Update(const double deltaTime) {
 				velocity += f * MOVE_SPEED;
 			}
 			if (g_Input.IsKeyDown(GLFW_KEY_SPACE)) {
-				cc->Camera.MoveWorld(glm::vec3(0, MOVE_SPEED * deltaTime, 0));
+				velocity += glm::vec3(0, MOVE_SPEED, 0);
 			}
 			if (g_Input.IsKeyDown(GLFW_KEY_C)) {
-				cc->Camera.MoveWorld(glm::vec3(0, MOVE_SPEED * deltaTime * -1, 0));
+				velocity += glm::vec3(0, MOVE_SPEED * -1, 0);
 			}
 			cc->Camera.MoveWorld(velocity * (float)deltaTime);
 			cc->Camera.CalculateViewProjection();

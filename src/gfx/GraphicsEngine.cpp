@@ -122,7 +122,7 @@ void GraphicsEngine::CreateContext() {
 }
 
 void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
-	m_ScreenSize = screenSize * 1.0f;
+	m_ScreenSize = screenSize * 2.0f;
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
 	m_Viewport.MinDepth = 0.0f;
@@ -357,49 +357,43 @@ void GraphicsEngine::Render() {
 
 	//m_Profiler.Step(cmdList, "Hi-z");
 	//m_HiZProgram.Disbatch(cmdList, m_DepthProgram.GetDepthTexture());
-
-	if (g_TestParams.UseCulling) {
-
-
-		if(g_TestParams.AsyncCompute){
+	if (g_TestParams.CurrentTest.Culling) {
+		
+		if(g_TestParams.CurrentTest.AsyncCompute){
 			//async compute
 			int listIndex = 0;
 			//reset fence
-			g_CommandBufferManager.SignalFence(1, CMD_BUFFER_TYPE_COMPUTE);
+			//g_CommandBufferManager.SignalFence(1, CMD_BUFFER_TYPE_COMPUTE);
 			//async
-			CommandBuffer* computeLists[] = { g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_COMPUTE),
-				g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_COMPUTE) };
-			CommandBuffer* graphicsLists[] = { g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_GRAPHICS),
-				g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_GRAPHICS) };
+			CommandBuffer* computeList = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_COMPUTE);
+			CommandBuffer* graphicsList = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_GRAPHICS);
 
 			bool geometryLeft = true;
-
+			int it = 32;
 			while (geometryLeft) {
-				int computeSignal = listIndex * 100 + 1;
-				int graphicsSignal = listIndex * 100 + 2;
 
-				geometryLeft = m_TriangleCullingProgram.Disbatch(computeLists[listIndex]->CmdList(), &m_RenderQueue, &m_FilterContext);
-				m_CullingProgram.Disbatch(computeLists[listIndex]->CmdList(), &m_FilterContext);
+				geometryLeft = m_TriangleCullingProgram.Disbatch(computeList->CmdList(), &m_RenderQueue, &m_FilterContext);
+				m_CullingProgram.Disbatch(computeList->CmdList(), &m_FilterContext);
 
-				g_CommandBufferManager.WaitOnFenceSignal(computeSignal, CMD_BUFFER_TYPE_COMPUTE);
+				g_CommandBufferManager.ExecuteCommandBuffer(computeList, CMD_BUFFER_TYPE_COMPUTE);
+				computeList->ResetCommandList(m_Context.FrameIndex);
 
-				g_CommandBufferManager.ExecuteCommandBuffer(computeLists[listIndex], CMD_BUFFER_TYPE_COMPUTE);
-				computeLists[listIndex]->ResetCommandList(m_Context.FrameIndex);
-
-				g_CommandBufferManager.SignalFence(graphicsSignal, CMD_BUFFER_TYPE_COMPUTE, CMD_BUFFER_TYPE_GRAPHICS);
-
+				g_CommandBufferManager.SignalFence(it, CMD_BUFFER_TYPE_COMPUTE, CMD_BUFFER_TYPE_GRAPHICS);
+				g_CommandBufferManager.WaitOnFenceSignal(it++, CMD_BUFFER_TYPE_GRAPHICS);
 				//render
-				SetRenderTarget(graphicsLists[listIndex]->CmdList());
-				RenderGeometry(graphicsLists[listIndex]->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
+				SetRenderTarget(graphicsList->CmdList());
+				RenderGeometry(graphicsList->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
 				//wait until culling is done then execute render
-				g_CommandBufferManager.WaitOnFenceSignal(graphicsSignal, CMD_BUFFER_TYPE_GRAPHICS);
-				g_CommandBufferManager.ExecuteCommandBuffer(graphicsLists[listIndex], CMD_BUFFER_TYPE_GRAPHICS);
-				graphicsLists[listIndex]->ResetCommandList(m_Context.FrameIndex);
+				
+				g_CommandBufferManager.ExecuteCommandBuffer(graphicsList, CMD_BUFFER_TYPE_GRAPHICS);
+				graphicsList->ResetCommandList(m_Context.FrameIndex);
 
+				WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 				listIndex = ++listIndex % 2;
 
 				//signal compute when done rendering so it can resume culling
-				g_CommandBufferManager.SignalFence(listIndex * 100 + 1, CMD_BUFFER_TYPE_GRAPHICS, CMD_BUFFER_TYPE_COMPUTE);
+				g_CommandBufferManager.SignalFence(it, CMD_BUFFER_TYPE_GRAPHICS, CMD_BUFFER_TYPE_COMPUTE);
+				g_CommandBufferManager.WaitOnFenceSignal(it++, CMD_BUFFER_TYPE_COMPUTE);
 			}
 		} else {
 			//sync compute
@@ -433,7 +427,7 @@ void GraphicsEngine::Render() {
 	//return to present mode for render target
 	cmdbuffer->CmdList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
+	
 	g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
 }
 

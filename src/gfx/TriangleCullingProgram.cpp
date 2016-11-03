@@ -24,7 +24,7 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 	macro.Name = "BATCH_SIZE";
 	std::string s;
 	std::stringstream ss;
-	ss << g_TestParams.BatchSize;
+	ss << g_TestParams.CurrentTest.BatchSize;
 	s = ss.str();
 	macro.Definition = s.c_str();
 	macros.push_back(macro);
@@ -96,7 +96,7 @@ void TriangleCullingProgram::Reset(DX12Context* context) {
 	macro.Name = "BATCH_SIZE";
 	std::string s;
 	std::stringstream ss;
-	ss << g_TestParams.BatchSize;
+	ss << g_TestParams.CurrentTest.BatchSize;
 	s = ss.str();
 	macro.Definition = s.c_str();
 	macros.push_back(macro);
@@ -166,10 +166,10 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, batchCounter, 0); //batch id
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, i, 1); // draw id
 
-		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / 3) + g_TestParams.BatchSize - 1) / g_TestParams.BatchSize;
+		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / 3) + g_TestParams.CurrentTest.BatchSize - 1) / g_TestParams.CurrentTest.BatchSize;
 
 		if(filterContext->GetRemainder() > 0)
-			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * g_TestParams.BatchSize * 3, 2); // batch offset
+			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * g_TestParams.CurrentTest.BatchSize * 3, 2); // batch offset
 		else
 			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, 0, 2);
 

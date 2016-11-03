@@ -13,17 +13,25 @@ struct TestData {
 
  class TestParams {
  public:
-	bool UseCulling = false;
-	int BatchSize = 1024;
-	int BatchCount = 1024;
 	bool Instrument = false;
-	bool AsyncCompute = false;
 	bool LogToFile = false;
 	std::string Filename = "default.dat";
 	bool Reset = false;
+	bool FreeCamera = false;
+
+	int FrameCounter = 0;
+	TestData CurrentTest;
+	std::queue<TestData> Tests;
 
 	static TestParams& GetInstance();
 
-	std::queue<TestData> Tests;
+	TestParams() {
+		CurrentTest.AsyncCompute = false;
+		CurrentTest.Culling = true;
+		CurrentTest.Duration = 10000;
+		CurrentTest.TestName = "default.dat";
+		CurrentTest.BatchCount = 1024;
+		CurrentTest.BatchSize = 1024;
+	}
  };
 
