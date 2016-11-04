@@ -27,13 +27,19 @@ void SSCameraSpline::Update(const double deltaTime) {
 			if ((entity.ComponentBitfield & CameraComponent::Flag) == CameraComponent::Flag) {
 				CameraComponent* cc = (CameraComponent*)g_ComponentManager.GetComponent(entity, CameraComponent::Flag);
 
+				if (g_TestParams.Reset) {
+					cc->Camera = Camera(); // reset camera
+				}
 				float t = g_TestParams.FrameCounter / (float)g_TestParams.CurrentTest.Duration;
+				//glm::vec3 pos = m_Spline.GetPointAtT(t);
+				cc->Camera.LookAt(m_Spline.GetPointAtT(t + 0.01f));
 				cc->Camera.SetPosition(m_Spline.GetPointAtT(t));
 				cc->Camera.CalculateViewProjection();
+
+
 			}
 		}
 	}
-
 }
 
 void SSCameraSpline::Shutdown() {

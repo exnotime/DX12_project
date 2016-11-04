@@ -116,6 +116,10 @@ CameraData& Camera::GetEditableData() {
 	return m_CamData;
 }
 
+void Camera::LookAt(const glm::vec3& position) {
+	m_Orientation = glm::quat_cast(glm::lookAt(position, m_CamData.Position, glm::vec3(0,1,0)));
+}
+
 void Camera::SetPosition(const glm::vec3& newPosition) {
 	m_CamData.Position = newPosition;
 }

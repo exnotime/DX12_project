@@ -10,14 +10,15 @@ CRSpline::~CRSpline() {
 
 void CRSpline::AddPoint(const glm::vec3& point) {
 	m_Points.push_back(point);
-	if (m_Points.size() > 0) {
-		m_DeltaT = 1.0f / m_Points.size();
+	if (m_Points.size() > 1) {
+		m_DeltaT = 1.0f / (m_Points.size() - 1);
 	}
 }
 
 glm::vec3 CRSpline::GetPointAtT(float t) {
 	if (m_Points.size() < 4)
 		return glm::vec3(0);
+	t = glm::clamp(t, 0.0f, 1.0f);
 
 	int p = (int)(t / m_DeltaT);
 	int size = m_Points.size() - 1;

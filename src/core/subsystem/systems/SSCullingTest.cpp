@@ -62,7 +62,7 @@ void SSCullingTest::Update(const double deltaTime) {
 	g_TestParams.FrameCounter++;
 #ifdef DO_TESTING
 	
-	if (g_TestParams.FrameCounter > m_CurrentTest.Duration) {
+	if (g_TestParams.FrameCounter > g_TestParams.CurrentTest.Duration) {
 		GetNextTest();
 	}
 #endif

@@ -108,6 +108,8 @@ class Camera {
 	// Example of Use: GetEditableLens().FOV = 90.0f; Do not assign the entire lens to a local variable since that will create a copy.
 	CameraData&				GetEditableData();
 
+	void LookAt(const glm::vec3& position);
+
 	void					SetPosition(const glm::vec3& newPosition);
 	void					SetOrientation(const glm::quat& newOrientation);
 	virtual void			SetMoveSpeed(const float newMoveSpeed);

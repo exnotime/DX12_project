@@ -62,6 +62,10 @@ void SSCamera::Update(const double deltaTime) {
 			if (g_Input.IsKeyDown(GLFW_KEY_C)) {
 				velocity += glm::vec3(0, MOVE_SPEED * -1, 0);
 			}
+			if (g_Input.IsKeyPushed(GLFW_KEY_E)) {
+				glm::vec3 pos = cc->Camera.GetPosition();
+				printf("Camera Position: %3.3f %3.3f %3.3f\n", pos.x, pos.y, pos.z);
+			}
 			cc->Camera.MoveWorld(velocity * (float)deltaTime);
 			cc->Camera.CalculateViewProjection();
 		}

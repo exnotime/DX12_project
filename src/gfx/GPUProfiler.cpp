@@ -47,8 +47,12 @@ void GPUProfiler::End(ID3D12GraphicsCommandList* cmdList, UINT frameIndex) {
 }
 
 void GPUProfiler::PrintResults(UINT frameIndex) {
-	if (m_LastFrameSteps == 0)
+	if (m_LastFrameSteps == 0) {
+		m_LastFrameSteps = m_StepCounter;
+		m_LastFrameNames = m_StepNames;
 		return;
+	}
+		
 	UINT64* result;
 	UINT index = MAX_PROFILER_STEPS * frameIndex;
 

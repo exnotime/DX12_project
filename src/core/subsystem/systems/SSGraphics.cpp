@@ -13,7 +13,7 @@
 #include "../../entity/EntityManager.h"
 #include "../../entity/EntityFactory.h"
 #include "../../input/Input.h"
-
+#include <gfx/TestParams.h>
 SSGraphics::SSGraphics(){
 
 }
@@ -45,7 +45,7 @@ void SSGraphics::Update(const double deltaTime) {
 			v.Camera = cc->Camera.GetData();
 			m_RenderQueue->AddView(v);
 
-			if (g_Input.IsKeyPushed(GLFW_KEY_T) || g_Input.IsMousebuttonDown(GLFW_MOUSE_BUTTON_RIGHT) || firstUpdate)
+			//if (g_Input.IsKeyPushed(GLFW_KEY_T) || g_Input.IsMousebuttonDown(GLFW_MOUSE_BUTTON_RIGHT) || firstUpdate || g_TestParams.CurrentTest.Culling)
 				lastCam = cc->Camera.GetData();
 			v.Camera = lastCam;
 			m_RenderQueue->AddView(v);
