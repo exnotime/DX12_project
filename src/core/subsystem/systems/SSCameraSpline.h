@@ -10,7 +10,7 @@ public:
 	virtual void Update(const double deltaTime);
 	virtual void Shutdown();
 
-	void AddPointToSpline(const glm::vec3& point);
+	void AddPointToSpline(glm::vec3 point);
 
 private:
 	CRSpline m_Spline;

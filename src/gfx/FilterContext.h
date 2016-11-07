@@ -13,7 +13,10 @@ public:
 	void BeginFilter(ID3D12GraphicsCommandList* cmdList);
 	void BeginRender(ID3D12GraphicsCommandList* cmdList);
 	bool AddBatches(UINT batchCount, UINT& batchCountOut);
+	void CopyTriangleStats(ID3D12GraphicsCommandList* cmdList);
+	void PrintTriangleStats();
 	ID3D12Resource* GetDrawArgsResource(int index);
+
 
 	UINT GetFilterIndex() {return m_CurrentFilterIndex;}
 	UINT GetRenderIndex() {return m_CurrentRenderIndex;}
@@ -30,6 +33,7 @@ private:
 	ComPtr<ID3D12Resource> m_IndexBuffers[MAX_SIMUL_PASSES];
 	ComPtr<ID3D12Resource> m_DrawArgsBuffers[MAX_SIMUL_PASSES];
 	ComPtr<ID3D12Resource> m_CounterBuffer;
+	ComPtr<ID3D12Resource> m_CopyBuffer;
 
 	ComPtr<ID3D12DescriptorHeap> m_FilterDescriptorHeaps[MAX_SIMUL_PASSES];
 

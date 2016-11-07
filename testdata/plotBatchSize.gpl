@@ -14,8 +14,7 @@ set xlabel "Frame"
 set ylabel "Time(ms)"
 
 set multiplot
-plot 	"Batch_64_64.dat" using 1:2 with lines title "64",\
-		"Batch_128_128.dat" using 1:2 with lines title "128",\
+plot 	"Batch_128_128.dat" using 1:2 with lines title "128",\
 		"Batch_256_256.dat" using 1:2 with lines title "256",\
 		"Batch_512_512.dat" using 1:2 with lines title "512",\
 		"Batch_1024_1024.dat" using 1:2 with lines title "1024"

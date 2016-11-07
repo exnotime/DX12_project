@@ -1,5 +1,5 @@
 #include "GPUProfiler.h"
-#include <stdio.h>
+#include <map>
 #include "TestParams.h"
 GPUProfiler::GPUProfiler() {
 
@@ -60,15 +60,23 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 	m_ResultBuffer->Map(0, &range, (void**)&result);
 	
 	UINT64 a, b;
+	std::map<std::string, double> joinedTimes;
 	for (int i = 0; i < m_LastFrameSteps - 1; i++) {
  		a = result[index + i];
 		b = result[index + i + 1];
 
 		double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
-#ifndef SILENT_PROFILING
-		printf("Step %s: %2.3f ms\n", m_LastFrameNames[i].c_str(), res);
-#endif
+		if (joinedTimes.find(m_LastFrameNames[i]) == joinedTimes.end()) {
+			joinedTimes[m_LastFrameNames[i]] = 0;
+		}
+		joinedTimes[m_LastFrameNames[i]] += res;
 	}
+
+#ifndef SILENT_PROFILING
+	for (auto& time : joinedTimes) {
+		printf("Step %s: %3.3f ms\n", time.first.c_str(), time.second);
+	}
+#endif
 
 	a = result[index];
 	b = result[index + m_LastFrameSteps - 1];

@@ -350,13 +350,14 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame2");
 
+	
+
+	m_Profiler.Step(cmdbuffer->CmdList(), "DepthRender");
+	m_DepthProgram.Render(cmdbuffer->CmdList(), &m_RenderQueue);
+	m_HiZProgram.Disbatch(cmdbuffer->CmdList(), m_DepthProgram.GetDepthTexture());
+
 	g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
 	cmdbuffer->ResetCommandList(m_Context.FrameIndex);
-	//m_Profiler.Step(cmdList, "DepthRender");
-	//m_DepthProgram.Render(cmdList, &m_RenderQueue);
-
-	m_Profiler.Step(cmdbuffer->CmdList(), "start");
-	//m_HiZProgram.Disbatch(cmdList, m_DepthProgram.GetDepthTexture());
 	if (g_TestParams.CurrentTest.Culling) {
 		
 		if(g_TestParams.CurrentTest.AsyncCompute){
@@ -389,7 +390,6 @@ void GraphicsEngine::Render() {
 				graphicsList->ResetCommandList(m_Context.FrameIndex);
 
 				WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
-				listIndex = ++listIndex % 2;
 
 				//signal compute when done rendering so it can resume culling
 				g_CommandBufferManager.SignalFence(it, CMD_BUFFER_TYPE_GRAPHICS, CMD_BUFFER_TYPE_COMPUTE);
@@ -418,12 +418,13 @@ void GraphicsEngine::Render() {
 		}
 	}
 	else {
-		//m_Profiler.Step(cmdList, "Render");
+		m_Profiler.Step(cmdbuffer->CmdList(), "Render");
 		SetRenderTarget(cmdbuffer->CmdList());
 		RenderGeometryWithoutCulling(cmdbuffer->CmdList(), &m_ProgramState, &m_RenderQueue);
 	}
 
 	m_Profiler.End(cmdbuffer->CmdList(), m_Context.FrameIndex);
+	m_FilterContext.CopyTriangleStats(cmdbuffer->CmdList());
 	//return to present mode for render target
 	cmdbuffer->CmdList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -449,6 +450,7 @@ void GraphicsEngine::Swap() {
 		WaitForSingleObjectEx(m_Fence.FenceEvent, INFINITE, false);
 	}
 	m_Fence.FenceValues[m_Context.FrameIndex] = currentFenceValue + 1;
+	m_FilterContext.PrintTriangleStats();
 	m_Profiler.PrintResults(m_Context.FrameIndex);
 	
 }

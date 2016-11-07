@@ -45,7 +45,7 @@ void SSCameraSpline::Update(const double deltaTime) {
 void SSCameraSpline::Shutdown() {
 }
 
-void SSCameraSpline::AddPointToSpline(const glm::vec3& point) {
+void SSCameraSpline::AddPointToSpline(glm::vec3 point) {
 	m_Spline.AddPoint(point);
 }
 

@@ -3,7 +3,7 @@
 
 #include <core/script/ScriptEngine.h>
 
-void AddTest(const std::string name, bool culling, bool async, int duration, int batchSize, int batchCount) {
+void AddTest(std::string name, bool culling, bool async, int duration, int batchSize, int batchCount) {
 	TestData td;
 	td.Culling = culling;
 	td.AsyncCompute = async;

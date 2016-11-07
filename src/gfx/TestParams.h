@@ -13,11 +13,11 @@ struct TestData {
 
  class TestParams {
  public:
-	bool Instrument = false;
+	bool Instrument = true;
 	bool LogToFile = false;
 	std::string Filename = "default.dat";
 	bool Reset = false;
-	bool FreeCamera = false;
+	bool FreeCamera = true;
 
 	int FrameCounter = 0;
 	TestData CurrentTest;
