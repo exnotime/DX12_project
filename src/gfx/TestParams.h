@@ -9,6 +9,10 @@ struct TestData {
 	float Duration;
 	int BatchSize;
 	int BatchCount;
+	bool FilterBackFace;
+	bool FilterSmallTri;
+	bool FilterFrustum;
+	bool FilterOcclusion;
 };
 
  class TestParams {
@@ -32,6 +36,11 @@ struct TestData {
 		CurrentTest.TestName = "default.dat";
 		CurrentTest.BatchCount = 1024;
 		CurrentTest.BatchSize = 1024;
+		CurrentTest.FilterBackFace = true;
+		CurrentTest.FilterSmallTri = true;
+		CurrentTest.FilterFrustum = true;
+		CurrentTest.FilterOcclusion = false;
+
 	}
  };
 

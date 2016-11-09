@@ -49,18 +49,22 @@ groupshared uint g_WorkGroupCount;
 
 bool CullTriangle(float4 vertices[3], uint indices[3])
 {
+	bool culled = false;
+
 #ifdef INSTRUMENT
 		g_CounterBuffer.InterlockedAdd(0, 1);
 #endif
 
+#ifdef FILTER_BACKFACE
 	//backface
 	float det = determinant(float3x3(	vertices[0].xyw,
 										vertices[1].xyw,
 										vertices[2].xyw));
-	bool culled = det >= 0.0;
-#ifdef INSTRUMENT
+	culled = det >= 0.0;
+	#ifdef INSTRUMENT
 	if(culled)
 		g_CounterBuffer.InterlockedAdd(4, 1);
+	#endif
 #endif
 
 	int verticesInFrontOfNearPlane = 0;
@@ -76,14 +80,17 @@ bool CullTriangle(float4 vertices[3], uint indices[3])
 	float3 vertexMax = max(vertices[0].xyz, max(vertices[1].xyz,vertices[2].xyz));
 	float3 vertexMin = min(vertices[0].xyz, min(vertices[1].xyz,vertices[2].xyz));
 
+#ifdef FILTER_SMALL_TRIANGLE
 	//small triangle
 	bool cullSmallTriangle = any(round(vertexMin.xy * g_ScreenSize) == round(vertexMax.xy * g_ScreenSize));
-#ifdef INSTRUMENT
+	#ifdef INSTRUMENT
 	if(!culled && cullSmallTriangle)
 		g_CounterBuffer.InterlockedAdd(8, 1);
-#endif
+	#endif
 	culled = culled || cullSmallTriangle;
+#endif
 
+#ifdef FILTER_FRUSTUM
 	//frustum
 	bool cullfrustum = false;
 	if(verticesInFrontOfNearPlane == 3)
@@ -91,35 +98,36 @@ bool CullTriangle(float4 vertices[3], uint indices[3])
 	if(verticesInFrontOfNearPlane == 0){
 		cullfrustum = (any(vertexMin.xy > 1) || any(vertexMax.xy < 0));
 	}
-#ifdef INSTRUMENT
+	#ifdef INSTRUMENT
 	if(!culled && cullfrustum)
 		g_CounterBuffer.InterlockedAdd(12, 1);
-#endif
-	culled = culled || cullfrustum;
-
-	//occlusion
-	//occlusion requires a good occlusion mesh
-	if(!culled){
-	float mipcount;
-	float2 texDim;
-	g_HIZBuffer.GetDimensions(0, texDim.x, texDim.y, mipcount);
-	float2 edge1 = (vertices[0].xy - vertices[1].xy) * texDim;
-	float2 edge2 = (vertices[1].xy - vertices[2].xy) * texDim;
-	float2 edge3 = (vertices[0].xy - vertices[2].xy) * texDim;
-	float longestEdge = max(length(edge1), max(length(edge2), length(edge3)));
-	int mip = min(ceil(log2(max(longestEdge, 1))) - 1, mipcount - 1);
-	float depth1 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMin.y), mip).r;
-	float depth2 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMin.y), mip).r;
-	float depth3 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMax.y), mip).r;
-	float depth4 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMax.y), mip).r;
-	float maxDepth = max(max(depth1, depth2), max(depth3, depth4));
-	culled = (vertexMin.z > maxDepth);
-	#ifdef INSTRUMENT
-	if(culled)
-		g_CounterBuffer.InterlockedAdd(16, 1);
 	#endif
-	}
+	culled = culled || cullfrustum;
+#endif
 
+#ifdef FILTER_OCCLUSION
+	//occlusion
+	if(!culled){
+		float mipcount;
+		float2 texDim;
+		g_HIZBuffer.GetDimensions(0, texDim.x, texDim.y, mipcount);
+		float2 edge1 = (vertices[0].xy - vertices[1].xy) * texDim;
+		float2 edge2 = (vertices[1].xy - vertices[2].xy) * texDim;
+		float2 edge3 = (vertices[0].xy - vertices[2].xy) * texDim;
+		float longestEdge = max(length(edge1), max(length(edge2), length(edge3)));
+		int mip = min(ceil(log2(max(longestEdge, 1))) - 1, mipcount - 1);
+		float depth1 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMin.y), mip).r;
+		float depth2 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMin.y), mip).r;
+		float depth3 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMax.y), mip).r;
+		float depth4 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMax.y), mip).r;
+		float maxDepth = max(max(depth1, depth2), max(depth3, depth4));
+		culled = (vertexMin.z > maxDepth);
+		#ifdef INSTRUMENT
+		if(culled)
+			g_CounterBuffer.InterlockedAdd(16, 1);
+		#endif
+	}
+#endif
 	return culled;
 }
 

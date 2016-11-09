@@ -20,6 +20,19 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 	if (g_TestParams.Instrument) {
 		macros.push_back({ "INSTRUMENT","1" });
 	}
+	if (g_TestParams.CurrentTest.FilterBackFace) {
+		macros.push_back({ "FILTER_BACKFACE","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterSmallTri) {
+		macros.push_back({ "FILTER_SMALL_TRIANGLE","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterFrustum) {
+		macros.push_back({ "FILTER_FRUSTUM","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterOcclusion) {
+		macros.push_back({ "FILTER_OCCLUSION","1" });
+	}
+
 	D3D_SHADER_MACRO macro;
 	macro.Name = "BATCH_SIZE";
 	std::string s;
@@ -91,6 +104,18 @@ void TriangleCullingProgram::Reset(DX12Context* context) {
 	std::vector<D3D_SHADER_MACRO> macros;
 	if (g_TestParams.Instrument) {
 		macros.push_back({ "INSTRUMENT","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterBackFace) {
+		macros.push_back({ "FILTER_BACKFACE","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterSmallTri) {
+		macros.push_back({ "FILTER_SMALL_TRIANGLE","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterFrustum) {
+		macros.push_back({ "FILTER_FRUSTUM","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterOcclusion) {
+		macros.push_back({ "FILTER_OCCLUSION","1" });
 	}
 	D3D_SHADER_MACRO macro;
 	macro.Name = "BATCH_SIZE";

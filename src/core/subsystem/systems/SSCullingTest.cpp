@@ -57,11 +57,25 @@ void SSCullingTest::Update(const double deltaTime) {
 		g_TestParams.CurrentTest.BatchSize = 1024;
 		g_TestParams.Reset = true;
 	}
-
-	//TODO::REMOVE!!!!!
-	g_TestParams.FrameCounter++;
-#ifdef DO_TESTING
+	if (g_Input.IsKeyPushed(GLFW_KEY_F5)) {
+		g_TestParams.CurrentTest.FilterBackFace = !g_TestParams.CurrentTest.FilterBackFace;
+		g_TestParams.Reset = true;
+	}
+	else if (g_Input.IsKeyPushed(GLFW_KEY_F6)) {
+		g_TestParams.CurrentTest.FilterSmallTri = !g_TestParams.CurrentTest.FilterSmallTri;
+		g_TestParams.Reset = true;
+	}
+	else if (g_Input.IsKeyPushed(GLFW_KEY_F7)) {
+		g_TestParams.CurrentTest.FilterFrustum = !g_TestParams.CurrentTest.FilterFrustum;
+		g_TestParams.Reset = true;
+	}
+	else if (g_Input.IsKeyPushed(GLFW_KEY_F8)) {
+		g_TestParams.CurrentTest.FilterOcclusion = !g_TestParams.CurrentTest.FilterOcclusion;
+		g_TestParams.Reset = true;
+	}
 	
+#ifdef DO_TESTING
+	g_TestParams.FrameCounter++;
 	if (g_TestParams.FrameCounter > g_TestParams.CurrentTest.Duration) {
 		GetNextTest();
 	}
