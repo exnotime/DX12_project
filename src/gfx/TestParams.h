@@ -9,6 +9,7 @@ struct TestData {
 	float Duration;
 	int BatchSize;
 	int BatchCount;
+	int TriangleCount;
 	bool FilterBackFace;
 	bool FilterSmallTri;
 	bool FilterFrustum;

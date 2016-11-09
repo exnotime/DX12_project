@@ -42,13 +42,15 @@ cbuffer cbPerFrame : register(b0){
 cbuffer constants : register(b1){
 	uint g_BatchIndex; //what batch this disbatch starts with
 	uint g_BatchDrawId; //what draw id this disbatch is culling
-	uint g_BatchIndexOffset;
+	uint g_BatchIndexOffset; //where in the index buffer should start writing
 };
 
 groupshared uint g_WorkGroupCount;
 
-bool CullTriangle(float4 vertices[3], uint indices[3])
-{
+#define TRIANGLE_COUNT 1
+#define TRIANGLE_SIZE 3 * TRIANGLE_COUNT
+
+bool CullTriangle(float4 vertices[3], uint indices[3]){
 	bool culled = false;
 
 #ifdef INSTRUMENT
@@ -133,20 +135,16 @@ bool CullTriangle(float4 vertices[3], uint indices[3])
 
 [numthreads(BATCH_SIZE, 1, 1)]
 void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_GroupID ) {
-	
-	uint laneId = LaneId();
-
 	if(groupIndex == 0){
 		g_WorkGroupCount = 0;
 	}
-
 GroupMemoryBarrierWithGroupSync();
-
-	const uint index = (groupIndex + (groupID.x * BATCH_SIZE)) * 3 + g_BatchIndexOffset;
+	const uint laneId = LaneId();
+	const uint index = (groupIndex + (groupID.x * BATCH_SIZE)) * TRIANGLE_SIZE + g_BatchIndexOffset;
 	uint waveSlot = 0;
 	uint localSlot = 0;
 	uint outCount = 0;
-	const uint indexOffset = (groupID.x + g_BatchIndex) * BATCH_SIZE * 3;
+	const uint indexOffset = (groupID.x + g_BatchIndex) * BATCH_SIZE * TRIANGLE_SIZE;
 
 	DrawCallArgs draw = g_DrawArgsBuffer[g_BatchDrawId];
 
@@ -154,16 +152,24 @@ GroupMemoryBarrierWithGroupSync();
 		//unpack triangle
 		float4x4 w = g_InputBuffer[draw.DrawIndex].World;
 
-		uint indices[] = {	g_TriangleIndices[draw.IndexOffset + index],
-							g_TriangleIndices[draw.IndexOffset + index + 1],
-							g_TriangleIndices[draw.IndexOffset + index + 2]};
+		uint indices[TRIANGLE_COUNT][3];
+		bool4 culledTris = bool4(false, false, false, false);
 
-		float4 vertices[] = {
-			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[0]], 1))),
-			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[1]], 1))),
-			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[2]], 1)))};
+		for(int i = 0; i < TRIANGLE_COUNT; ++i){
 
-		const Predicate laneActive = !CullTriangle(vertices, indices);
+			indices[i][0] = g_TriangleIndices[draw.IndexOffset + index];
+			indices[i][1] = g_TriangleIndices[draw.IndexOffset + index + 1];
+			indices[i][2] = g_TriangleIndices[draw.IndexOffset + index + 2];
+
+			float4 vertices[] = {
+			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][0]], 1))),
+			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][1]], 1))),
+			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][2]], 1)))};
+
+			culledTris[i] = !CullTriangle(vertices, indices);
+		}
+
+		const Predicate laneActive = any(culledTris);
 		BitMask ballot = WaveBallot(laneActive);
 
 		outCount = BitCount(ballot);
@@ -176,10 +182,14 @@ GroupMemoryBarrierWithGroupSync();
 		waveSlot = ReadFirstLaneUInt(waveSlot);
 
 		if(laneActive){
-			//write out triangle
-			g_OutTriangleIndices[indexOffset + (localSlot + waveSlot) * 3] = indices[0];
-			g_OutTriangleIndices[indexOffset + (localSlot + waveSlot) * 3 + 1] = indices[1];
-			g_OutTriangleIndices[indexOffset + (localSlot + waveSlot) * 3 + 2] = indices[2];
+			//write out triangles
+			for(int i = 0; i < TRIANGLE_COUNT; ++i){
+				uint outputIndex = indexOffset + (localSlot + waveSlot) * TRIANGLE_SIZE + i * 3;
+
+				g_OutTriangleIndices[outputIndex] = indices[i][0];
+				g_OutTriangleIndices[outputIndex + 1] = indices[i][1];
+				g_OutTriangleIndices[outputIndex + 2] = indices[i][2];
+			}
 		}
 	}
 GroupMemoryBarrierWithGroupSync();
