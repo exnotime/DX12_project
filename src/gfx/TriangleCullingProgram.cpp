@@ -191,10 +191,10 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, batchCounter, 0); //batch id
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, i, 1); // draw id
 
-		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / 3) + g_TestParams.CurrentTest.BatchSize - 1) / g_TestParams.CurrentTest.BatchSize;
+		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / (g_TestParams.CurrentTest.TriangleCount * 3)) + g_TestParams.CurrentTest.BatchSize - 1) / g_TestParams.CurrentTest.BatchSize;
 
 		if(filterContext->GetRemainder() > 0)
-			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * g_TestParams.CurrentTest.BatchSize * 3, 2); // batch offset
+			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * g_TestParams.CurrentTest.BatchSize * g_TestParams.CurrentTest.TriangleCount * 3, 2); // batch offset
 		else
 			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, 0, 2);
 

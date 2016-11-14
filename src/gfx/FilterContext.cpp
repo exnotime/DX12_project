@@ -11,7 +11,7 @@ FilterContext::~FilterContext() {
 
 void FilterContext::Init(ID3D12Device* device) {
 	//create resources
-	CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(g_TestParams.CurrentTest.BatchSize * 3 * g_TestParams.CurrentTest.BatchCount * sizeof(UINT), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(g_TestParams.CurrentTest.BatchSize * g_TestParams.CurrentTest.TriangleCount * 3 * g_TestParams.CurrentTest.BatchCount * sizeof(UINT), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	CD3DX12_RESOURCE_DESC drawBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(g_TestParams.CurrentTest.BatchCount * sizeof(IndirectDrawCall), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	for (int i = 0; i < MAX_SIMUL_PASSES; i++) {
 		device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
@@ -58,7 +58,7 @@ void FilterContext::Init(ID3D12Device* device) {
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 		device->CreateUnorderedAccessView(m_DrawArgsBuffers[i].Get(), nullptr, &uavDesc, cpuHandle);
 		//indices output
-		uavDesc.Buffer.NumElements = g_TestParams.CurrentTest.BatchCount * g_TestParams.CurrentTest.BatchSize * 3;
+		uavDesc.Buffer.NumElements = g_TestParams.CurrentTest.BatchCount * g_TestParams.CurrentTest.BatchSize * g_TestParams.CurrentTest.TriangleCount * 3;
 		uavDesc.Buffer.StructureByteStride = sizeof(UINT);
 		device->CreateUnorderedAccessView(m_IndexBuffers[i].Get(), nullptr, &uavDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
 		//counter buffer

@@ -47,7 +47,7 @@ cbuffer constants : register(b1){
 
 groupshared uint g_WorkGroupCount;
 
-#define TRIANGLE_COUNT 1
+#define TRIANGLE_COUNT 4
 #define TRIANGLE_SIZE 3 * TRIANGLE_COUNT
 
 bool CullTriangle(float4 vertices[3], uint indices[3]){
@@ -155,18 +155,19 @@ GroupMemoryBarrierWithGroupSync();
 		uint indices[TRIANGLE_COUNT][3];
 		bool4 culledTris = bool4(false, false, false, false);
 
+		[unroll]
 		for(int i = 0; i < TRIANGLE_COUNT; ++i){
 
-			indices[i][0] = g_TriangleIndices[draw.IndexOffset + index];
-			indices[i][1] = g_TriangleIndices[draw.IndexOffset + index + 1];
-			indices[i][2] = g_TriangleIndices[draw.IndexOffset + index + 2];
+			indices[i][0] = g_TriangleIndices[draw.IndexOffset + index + i * 3];
+			indices[i][1] = g_TriangleIndices[draw.IndexOffset + index + i * 3 + 1];
+			indices[i][2] = g_TriangleIndices[draw.IndexOffset + index + i * 3 + 2];
 
 			float4 vertices[] = {
 			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][0]], 1))),
 			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][1]], 1))),
 			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][2]], 1)))};
 
-			culledTris[i] = !CullTriangle(vertices, indices);
+			culledTris[i] = !CullTriangle(vertices, indices[i]);
 		}
 
 		const Predicate laneActive = any(culledTris);
@@ -197,7 +198,7 @@ GroupMemoryBarrierWithGroupSync();
 	if(groupIndex == 0){
 		g_OutDrawArgs[g_BatchIndex + groupID.x].DrawIndex = draw.DrawIndex;
 		g_OutDrawArgs[g_BatchIndex + groupID.x].MaterialIndex = draw.MaterialIndex;
-		g_OutDrawArgs[g_BatchIndex + groupID.x].IndexCount = g_WorkGroupCount * 3;
+		g_OutDrawArgs[g_BatchIndex + groupID.x].IndexCount = g_WorkGroupCount * TRIANGLE_SIZE;
 		g_OutDrawArgs[g_BatchIndex + groupID.x].InstanceCount = 1;
 		g_OutDrawArgs[g_BatchIndex + groupID.x].IndexOffset = indexOffset;
 

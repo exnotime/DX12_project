@@ -35,8 +35,9 @@ struct TestData {
 		CurrentTest.Culling = true;
 		CurrentTest.Duration = 10000;
 		CurrentTest.TestName = "default.dat";
-		CurrentTest.BatchCount = 1024;
+		CurrentTest.BatchCount = 256;
 		CurrentTest.BatchSize = 1024;
+		CurrentTest.TriangleCount = 4;
 		CurrentTest.FilterBackFace = true;
 		CurrentTest.FilterSmallTri = true;
 		CurrentTest.FilterFrustum = true;

@@ -17,7 +17,6 @@ public:
 	void PrintTriangleStats();
 	ID3D12Resource* GetDrawArgsResource(int index);
 
-
 	UINT GetFilterIndex() {return m_CurrentFilterIndex;}
 	UINT GetRenderIndex() {return m_CurrentRenderIndex;}
 	D3D12_CPU_DESCRIPTOR_HANDLE GetFilterDescriptors() {return m_FilterDescriptorHeaps[m_CurrentFilterIndex]->GetCPUDescriptorHandleForHeapStart();}
