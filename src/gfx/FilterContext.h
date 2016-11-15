@@ -27,7 +27,7 @@ public:
 	UINT GetRemainder() {return m_BatchRemainder;}
 	UINT GetCounterOffset() {return m_CounterOffset;}
 	void IncrementDrawCounter() {m_CurrentDraw++;}
-	
+	UINT GetDrawCounter() { return m_DrawCounter; }
 private:
 	ComPtr<ID3D12Resource> m_IndexBuffers[MAX_SIMUL_PASSES];
 	ComPtr<ID3D12Resource> m_DrawArgsBuffers[MAX_SIMUL_PASSES];
@@ -49,4 +49,5 @@ private:
 	UINT m_BatchRemainder = 0;
 	UINT m_DescHeapIncSize = 0;
 	UINT m_CounterOffset = 0;
+	UINT m_DrawCounter = 0;
 };

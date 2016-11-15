@@ -81,7 +81,7 @@ bool Texture::Init(const std::string& filename, ID3D12Device* device, ID3D12Grap
 		delete[] wname;
 		m_UploadHeap->SetName(L"upload heap");
 #endif
-		printf("Loaded texture: %s\n", filename.c_str());
+		printf("Finished loading texture: %s\n", filename.c_str());
 		return true;
 	}
 
@@ -139,7 +139,7 @@ bool Texture::Init(const std::string& filename, ID3D12Device* device, ID3D12Grap
 		delete[] name;
 		m_UploadHeap->SetName(L"upload heap");
 #endif
-		printf("Loaded texture: %s\n", filename.c_str());
+		printf("Finished loading texture: %s\n", filename.c_str());
 		stbi_image_free(textureData);
 	}
 	else {

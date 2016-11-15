@@ -35,14 +35,17 @@ struct TestData {
 		CurrentTest.Culling = true;
 		CurrentTest.Duration = 10000;
 		CurrentTest.TestName = "default.dat";
-		CurrentTest.BatchCount = 256;
+		CurrentTest.BatchCount = 1024;
 		CurrentTest.BatchSize = 1024;
-		CurrentTest.TriangleCount = 4;
+		CurrentTest.TriangleCount = 1;
 		CurrentTest.FilterBackFace = true;
 		CurrentTest.FilterSmallTri = true;
 		CurrentTest.FilterFrustum = true;
 		CurrentTest.FilterOcclusion = false;
-
 	}
  };
+
+#define BATCH_COUNT g_TestParams.CurrentTest.BatchCount
+#define BATCH_SIZE g_TestParams.CurrentTest.BatchSize
+#define TRI_COUNT g_TestParams.CurrentTest.TriangleCount
 

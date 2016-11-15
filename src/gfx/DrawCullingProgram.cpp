@@ -168,9 +168,9 @@ void DrawCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, FilterCont
 	cmdList->SetComputeRootDescriptorTable(INPUT_DESC, CD3DX12_GPU_DESCRIPTOR_HANDLE(
 		m_DescHeap->GetGPUDescriptorHandleForHeapStart(), m_HeapDescIncSize * filterContext->GetFilterIndex() * DESC_HEAP_SIZE));
 
-	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, filterContext->GetBatchCount(), 0);
+	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, filterContext->GetDrawCounter(), 0);
 	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, filterContext->GetCounterOffset(), 1);
 
-	UINT disbatchCount = (filterContext->GetBatchCount() + m_WaveSize - 1) / m_WaveSize;
+	UINT disbatchCount = (filterContext->GetDrawCounter() + m_WaveSize - 1) / m_WaveSize;
 	cmdList->Dispatch(disbatchCount, 1, 1);
 }

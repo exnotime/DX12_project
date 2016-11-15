@@ -13,6 +13,7 @@ public:
 	void Reset(DX12Context* context);
 	void CreateDescriptorTable(HiZProgram* hizProgram);
 	bool Disbatch(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue, FilterContext* filterContext);
+	std::vector<D3D_SHADER_MACRO> BuildMacros();
 private:
 	DX12Context* m_Context;
 	Shader m_Shader;

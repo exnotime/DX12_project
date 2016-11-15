@@ -15,53 +15,26 @@ TriangleCullingProgram::~TriangleCullingProgram() {
 
 void TriangleCullingProgram::Init(DX12Context* context) {
 	m_Context = context;
-	//build shader macros
-	std::vector<D3D_SHADER_MACRO> macros;
-	if (g_TestParams.Instrument) {
-		macros.push_back({ "INSTRUMENT","1" });
-	}
-	if (g_TestParams.CurrentTest.FilterBackFace) {
-		macros.push_back({ "FILTER_BACKFACE","1" });
-	}
-	if (g_TestParams.CurrentTest.FilterSmallTri) {
-		macros.push_back({ "FILTER_SMALL_TRIANGLE","1" });
-	}
-	if (g_TestParams.CurrentTest.FilterFrustum) {
-		macros.push_back({ "FILTER_FRUSTUM","1" });
-	}
-	if (g_TestParams.CurrentTest.FilterOcclusion) {
-		macros.push_back({ "FILTER_OCCLUSION","1" });
-	}
-
-	D3D_SHADER_MACRO macro;
-	macro.Name = "BATCH_SIZE";
-	std::string s;
-	std::stringstream ss;
-	ss << g_TestParams.CurrentTest.BatchSize;
-	s = ss.str();
-	macro.Definition = s.c_str();
-	macros.push_back(macro);
-	
+	std::vector<D3D_SHADER_MACRO> macros = BuildMacros();
 	m_Shader.LoadFromFile(L"src/shaders/TriangleCulling.hlsl", COMPUTE_SHADER_BIT, &context->Extensions, &macros);
 	//Root sign
 	RootSignatureFactory rootSignFact;
 	std::vector<CD3DX12_DESCRIPTOR_RANGE> inputRanges;
 	std::vector<CD3DX12_DESCRIPTOR_RANGE> outputRanges;
 	for (int i = 0; i < ROOT_PARAM_COUNT; ++i) {
-		switch (i)
-		{
+		switch (i) {
 		case PER_FRAME_CB:
 			rootSignFact.AddConstantBufferView(0);
 			break;
 		case CONSTANTS_C:
-			rootSignFact.AddConstant(3, 1);
+			rootSignFact.AddConstant(4, 1);
 			break;
 		case INPUT_DT:
 			inputRanges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0));
 			rootSignFact.AddDescriptorTable(inputRanges);
 			break;
 		case OUTPUT_DT:
-			outputRanges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 3, 0, 0, 0));
+			outputRanges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 4, 0, 0, 0));
 			rootSignFact.AddDescriptorTable(outputRanges);
 			break;
 		}
@@ -91,7 +64,7 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 
 	//Descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	heapDesc.NumDescriptors = 11;
+	heapDesc.NumDescriptors = 13;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	context->Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_DescHeap));
@@ -101,31 +74,7 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 void TriangleCullingProgram::Reset(DX12Context* context) {
 	//recompile shader and pipeline state
 	m_PipeState.Reset();
-	std::vector<D3D_SHADER_MACRO> macros;
-	if (g_TestParams.Instrument) {
-		macros.push_back({ "INSTRUMENT","1" });
-	}
-	if (g_TestParams.CurrentTest.FilterBackFace) {
-		macros.push_back({ "FILTER_BACKFACE","1" });
-	}
-	if (g_TestParams.CurrentTest.FilterSmallTri) {
-		macros.push_back({ "FILTER_SMALL_TRIANGLE","1" });
-	}
-	if (g_TestParams.CurrentTest.FilterFrustum) {
-		macros.push_back({ "FILTER_FRUSTUM","1" });
-	}
-	if (g_TestParams.CurrentTest.FilterOcclusion) {
-		macros.push_back({ "FILTER_OCCLUSION","1" });
-	}
-	D3D_SHADER_MACRO macro;
-	macro.Name = "BATCH_SIZE";
-	std::string s;
-	std::stringstream ss;
-	ss << g_TestParams.CurrentTest.BatchSize;
-	s = ss.str();
-	macro.Definition = s.c_str();
-	macros.push_back(macro);
-
+	std::vector<D3D_SHADER_MACRO> macros = BuildMacros();
 	m_Shader.LoadFromFile(L"src/shaders/TriangleCulling.hlsl", COMPUTE_SHADER_BIT, &context->Extensions, &macros);
 
 	PipelineStateFactory pipeFact;
@@ -172,8 +121,8 @@ void TriangleCullingProgram::CreateDescriptorTable(HiZProgram* hizProgram) {
 
 bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue, FilterContext* filterContext) {
 	filterContext->BeginFilter(cmdList);
-	// copy in descriptors
-	m_Context->Device->CopyDescriptorsSimple(3, CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DescHeap->GetCPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * (5 + 3 * filterContext->GetFilterIndex())),
+	// copy descriptors
+	m_Context->Device->CopyDescriptorsSimple(4, CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DescHeap->GetCPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * (5 + 4 * filterContext->GetFilterIndex())),
 		filterContext->GetFilterDescriptors(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	ID3D12DescriptorHeap* heaps[] = { m_DescHeap.Get() };
@@ -183,7 +132,7 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 	cmdList->SetComputeRootConstantBufferView(PER_FRAME_CB, g_BufferManager.GetGPUHandle("cbPerFrame"));
 	cmdList->SetComputeRootDescriptorTable(INPUT_DT, m_DescHeap->GetGPUDescriptorHandleForHeapStart());
 
-	cmdList->SetComputeRootDescriptorTable(OUTPUT_DT, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * ( 5 + 3 * filterContext->GetFilterIndex())));
+	cmdList->SetComputeRootDescriptorTable(OUTPUT_DT, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * ( 5 + 4 * filterContext->GetFilterIndex())));
 
 	UINT batchCounter = 0;
 	for (int i = filterContext->GetCurrentDraw(); i < queue->GetDrawCount(); i++) {
@@ -191,13 +140,14 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, batchCounter, 0); //batch id
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, i, 1); // draw id
 
-		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / (g_TestParams.CurrentTest.TriangleCount * 3)) + g_TestParams.CurrentTest.BatchSize - 1) / g_TestParams.CurrentTest.BatchSize;
+		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / (TRI_COUNT * 3)) + BATCH_SIZE - 1) / BATCH_SIZE;
 
 		if(filterContext->GetRemainder() > 0)
-			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * g_TestParams.CurrentTest.BatchSize * g_TestParams.CurrentTest.TriangleCount * 3, 2); // batch offset
+			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * BATCH_SIZE * TRI_COUNT, 2); // batch offset
 		else
 			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, 0, 2);
 
+		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, filterContext->GetDrawCounter(), 3);
 		//if we have filled up on batches break and switch to rendering
 		if (filterContext->AddBatches(batchCount, batchCount)) {
 			cmdList->Dispatch(batchCount, 1, 1);
@@ -209,4 +159,41 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 	}
 
 	return false;
+}
+
+std::vector<D3D_SHADER_MACRO> TriangleCullingProgram::BuildMacros() {
+	
+	std::vector<D3D_SHADER_MACRO> macros;
+	if (g_TestParams.Instrument) {
+		macros.push_back({ "INSTRUMENT","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterBackFace) {
+		macros.push_back({ "FILTER_BACKFACE","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterSmallTri) {
+		macros.push_back({ "FILTER_SMALL_TRIANGLE","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterFrustum) {
+		macros.push_back({ "FILTER_FRUSTUM","1" });
+	}
+	if (g_TestParams.CurrentTest.FilterOcclusion) {
+		macros.push_back({ "FILTER_OCCLUSION","1" });
+	}
+	D3D_SHADER_MACRO batchSize;
+	batchSize.Name = "BATCH_SIZE";
+	std::stringstream ss;
+	ss << BATCH_SIZE;
+	batchSize.Definition = (LPCSTR)malloc(4);
+	strcpy((char*)batchSize.Definition, ss.str().c_str());
+	macros.push_back(batchSize);
+
+	ss.str("");
+	D3D_SHADER_MACRO triCount;
+	triCount.Name = "TRIANGLE_COUNT";
+	ss << TRI_COUNT;
+	triCount.Definition = (LPCSTR)malloc(4);
+	strcpy((char*)triCount.Definition, ss.str().c_str());
+	macros.push_back(triCount);
+
+	return macros;
 }
