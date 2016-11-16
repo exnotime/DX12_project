@@ -122,7 +122,7 @@ void GraphicsEngine::CreateContext() {
 }
 
 void GraphicsEngine::CreateSwapChain(HWND hWnd, const glm::vec2& screenSize) {
-	m_ScreenSize = screenSize * 2.0f;
+	m_ScreenSize = screenSize;
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;
 	m_Viewport.MinDepth = 0.0f;
@@ -253,19 +253,6 @@ void GraphicsEngine::ResizeFrameBuffer(const glm::vec2& screenSize) {
 	m_DSVHeap.Reset();
 	//create swapchain
 	CreateSwapChain(hWnd, screenSize);
-	m_ScreenSize = screenSize;
-	m_Viewport.TopLeftX = 0;
-	m_Viewport.TopLeftY = 0;
-	m_Viewport.MinDepth = 0.0f;
-	m_Viewport.Width = screenSize.x;
-	m_Viewport.Height = screenSize.y;
-	m_Viewport.MaxDepth = 1.0f;
-
-	m_ScissorRect.left = 0;
-	m_ScissorRect.top = 0;
-	m_ScissorRect.bottom = (unsigned)screenSize.y;
-	m_ScissorRect.right = (unsigned)screenSize.x;
-
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 }
 
@@ -350,8 +337,6 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame2");
 
-	
-
 	m_Profiler.Step(cmdbuffer->CmdList(), "DepthRender");
 	m_DepthProgram.Render(cmdbuffer->CmdList(), &m_RenderQueue);
 	m_HiZProgram.Disbatch(cmdbuffer->CmdList(), m_DepthProgram.GetDepthTexture());
@@ -363,8 +348,6 @@ void GraphicsEngine::Render() {
 		if(g_TestParams.CurrentTest.AsyncCompute){
 			//async compute
 			int listIndex = 0;
-			//reset fence
-			//g_CommandBufferManager.SignalFence(1, CMD_BUFFER_TYPE_COMPUTE);
 			//async
 			CommandBuffer* computeList = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_COMPUTE);
 			CommandBuffer* graphicsList = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_GRAPHICS);

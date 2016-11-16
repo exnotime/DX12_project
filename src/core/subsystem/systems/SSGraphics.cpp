@@ -14,6 +14,10 @@
 #include "../../entity/EntityFactory.h"
 #include "../../input/Input.h"
 #include <gfx/TestParams.h>
+#include "../../script/ScriptEngine.h"
+#include <angelscript.h>
+using AngelScript::asCALL_THISCALL_ASGLOBAL;
+using AngelScript::asSMethodPtr;
 SSGraphics::SSGraphics(){
 
 }
@@ -29,6 +33,8 @@ void SSGraphics::Startup() {
 		m_Graphics = new GraphicsEngine();
 		m_Graphics->Init(hWnd, glm::vec2(ws.Width, ws.Height));
 		m_RenderQueue = m_Graphics->GetRenderQueue();
+
+		g_ScriptEngine.GetEngine()->RegisterGlobalFunction("void ResizeFrameBuffer(vec2 size)", asMETHOD(GraphicsEngine, GraphicsEngine::ResizeFrameBuffer), asCALL_THISCALL_ASGLOBAL, m_Graphics);
 	}
 }
 
@@ -45,8 +51,12 @@ void SSGraphics::Update(const double deltaTime) {
 			v.Camera = cc->Camera.GetData();
 			m_RenderQueue->AddView(v);
 
+#ifndef DO_TESTING
 			if (g_Input.IsKeyPushed(GLFW_KEY_T) || g_Input.IsMousebuttonDown(GLFW_MOUSE_BUTTON_RIGHT) || firstUpdate)
 				lastCam = cc->Camera.GetData();
+#else
+			lastCam = cc->Camera.GetData();
+#endif
 			v.Camera = lastCam;
 			m_RenderQueue->AddView(v);
 		}
