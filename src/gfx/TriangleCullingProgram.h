@@ -30,6 +30,7 @@ private:
 		CONSTANTS_C,
 		INPUT_DT,
 		OUTPUT_DT,
+		EXTENSIONS_DESC,
 		ROOT_PARAM_COUNT
 	};
 };

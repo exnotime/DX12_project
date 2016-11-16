@@ -6,7 +6,7 @@ class LineRenderProgram {
 public:
 	LineRenderProgram();
 	~LineRenderProgram();
-	void Init(ID3D12Device* device);
+	void Init(DX12Context* context);
 	void Render(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue);
 private:
 	Shader m_Shader;

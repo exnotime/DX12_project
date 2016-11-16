@@ -8,7 +8,7 @@ void main(){
 	//int level = LoadModel("assets/models/sponza/sponza.obj");
 	//int occluder = LoadModel("assets/models/sponza/SponzaOccluder.obj");
 	//SpawnLevelObjectWithOccluder(level, occluder, vec3(0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(1));
-	//SpawnLevelObject(bunny, vec3(0, 1.0f, 10), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(0.5f, 0.6f, 0.5f, 1));
+	//SpawnLevelObject(bunny, vec3(0, 1.1f, 10), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(0.5f, 0.6f, 0.5f, 1));
 	//AddSplinePoint(vec3(57.678, 7.215, 0.239));
 	//AddSplinePoint(vec3(1.131, 4.717, 0.998));
 	//AddSplinePoint(vec3(-61.093, 5.442, 0.995));
@@ -33,7 +33,6 @@ void main(){
 	AddSplinePoint(vec3(0.5f, 2.8f, -40.0f));
 	AddSplinePoint(vec3(2.1f, 2.8f, -17.0f));
 	AddSplinePoint(vec3(-8.75f, 2.8f, -17.0f));
-
 	ResizeFrameBuffer(vec2(1920,1080) * 2.0f);
 
 	//rungholt

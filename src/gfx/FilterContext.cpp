@@ -172,7 +172,7 @@ void FilterContext::BeginFilter(ID3D12GraphicsCommandList* cmdList) {
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_CounterClearHeaps[1]->GetGPUDescriptorHandleForHeapStart(), 1 + m_CurrentFilterIndex, m_DescHeapIncSize);
 	cmdList->ClearUnorderedAccessViewUint(gpuHandle, cpuHandle, m_CounterBuffer.Get(), vals, 0, nullptr);
 	//clear draw args
-	cmdList->ClearUnorderedAccessViewUint(gpuHandle.Offset(2, m_DescHeapIncSize), cpuHandle.Offset(2, m_DescHeapIncSize), m_DrawArgsBuffers[m_CurrentFilterIndex].Get(), vals, 0, nullptr);
+	//cmdList->ClearUnorderedAccessViewUint(gpuHandle.Offset(2, m_DescHeapIncSize), cpuHandle.Offset(2, m_DescHeapIncSize), m_DrawArgsBuffers[m_CurrentFilterIndex].Get(), vals, 0, nullptr);
 }
 
 void FilterContext::BeginRender(ID3D12GraphicsCommandList* cmdList) {
@@ -221,17 +221,19 @@ bool FilterContext::AddBatches(UINT batchCount, UINT& batchCountOut) {
 }
 
 void FilterContext::PrintTriangleStats() {
-	UINT* stats;
-	D3D12_RANGE range = {0, sizeof(UINT) * 6};
-	m_CopyBuffer->Map(0, &range, (void**)&stats);
-	printf("\nTotal Triangle Count: %d\n", stats[0]);
-	printf("Backface Count: %d\n", stats[1]);
-	printf("Small triangle Count: %d\n", stats[2]);
-	printf("Frustum Count: %d\n", stats[3]);
-	printf("Occlusion Count: %d\n", stats[4]);
-	printf("Total surviving triangles %d\n\n", stats[5]);
-	range.End = 0;
-	m_CopyBuffer->Unmap(0, &range);
+	if (g_TestParams.Instrument) {
+		UINT* stats;
+		D3D12_RANGE range = { 0, sizeof(UINT) * 6 };
+		m_CopyBuffer->Map(0, &range, (void**)&stats);
+		printf("\nTotal Triangle Count: %d\n", stats[0]);
+		printf("Backface Count: %d\n", stats[1]);
+		printf("Small triangle Count: %d\n", stats[2]);
+		printf("Frustum Count: %d\n", stats[3]);
+		printf("Occlusion Count: %d\n", stats[4]);
+		printf("Total surviving triangles %d\n\n", stats[5]);
+		range.End = 0;
+		m_CopyBuffer->Unmap(0, &range);
+	}
 }
 
 ID3D12Resource* FilterContext::GetDrawArgsResource(int index) {

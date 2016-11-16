@@ -18,7 +18,7 @@ struct TestData {
 
  class TestParams {
  public:
-	bool Instrument = true;
+	bool Instrument = false;
 	bool LogToFile = false;
 	std::string Filename = "default.dat";
 	bool Reset = false;
@@ -35,8 +35,8 @@ struct TestData {
 		CurrentTest.Culling = true;
 		CurrentTest.Duration = 10000;
 		CurrentTest.TestName = "default.dat";
-		CurrentTest.BatchCount = 1024;
 		CurrentTest.BatchSize = 1024;
+		CurrentTest.BatchCount = 1024;
 		CurrentTest.TriangleCount = 1;
 		CurrentTest.FilterBackFace = true;
 		CurrentTest.FilterSmallTri = true;

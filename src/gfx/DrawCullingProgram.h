@@ -11,6 +11,7 @@ public:
 	void Reset(DX12Context* context, FilterContext* filterContext);
 	void Disbatch(ID3D12GraphicsCommandList* cmdList, FilterContext* filterContext);
 	void ClearCounters(ID3D12GraphicsCommandList* cmdList);
+
 	ID3D12Resource* GetDrawArgsBuffer(int index) {
 		return m_OutputBuffer[index].Get();
 	}
@@ -23,6 +24,7 @@ private:
 	enum ROOT_PARAMS {
 		INPUT_DESC,
 		INPUT_COUNT_C,
+		EXTENSIONS_DESC,
 		ROOT_PARAM_COUNT
 	};
 	Shader							m_Shader;
@@ -35,4 +37,5 @@ private:
 	UINT							m_HeapDescIncSize;
 	UINT							m_WaveSize;
 	const UINT DESC_HEAP_SIZE = 3;
+	const UINT EXTENSION_DESC_OFFSET = DESC_HEAP_SIZE * MAX_SIMUL_PASSES;
 };

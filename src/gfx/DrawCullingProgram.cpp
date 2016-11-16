@@ -62,7 +62,7 @@ void DrawCullingProgram::Init(DX12Context* context, FilterContext* filterContext
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDesc.NodeMask = 0;
-	heapDesc.NumDescriptors = DESC_HEAP_SIZE * MAX_SIMUL_PASSES;
+	heapDesc.NumDescriptors = DESC_HEAP_SIZE * MAX_SIMUL_PASSES + 1;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	context->Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_DescHeap));
 
@@ -82,7 +82,7 @@ void DrawCullingProgram::Init(DX12Context* context, FilterContext* filterContext
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
 		srvDesc.Buffer.FirstElement = 0;
 		srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-		srvDesc.Buffer.NumElements = g_TestParams.CurrentTest.BatchCount;
+		srvDesc.Buffer.NumElements = BATCH_COUNT;
 		srvDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 		srvDesc.Format = DXGI_FORMAT_UNKNOWN;
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -95,7 +95,7 @@ void DrawCullingProgram::Init(DX12Context* context, FilterContext* filterContext
 		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 		uavDesc.Buffer.FirstElement = 0;
-		uavDesc.Buffer.NumElements = g_TestParams.CurrentTest.BatchCount;
+		uavDesc.Buffer.NumElements = BATCH_COUNT;
 		uavDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
 		context->Device->CreateUnorderedAccessView(m_OutputBuffer[i].Get(), nullptr, &uavDesc, handle.Offset(1, m_HeapDescIncSize));
 		//counter
@@ -109,6 +109,20 @@ void DrawCullingProgram::Init(DX12Context* context, FilterContext* filterContext
 		context->Device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, handle.Offset(1, m_HeapDescIncSize));
 		//create counter uavs for clearing as well
 		context->Device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, m_CounterClearHeaps[i]->GetCPUDescriptorHandleForHeapStart());
+	}
+
+	if (context->Extensions.Vendor == NVIDIA_VENDOR_ID) {
+		//add a null descriptor to the heap for extensions
+		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+		uavDesc.Buffer.CounterOffsetInBytes = 0;
+		uavDesc.Buffer.FirstElement = 0;
+		uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+		uavDesc.Buffer.NumElements = 1;
+		uavDesc.Buffer.StructureByteStride = 256;
+		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+		context->Device->CreateUnorderedAccessView(nullptr, nullptr, &uavDesc,
+			CD3DX12_CPU_DESCRIPTOR_HANDLE(m_DescHeap->GetCPUDescriptorHandleForHeapStart(), EXTENSION_DESC_OFFSET * m_HeapDescIncSize));
 	}
 }
 
@@ -170,6 +184,9 @@ void DrawCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, FilterCont
 
 	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, filterContext->GetDrawCounter(), 0);
 	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, filterContext->GetCounterOffset(), 1);
+
+	//extensions
+	cmdList->SetComputeRootDescriptorTable(EXTENSIONS_DESC, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), EXTENSION_DESC_OFFSET * m_HeapDescIncSize));
 
 	UINT disbatchCount = (filterContext->GetDrawCounter() + m_WaveSize - 1) / m_WaveSize;
 	cmdList->Dispatch(disbatchCount, 1, 1);

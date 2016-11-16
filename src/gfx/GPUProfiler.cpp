@@ -14,6 +14,7 @@ void GPUProfiler::Init(DX12Context* context) {
 	queryHeapDesc.Count = MAX_PROFILER_STEPS * g_FrameCount;
 	queryHeapDesc.NodeMask = 0;
 	queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
+	//context->Device->SetStablePowerState(true);
 	context->Device->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&m_QueryHeap));
 
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK), D3D12_HEAP_FLAG_NONE,

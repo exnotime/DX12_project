@@ -125,19 +125,9 @@ uint WaveMin(uint val){
 	waveMin = min(waveMin, NvShflXor(waveMin, 1));
 	return waveMin;
 }
-//Naive BitCount think of other method later
-uint BitCount(BitMask bm){
-	//might need to unroll
-	uint count = 0;
-	for(int i = 1; i < NV_WARP_SIZE + 1; i++){
-		//8-bit example
-		// 00110010 << 6
-		// 10000000 >> 7
-		// cnt += 00000001
-		count += ((bm << (NV_WARP_SIZE - i)) >> (NV_WARP_SIZE - 1));
-	}
-	return count;
-}
+
+#define BitCount countbits
+
 //Naive MBCount think of other method later
 uint MBCount(BitMask bm){
 	BitMask laneMask = (1 << NvGetLaneId()) - 1;

@@ -337,9 +337,9 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame2");
 
-	m_Profiler.Step(cmdbuffer->CmdList(), "DepthRender");
-	m_DepthProgram.Render(cmdbuffer->CmdList(), &m_RenderQueue);
-	m_HiZProgram.Disbatch(cmdbuffer->CmdList(), m_DepthProgram.GetDepthTexture());
+	//m_Profiler.Step(cmdbuffer->CmdList(), "DepthRender");
+	//m_DepthProgram.Render(cmdbuffer->CmdList(), &m_RenderQueue);
+	//m_HiZProgram.Disbatch(cmdbuffer->CmdList(), m_DepthProgram.GetDepthTexture());
 
 	g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
 	cmdbuffer->ResetCommandList(m_Context.FrameIndex);

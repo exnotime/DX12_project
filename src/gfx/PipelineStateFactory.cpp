@@ -102,6 +102,7 @@ ComPtr<ID3D12PipelineState> PipelineStateFactory::CreateGraphicsState(DX12Contex
 	if (context->Extensions.Vendor == NVIDIA_VENDOR_ID) {
 		NVAPI_D3D12_PSO_SET_SHADER_EXTENSION_SLOT_DESC extensionDesc;
 		extensionDesc.baseVersion = NV_PSO_EXTENSION_DESC_VER;
+		extensionDesc.psoExtension = NV_PSO_SET_SHADER_EXTNENSION_SLOT_AND_SPACE;
 		extensionDesc.version = NV_SET_SHADER_EXTENSION_SLOT_DESC_VER;
 		extensionDesc.registerSpace = NVIDIA_EXTENSION_SPACE;
 		extensionDesc.uavSlot = NVIDIA_EXTENSION_SLOT;
@@ -128,15 +129,15 @@ ComPtr<ID3D12PipelineState> PipelineStateFactory::CreateComputeState(DX12Context
 	if (context->Extensions.Vendor == NVIDIA_VENDOR_ID) {
 		NVAPI_D3D12_PSO_SET_SHADER_EXTENSION_SLOT_DESC extensionDesc;
 		extensionDesc.baseVersion = NV_PSO_EXTENSION_DESC_VER;
-		extensionDesc.psoExtension = NV_PSO_EXTENSION::NV_PSO_SET_SHADER_EXTNENSION_SLOT_AND_SPACE;
+		extensionDesc.psoExtension = NV_PSO_SET_SHADER_EXTNENSION_SLOT_AND_SPACE;
 		extensionDesc.version = NV_SET_SHADER_EXTENSION_SLOT_DESC_VER;
 		extensionDesc.registerSpace = NVIDIA_EXTENSION_SPACE;
 		extensionDesc.uavSlot = NVIDIA_EXTENSION_SLOT;
 
 		const NVAPI_D3D12_PSO_EXTENSION_DESC* pExtensions[] = { &extensionDesc };
 
-		NvAPI_D3D12_CreateComputePipelineState(context->Device.Get(), &m_ComputeStateDesc, 1, pExtensions, &pipelineState);
-
+		NvAPI_Status status = NvAPI_D3D12_CreateComputePipelineState(context->Device.Get(), &m_ComputeStateDesc, 1, pExtensions, &pipelineState);
+		int i = 0;
 	}
 	else {
 		HR(context->Device->CreateComputePipelineState(&m_ComputeStateDesc, IID_PPV_ARGS(&pipelineState)), L"Error creating pipeline state");

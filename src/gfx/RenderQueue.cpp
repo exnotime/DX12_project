@@ -107,6 +107,14 @@ void RenderQueue::Clear() {
 	m_InstanceCounter = 0;
 }
 
+void RenderQueue::AddLine(const std::vector<glm::vec3>& points,const glm::vec4& color) {
+	if (points.size <= 1) {
+		return;
+	}
+
+
+}
+
 void RenderQueue::AddView(const View& v) {
 	m_Views.push_back(v);
 
@@ -151,14 +159,6 @@ bool RenderQueue::AABBvsFrustum(const glm::vec4& max, const glm::vec4& min) {
 		if (out == 8) 
 			return false;
 	}
-
-	//int out;
-	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x > max.x) ? 1 : 0); if (out == 8) return false;
-	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].x < min.x) ? 1 : 0); if (out == 8) return false;
-	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].y > max.y) ? 1 : 0); if (out == 8) return false;
-	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].y < min.y) ? 1 : 0); if (out == 8) return false;
-	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z > max.z) ? 1 : 0); if (out == 8) return false;
-	//out = 0; for (int i = 0; i<8; i++) out += ((m_FrustumCorners[i].z < min.z) ? 1 : 0); if (out == 8) return false;
 
 	return true;
 }

@@ -29,6 +29,12 @@ struct View {
 	Viewport Viewport;
 };
 
+struct Line {
+	UINT Start;
+	UINT End;
+	glm::vec4 Color;
+};
+
 struct IndirectDrawCall {
 	UINT DrawIndex;
 	UINT MaterialOffset;
@@ -45,6 +51,8 @@ class RenderQueue {
 	void Enqueue(ModelHandle model, const ShaderInput& input);
 
 	void EnqueueOccluder(ModelHandle occluderModel);
+
+	void AddLine(const std::vector<glm::vec3>& points,const glm::vec4& color);
 
 	void Clear();
 	void UpdateBuffer(ID3D12GraphicsCommandList* cmdList);
@@ -80,6 +88,10 @@ class RenderQueue {
 
 	std::vector<IndirectDrawCall>		m_DrawCalls;
 	std::vector<IndirectDrawCall>		m_OccluderDrawCalls;
+
+	std::vector<Line>					m_Lines;
+	std::vector<glm::vec3>				m_LinePoints;
+
 	unsigned							m_InstanceCounter;
 	const int MAX_SHADER_INPUT_COUNT = 10000;
 };

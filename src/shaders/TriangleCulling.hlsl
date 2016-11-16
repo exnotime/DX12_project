@@ -24,7 +24,7 @@ StructuredBuffer<ShaderInput> g_InputBuffer : register(t3);
 Texture2D g_HIZBuffer : register(t4);
 SamplerState g_Sampler : register(s0);
 
-globallycoherent RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
+RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
 RWStructuredBuffer<uint> g_OutTriangleIndices : register(u1);
 globallycoherent RWByteAddressBuffer g_CullingStats : register(u2);
 globallycoherent RWByteAddressBuffer g_Counters : register(u3);
@@ -143,11 +143,8 @@ void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_Dispatc
 			g_OutDrawArgs[g_BatchOutDrawId].DrawIndex = g_DrawArgsBuffer[g_BatchDrawId].DrawIndex;
 			g_OutDrawArgs[g_BatchOutDrawId].MaterialIndex = g_DrawArgsBuffer[g_BatchDrawId].MaterialIndex;
 			g_OutDrawArgs[g_BatchOutDrawId].InstanceCount = 1;
-			g_OutDrawArgs[g_BatchOutDrawId].BaseVertex = 0;
-			g_OutDrawArgs[g_BatchOutDrawId].BaseInstance = 0;
-			//g_OutDrawArgs[g_BatchOutDrawId].IndexCount = 0;
+			g_OutDrawArgs[g_BatchOutDrawId].IndexCount = 0;
 			g_OutDrawArgs[g_BatchOutDrawId].IndexOffset = g_BatchIndex * BATCH_SIZE * TRIANGLE_SIZE;
-			g_Counters.Store(g_BatchIndex * 4, 0);
 		}
 	}
 GroupMemoryBarrierWithGroupSync();
@@ -156,7 +153,6 @@ GroupMemoryBarrierWithGroupSync();
 	const uint indexOffset = g_BatchIndex * BATCH_SIZE * TRIANGLE_SIZE;
 	uint waveSlot = 0;
 	uint localSlot = 0;
-	
 	uint3 indices[TRIANGLE_COUNT];
 	//DrawCallArgs draw = g_DrawArgsBuffer[g_BatchDrawId];
 	Predicate laneActive = false;
@@ -166,7 +162,7 @@ GroupMemoryBarrierWithGroupSync();
 		float4x4 w = g_InputBuffer[g_DrawArgsBuffer[g_BatchDrawId].DrawIndex].World;
 		bool4 culledTris = bool4(false, false, false, false);
 
-		[unroll]
+		
 		for(int i = 0; i < TRIANGLE_COUNT; ++i){
 			const uint k = g_DrawArgsBuffer[g_BatchDrawId].IndexOffset + index + i * 3;
 
@@ -207,7 +203,7 @@ GroupMemoryBarrierWithGroupSync();
 GroupMemoryBarrierWithGroupSync();
 	if(laneActive){
 		//write out triangles
-		[unroll]
+		
 		for(int i = 0; i < TRIANGLE_COUNT; ++i){
 			uint outputIndex = indexOffset + (localSlot + waveSlot + g_GroupSlot) * TRIANGLE_SIZE + i * 3;
 			g_OutTriangleIndices[outputIndex] = indices[i][0];
