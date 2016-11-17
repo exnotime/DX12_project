@@ -382,17 +382,24 @@ void GraphicsEngine::Render() {
 			//sync compute
 			m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
 			while (m_TriangleCullingProgram.Disbatch(cmdbuffer->CmdList(), &m_RenderQueue, &m_FilterContext)) {
+				cmdbuffer->CmdList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(nullptr));
+
 				m_Profiler.Step(cmdbuffer->CmdList(), "DrawCulling");
 				m_CullingProgram.Disbatch(cmdbuffer->CmdList(), &m_FilterContext);
+				cmdbuffer->CmdList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(nullptr));
 				m_Profiler.Step(cmdbuffer->CmdList(), "Render");
 				SetRenderTarget(cmdbuffer->CmdList());
 				RenderGeometry(cmdbuffer->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
-				
+
+				//m_FilterContext.CopyTriangleStats(cmdbuffer->CmdList()); //hijacking this to debug the culling
+
 				g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
 				cmdbuffer->ResetCommandList(m_Context.FrameIndex);
 				m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
+				//WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
+				//m_FilterContext.Debug();
 			}
-
+			cmdbuffer->CmdList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(nullptr));
 			m_Profiler.Step(cmdbuffer->CmdList(), "DrawCulling");
 			m_CullingProgram.Disbatch(cmdbuffer->CmdList(), &m_FilterContext);
 			m_Profiler.Step(cmdbuffer->CmdList(), "Render");

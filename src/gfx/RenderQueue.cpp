@@ -108,7 +108,7 @@ void RenderQueue::Clear() {
 }
 
 void RenderQueue::AddLine(const std::vector<glm::vec3>& points,const glm::vec4& color) {
-	if (points.size <= 1) {
+	if (points.size() <= 1) {
 		return;
 	}
 

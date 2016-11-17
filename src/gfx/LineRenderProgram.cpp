@@ -34,5 +34,4 @@ void LineRenderProgram::Init(DX12Context* context) {
 void LineRenderProgram::Render(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue) {
 
 	cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
-	cmdList->set
 }

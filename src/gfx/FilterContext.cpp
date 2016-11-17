@@ -236,6 +236,12 @@ void FilterContext::PrintTriangleStats() {
 	}
 }
 
+void FilterContext::Debug() {
+	UINT* stats;
+	m_CopyBuffer->Map(0, nullptr, (void**)&stats);
+	m_CopyBuffer->Unmap(0, nullptr);
+}
+
 ID3D12Resource* FilterContext::GetDrawArgsResource(int index) {
 	return m_DrawArgsBuffers[index].Get();
 }

@@ -38,9 +38,9 @@ struct TestData {
 		CurrentTest.BatchSize = 1024;
 		CurrentTest.BatchCount = 1024;
 		CurrentTest.TriangleCount = 1;
-		CurrentTest.FilterBackFace = true;
-		CurrentTest.FilterSmallTri = true;
-		CurrentTest.FilterFrustum = true;
+		CurrentTest.FilterBackFace = false;
+		CurrentTest.FilterSmallTri = false;
+		CurrentTest.FilterFrustum = false;
 		CurrentTest.FilterOcclusion = false;
 	}
  };

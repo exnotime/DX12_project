@@ -15,7 +15,10 @@ public:
 	bool AddBatches(UINT batchCount, UINT& batchCountOut);
 	void CopyTriangleStats(ID3D12GraphicsCommandList* cmdList);
 	void PrintTriangleStats();
+	void Debug();
 	ID3D12Resource* GetDrawArgsResource(int index);
+
+
 
 	UINT GetFilterIndex() {return m_CurrentFilterIndex;}
 	UINT GetRenderIndex() {return m_CurrentRenderIndex;}
@@ -28,6 +31,7 @@ public:
 	UINT GetCounterOffset() {return m_CounterOffset;}
 	void IncrementDrawCounter() {m_CurrentDraw++;}
 	UINT GetDrawCounter() { return m_DrawCounter; }
+
 private:
 	ComPtr<ID3D12Resource> m_IndexBuffers[MAX_SIMUL_PASSES];
 	ComPtr<ID3D12Resource> m_DrawArgsBuffers[MAX_SIMUL_PASSES];

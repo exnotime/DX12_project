@@ -33,7 +33,7 @@ void main(){
 	AddSplinePoint(vec3(0.5f, 2.8f, -40.0f));
 	AddSplinePoint(vec3(2.1f, 2.8f, -17.0f));
 	AddSplinePoint(vec3(-8.75f, 2.8f, -17.0f));
-	ResizeFrameBuffer(vec2(1920,1080) * 2.0f);
+	ResizeFrameBuffer(vec2(1600,900));
 
 	//rungholt
 	//SpawnPlayer(vec3(0.0f, 20.0f, 0.0f), vec3(0.5f, 1.8f, 0.3f), quat(1.0f, 0.0f, 0.0f, 0.0f));
