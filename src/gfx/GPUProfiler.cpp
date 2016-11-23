@@ -1,6 +1,6 @@
 #include "GPUProfiler.h"
 #include <map>
-#include "TestParams.h"
+
 GPUProfiler::GPUProfiler() {
 
 }
@@ -24,7 +24,8 @@ void GPUProfiler::Init(DX12Context* context) {
 	context->CommandQueue->GetTimestampFrequency(&m_TimerFreqs);
 
 #ifdef PRINT_TO_FILE
-	m_File = fopen(g_TestParams.Filename.c_str(), "w");
+	std::string file = g_TestParams.Directory + "/Frametimes.dat";
+	m_File = fopen(file.c_str(), "w");
 #endif
 	m_StepCounter = 0;
 	m_LastFrameSteps = 1;
@@ -66,7 +67,8 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
  		a = result[index + i];
 		b = result[index + i + 1];
 
-		double res = ((b - a) / (double)m_TimerFreqs) * 1000.0;
+		//UINT64 delta = b < a ? a - b : b - a;
+		double res = (b - a)/ ((double)m_TimerFreqs) * 1000.0;
 		if (joinedTimes.find(m_LastFrameNames[i]) == joinedTimes.end()) {
 			joinedTimes[m_LastFrameNames[i]] = 0;
 		}
@@ -103,7 +105,8 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 void GPUProfiler::Reset() {
 #ifdef PRINT_TO_FILE
 	fclose(m_File);
-	m_File = fopen(g_TestParams.Filename.c_str(), "w");
+	std::string file = g_TestParams.Directory + "/Frametimes.dat";
+	m_File = fopen(file.c_str(), "w");
 	m_LogCounter = 0;
 #endif
 	m_LastFrameSteps = 1;

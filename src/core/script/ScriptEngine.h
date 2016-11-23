@@ -14,6 +14,7 @@ public:
 	AngelScript::asIScriptEngine* GetEngine() { return m_Engine; }
 	void RecompileScript(const std::string& scriptname);
 	void RecompileAllScripts();
+	void ExecuteString(const std::string& code);
 private:
 	ScriptEngine();
 	std::vector<std::string> m_Scripts;

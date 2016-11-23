@@ -3,14 +3,14 @@
 
 #include <core/script/ScriptEngine.h>
 
-void AddTest(std::string name, bool culling, bool async, int duration, int batchSize, int batchCount) {
+void AddTest(std::string name, bool culling, int duration, int batchSize, int batchCount, glm::vec2 framebuffersize) {
 	TestData td;
 	td.Culling = culling;
-	td.AsyncCompute = async;
 	td.BatchCount = batchCount;
 	td.BatchSize = batchSize;
 	td.Duration = duration;
 	td.TestName = name;
+	td.FrameBufferSize = framebuffersize;
 	g_TestParams.Tests.push(td);
 }
 
@@ -26,7 +26,7 @@ void SSCullingTest::Startup() {
 	g_TestParams.CurrentTest.Culling = true;
 
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
-		"void AddTest(string name, bool culling, bool async, int duration, int batchSize, int batchCount)",
+		"void AddTest(string name, bool culling, int duration, int batchSize, int batchCount, vec2 framebuffersize)",
 		AngelScript::asFUNCTION(AddTest),
 		AngelScript::asCALL_CDECL);
 
@@ -97,7 +97,7 @@ void SSCullingTest::GetNextTest() {
 	}
 
 	g_TestParams.CurrentTest = g_TestParams.Tests.front();
-	g_TestParams.Filename = g_TestParams.CurrentTest.TestName;
+	g_TestParams.Directory = g_TestParams.CurrentTest.TestName;
 
 	g_TestParams.Reset = true;
 

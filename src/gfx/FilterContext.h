@@ -18,8 +18,6 @@ public:
 	void Debug();
 	ID3D12Resource* GetDrawArgsResource(int index);
 
-
-
 	UINT GetFilterIndex() {return m_CurrentFilterIndex;}
 	UINT GetRenderIndex() {return m_CurrentRenderIndex;}
 	D3D12_CPU_DESCRIPTOR_HANDLE GetFilterDescriptors() {return m_FilterDescriptorHeaps[m_CurrentFilterIndex]->GetCPUDescriptorHandleForHeapStart();}
@@ -54,4 +52,6 @@ private:
 	UINT m_DescHeapIncSize = 0;
 	UINT m_CounterOffset = 0;
 	UINT m_DrawCounter = 0;
+
+	FILE* m_Files[4]; //files for writing out triangle stats to file
 };

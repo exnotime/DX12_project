@@ -85,6 +85,7 @@ void SpawnLevelObjectS(int shape, const glm::vec3& position, const glm::quat& or
 
 	ModelComponent mc;
 	mc.Model = g_ShapeGenerator.GenerateModel((BASIC_SHAPE)shape);
+	mc.Occluder = g_ShapeGenerator.GenerateModel((BASIC_SHAPE)shape);
 	mc.Color = color;
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
 }

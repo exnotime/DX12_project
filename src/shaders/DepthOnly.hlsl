@@ -23,7 +23,5 @@ cbuffer cbShaderIndex : register(b2){
 }
 
 float4 VSMain(VSIn input) : SV_POSITION {
-	float4x4 world = g_InputBuffer[g_ShaderIndex].World;
-	float4x4 wvp = mul(g_ViewProj, world);
-	return mul(wvp,float4(input.Position, 1));
+	return mul(g_ViewProj, mul(g_InputBuffer[g_ShaderIndex].World,float4(input.Position, 1)));
 }

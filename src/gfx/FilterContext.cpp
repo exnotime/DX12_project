@@ -112,6 +112,14 @@ void FilterContext::Init(ID3D12Device* device) {
 		m_IndexBufferViews[i].Format = DXGI_FORMAT_R32_UINT;
 		m_IndexBufferViews[i].SizeInBytes = indexBufferDesc.Width;
 	}
+
+	//Open up files for writing
+#ifdef PRINT_TO_FILE
+	std::string file;
+	file = g_TestParams.Directory + "/TriangleCount.dat";
+	m_Files[0] = fopen(file.c_str(), "w");
+	//add the rest
+#endif
 }
 
 void FilterContext::Reset(ID3D12Device* device) {
@@ -157,11 +165,11 @@ void FilterContext::BeginFilter(ID3D12GraphicsCommandList* cmdList) {
 		CD3DX12_RESOURCE_BARRIER::Transition(m_DrawArgsBuffers[m_CurrentFilterIndex].Get(),
 		D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
 		CD3DX12_RESOURCE_BARRIER::Transition(m_IndexBuffers[m_CurrentFilterIndex].Get(),
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+		D3D12_RESOURCE_STATE_INDEX_BUFFER, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
 		CD3DX12_RESOURCE_BARRIER::Transition(g_ModelBank.GetVertexBufferResource(),
 		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
 		CD3DX12_RESOURCE_BARRIER::Transition(g_ModelBank.GetIndexBufferResource(),
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+		D3D12_RESOURCE_STATE_INDEX_BUFFER, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
 	};
 	cmdList->ResourceBarrier(_countof(barriers), barriers);
 	g_BufferManager.SwitchState(cmdList, "IndirectBuffer", D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -171,15 +179,13 @@ void FilterContext::BeginFilter(ID3D12GraphicsCommandList* cmdList) {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CounterClearHeaps[0]->GetCPUDescriptorHandleForHeapStart(), 1 + m_CurrentFilterIndex, m_DescHeapIncSize);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_CounterClearHeaps[1]->GetGPUDescriptorHandleForHeapStart(), 1 + m_CurrentFilterIndex, m_DescHeapIncSize);
 	cmdList->ClearUnorderedAccessViewUint(gpuHandle, cpuHandle, m_CounterBuffer.Get(), vals, 0, nullptr);
-	//clear draw args
-	//cmdList->ClearUnorderedAccessViewUint(gpuHandle.Offset(2, m_DescHeapIncSize), cpuHandle.Offset(2, m_DescHeapIncSize), m_DrawArgsBuffers[m_CurrentFilterIndex].Get(), vals, 0, nullptr);
 }
 
 void FilterContext::BeginRender(ID3D12GraphicsCommandList* cmdList) {
 	m_CurrentRenderIndex = ++m_CurrentRenderIndex % MAX_SIMUL_PASSES;
 
 	CD3DX12_RESOURCE_BARRIER barriers[] = {
-		CD3DX12_RESOURCE_BARRIER::UAV(m_DrawArgsBuffers[m_CurrentRenderIndex].Get()),
+		CD3DX12_RESOURCE_BARRIER::UAV(nullptr),
 		CD3DX12_RESOURCE_BARRIER::Transition(m_DrawArgsBuffers[m_CurrentRenderIndex].Get(),
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT),
 		CD3DX12_RESOURCE_BARRIER::Transition(m_IndexBuffers[m_CurrentRenderIndex].Get(),

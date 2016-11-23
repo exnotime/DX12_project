@@ -8,7 +8,8 @@ void main(){
 	//int level = LoadModel("assets/models/sponza/sponza.obj");
 	//int occluder = LoadModel("assets/models/sponza/SponzaOccluder.obj");
 	//SpawnLevelObjectWithOccluder(level, occluder, vec3(0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(1));
-	//SpawnLevelObject(bunny, vec3(0, 1.1f, 10), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(0.5f, 0.6f, 0.5f, 1));
+	//SpawnLevelObject(bunny, vec3(0, 1.5f, 10), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(0.5f, 0.6f, 0.5f, 1));
+	//SpawnShape(0, vec3(0,8,0),quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(8.0f, 15.0f, 0.2f), vec4(0.2f,0,0,1));
 	//AddSplinePoint(vec3(57.678, 7.215, 0.239));
 	//AddSplinePoint(vec3(1.131, 4.717, 0.998));
 	//AddSplinePoint(vec3(-61.093, 5.442, 0.995));
@@ -22,21 +23,21 @@ void main(){
 	//AddSplinePoint(vec3(-65.885, 31.746, 26.149));
 
 	//San miguel scene
-	
 	SpawnPlayer(vec3(-4.47f, 3.02f, -17.73f), vec3(0.5f, 1.8f, 0.3f), quat(-0.93f, 0.05f, -0.37f, -0.02f));
 	int level = LoadModel("D:/san_miguel/sanMiguel.obj");
 	int occluder = LoadModel("D:/san_miguel/sanMiguelOcc.obj");
 	SpawnLevelObjectWithOccluder(level,occluder, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
-	AddSplinePoint(vec3(-4.5f, 2.8f, -18.0f));
-	AddSplinePoint(vec3(-22.0f, 2.8f,-18.0f));
-	AddSplinePoint(vec3(-22.0f, 2.8f, -40.0f));
-	AddSplinePoint(vec3(0.5f, 2.8f, -40.0f));
-	AddSplinePoint(vec3(2.1f, 2.8f, -17.0f));
-	AddSplinePoint(vec3(-8.75f, 2.8f, -17.0f));
-	ResizeFrameBuffer(vec2(1600,900));
+	//AddSplinePoint(vec3(-4.5f, 2.8f, -18.0f));
+	//AddSplinePoint(vec3(-22.0f, 2.8f,-18.0f));
+	//AddSplinePoint(vec3(-22.0f, 2.8f, -40.0f));
+	//AddSplinePoint(vec3(0.5f, 2.8f, -40.0f));
+	//AddSplinePoint(vec3(2.1f, 2.8f, -17.0f));
+	//AddSplinePoint(vec3(-8.75f, 2.8f, -17.0f));
+	//ResizeFrameBuffer(vec2(1600,900));
 
 	//rungholt
 	//SpawnPlayer(vec3(0.0f, 20.0f, 0.0f), vec3(0.5f, 1.8f, 0.3f), quat(1.0f, 0.0f, 0.0f, 0.0f));
-	//level = LoadModel("assets/models/rungholt/rungholt.obj");
-	//SpawnLevelObject(level, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	//int level = LoadModel("assets/models/rungholt/rungholt.obj");
+	//int occluder = LoadModel("assets/models/rungholt/rungholt_occ.obj");
+	//SpawnLevelObjectWithOccluder(level, occluder, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 }

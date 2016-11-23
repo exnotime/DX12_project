@@ -62,8 +62,8 @@ void InitGeometryState(GeometryProgramState* state, DX12Context* context, ID3D12
 	pipeStateFact.SetAllShaders(state->Shader);
 	state->PipelineState = pipeStateFact.CreateGraphicsState(context);
 
-	state->DiffSkyTex.Init("assets/cubemaps/sanmiguel_irr.dds", context->Device.Get(), cmdList);
-	state->SpecSkyTex.Init("assets/cubemaps/sanmiguel_rad.dds", context->Device.Get(), cmdList);
+	state->DiffSkyTex.Init("assets/cubemaps/skybox_irr.dds", context->Device.Get(), cmdList);
+	state->SpecSkyTex.Init("assets/cubemaps/skybox_rad.dds", context->Device.Get(), cmdList);
 	state->IBLTex.Init("assets/textures/IBLTex.dds", context->Device.Get(), cmdList);
 
 	D3D12_DESCRIPTOR_HEAP_DESC skyHeapDesc = {};
@@ -152,12 +152,16 @@ void RenderGeometry(ID3D12GraphicsCommandList*cmdList, GeometryProgram::Geometry
 	cmdList->SetGraphicsRootDescriptorTable(ENVIROMENT_DESC_TABLE, gpuHandle);
 	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
 
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(cullingProgram->GetDrawArgsBuffer(filterContext->GetRenderIndex()),
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(cullingProgram->GetCounterBuffer(),
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT));
+	CD3DX12_RESOURCE_BARRIER barriers[] = {
+		CD3DX12_RESOURCE_BARRIER::Transition(cullingProgram->GetDrawArgsBuffer(filterContext->GetRenderIndex()),
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT),
+		CD3DX12_RESOURCE_BARRIER::Transition(cullingProgram->GetCounterBuffer(),
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT)
+	};
 
-	//cmdList->ExecuteIndirect(state->CommandSignature.Get(), filterContext->GetBatchCount(),
+	cmdList->ResourceBarrier(_countof(barriers), barriers);
+
+	//cmdList->ExecuteIndirect(state->CommandSignature.Get(), filterContext->GetDrawCounter(),
 	//	filterContext->GetDrawArgsResource(filterContext->GetRenderIndex()), 0,
 	//	nullptr, 0);
 	cmdList->ExecuteIndirect(state->CommandSignature.Get(), filterContext->GetDrawCounter(),

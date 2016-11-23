@@ -24,10 +24,10 @@ StructuredBuffer<ShaderInput> g_InputBuffer : register(t3);
 Texture2D g_HIZBuffer : register(t4);
 SamplerState g_Sampler : register(s0);
 
-RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
+globallycoherent RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
 RWStructuredBuffer<uint> g_OutTriangleIndices : register(u1);
-RWByteAddressBuffer g_CullingStats : register(u2);
-RWByteAddressBuffer g_Counters : register(u3);
+globallycoherent RWByteAddressBuffer g_CullingStats : register(u2);
+globallycoherent RWByteAddressBuffer g_Counters : register(u3);
 
 cbuffer cbPerFrame : register(b0){
 	float4x4 g_ViewProj;
@@ -41,7 +41,7 @@ cbuffer cbPerFrame : register(b0){
 cbuffer constants : register(b1){
 	uint g_BatchIndex; //what batch this dispatch starts with
 	uint g_BatchDrawId; //what draw id this dispatch is culling
-	uint g_BatchIndexOffset; //where in the index buffer should start writing
+	uint g_BatchIndexOffset; //where in the index buffer it should start reading
 	uint g_BatchOutDrawId;
 };
 
@@ -80,8 +80,8 @@ bool CullTriangle(float4 vertices[3], uint3 indices){
 			verticesInFrontOfNearPlane++;
 	}
 
-	float3 vertexMax = max(vertices[0].xyz, max(vertices[1].xyz,vertices[2].xyz));
-	float3 vertexMin = min(vertices[0].xyz, min(vertices[1].xyz,vertices[2].xyz));
+	float4 vertexMax = max(vertices[0].xyzw, max(vertices[1].xyzw,vertices[2].xyzw));
+	float4 vertexMin = min(vertices[0].xyzw, min(vertices[1].xyzw,vertices[2].xyzw));
 
 #ifdef FILTER_SMALL_TRIANGLE
 	//small triangle
@@ -118,13 +118,15 @@ bool CullTriangle(float4 vertices[3], uint3 indices){
 		float2 edge2 = (vertices[1].xy - vertices[2].xy) * texDim;
 		float2 edge3 = (vertices[0].xy - vertices[2].xy) * texDim;
 		float longestEdge = max(length(edge1), max(length(edge2), length(edge3)));
-		int mip = min(ceil(log2(max(longestEdge, 1))) - 1, mipcount - 1);
+		int mip = min(ceil(log2(max(longestEdge, 1))), mipcount - 1);
+
 		float depth1 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMin.y), mip).r;
 		float depth2 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMin.y), mip).r;
-		float depth3 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMax.y), mip).r;
-		float depth4 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMax.y), mip).r;
+		float depth3 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMax.y), mip).r;
+		float depth4 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMax.y), mip).r;
 		float maxDepth = max(max(depth1, depth2), max(depth3, depth4));
 		culled = (vertexMin.z > maxDepth);
+
 		#ifdef INSTRUMENT
 		if(culled)
 			g_CullingStats.InterlockedAdd(16, 1);
@@ -147,11 +149,10 @@ void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_Dispatc
 	}
 GroupMemoryBarrierWithGroupSync();
 	const uint laneId = LaneId();
-	const uint index = (groupIndex + (groupID.x * BATCH_SIZE) + g_BatchIndexOffset) * TRIANGLE_SIZE;
+	const uint index = (groupIndex + (groupID.x + g_BatchIndexOffset) * BATCH_SIZE) * TRIANGLE_SIZE;
 	uint waveSlot = 0;
 	uint localSlot = 0;
 	uint3 indices[TRIANGLE_COUNT];
-	//DrawCallArgs draw = g_DrawArgsBuffer[g_BatchDrawId];
 	Predicate laneActive = false;
 
 	if(index < g_DrawArgsBuffer[g_BatchDrawId].IndexCount){
@@ -189,19 +190,19 @@ GroupMemoryBarrierWithGroupSync();
 	}
 GroupMemoryBarrierWithGroupSync();
 	if(groupIndex == 0){
-		//g_Counters.InterlockedAdd(g_BatchOutDrawId * 4, g_WorkGroupCount, g_GroupSlot);
-		InterlockedAdd(g_OutDrawArgs[g_BatchOutDrawId].IndexCount, g_WorkGroupCount * TRIANGLE_SIZE, g_GroupSlot);
+		g_Counters.InterlockedAdd(g_BatchOutDrawId * 4, g_WorkGroupCount, g_GroupSlot);
+		InterlockedAdd(g_OutDrawArgs[g_BatchOutDrawId].IndexCount, g_WorkGroupCount * TRIANGLE_SIZE);
 	#ifdef INSTRUMENT
 		g_CullingStats.InterlockedAdd(20, g_WorkGroupCount);
 	#endif
 	}
 
-GroupMemoryBarrierWithGroupSync();
+AllMemoryBarrierWithGroupSync();
 	if(laneActive){
 		//write out triangles
+		const uint outputIndex = (g_BatchIndex * BATCH_SIZE * TRIANGLE_SIZE) + (localSlot + waveSlot + g_GroupSlot) * TRIANGLE_SIZE;
 		[unroll]
 		for(int i = 0; i < TRIANGLE_COUNT; ++i){
-			const uint outputIndex = (g_BatchIndex * BATCH_SIZE * TRIANGLE_SIZE) + (groupIndex + (groupID.x * BATCH_SIZE)) * TRIANGLE_SIZE;//  g_GroupSlot + (localSlot + waveSlot) * TRIANGLE_SIZE + i * 3;
 			g_OutTriangleIndices[outputIndex] = indices[i][0];
 			g_OutTriangleIndices[outputIndex + 1] = indices[i][1];
 			g_OutTriangleIndices[outputIndex + 2] = indices[i][2];

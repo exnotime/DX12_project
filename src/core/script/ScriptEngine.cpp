@@ -1,6 +1,7 @@
 #include "ScriptEngine.h"
 #include "scriptstdstring/scriptstdstring.h"
 #include "scriptbuilder/scriptbuilder.h"
+#include "scripthelper/scripthelper.h"
 #include <angelscript-integration/angelscript-integration.h>
 #include <assert.h>
 
@@ -73,4 +74,8 @@ void ScriptEngine::RecompileAllScripts() {
 	for (auto& script : m_Scripts) {
 		RecompileScript(script);
 	}
+}
+
+void ScriptEngine::ExecuteString(const std::string& code) {
+	AngelScript::ExecuteString(m_Engine, code.c_str(), nullptr, m_Context);
 }

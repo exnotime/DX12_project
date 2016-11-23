@@ -7,7 +7,8 @@ public:
 	HiZProgram();
 	~HiZProgram();
 	void Init(DX12Context* context, glm::vec2 screenSize);
-	void Disbatch(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* srcTex);
+	void CreateDescriptors(ID3D12Device* device, ID3D12Resource* srcTex);
+	void Disbatch(ID3D12GraphicsCommandList* cmdList);
 	ID3D12Resource* GetResource() {
 		return m_HiZResource.Get();
 	}
@@ -20,6 +21,13 @@ private:
 	ComPtr<ID3D12RootSignature>		m_RootSignature;
 	ComPtr<ID3D12PipelineState>		m_PipelineState;
 	ComPtr<ID3D12DescriptorHeap>	m_DescHeap;
+
+	Shader m_LinearizeShader;
+	ComPtr<ID3D12RootSignature>		m_LinearRoot;
+	ComPtr<ID3D12PipelineState>		m_LinearPipe;
+	ComPtr<ID3D12DescriptorHeap>	m_LinearHeap;
+
+	
 	ComPtr<ID3D12Resource>			m_HiZResource;
 	UINT							m_MipCount;
 	UINT							m_DescIncSize;

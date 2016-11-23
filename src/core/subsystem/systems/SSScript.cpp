@@ -11,7 +11,7 @@ SSScript::~SSScript(){
 }
 
 void SSScript::Startup() {
-	printf("Loading all scripts\n");
+	//printf("Loading all scripts\n");
 	g_ScriptEngine.CompileScript("script/spawnLevel.as");
 	g_ScriptEngine.RunScript("script/spawnLevel.as");
 }

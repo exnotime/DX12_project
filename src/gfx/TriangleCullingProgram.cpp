@@ -42,9 +42,9 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 	rootSignFact.AddExtensions(&context->Extensions);
 	D3D12_STATIC_SAMPLER_DESC sampDesc = {};
 	sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-	sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	sampDesc.MipLODBias = 0;
 	sampDesc.MaxAnisotropy = 1.0f;
 	sampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
@@ -130,7 +130,6 @@ void TriangleCullingProgram::CreateDescriptorTable(HiZProgram* hizProgram) {
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
 	device->CreateShaderResourceView(hizProgram->GetResource(), &srvDesc, cpuHandle.Offset(1, m_DescHeapIncSize));
-
 }
 
 bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, RenderQueue* queue, FilterContext* filterContext) {
@@ -160,11 +159,12 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / (TRI_COUNT * 3)) + BATCH_SIZE - 1) / BATCH_SIZE;
 
 		if(filterContext->GetRemainder() > 0)
-			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()) * BATCH_SIZE * TRI_COUNT, 2); // batch offset
+			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()), 2); // batch offset
 		else
 			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, 0, 2);
 
-		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, filterContext->GetDrawCounter(), 3);
+		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, filterContext->GetDrawCounter(), 3); //batch output 
+
 		//if we have filled up on batches break and switch to rendering
 		if (filterContext->AddBatches(batchCount, batchCount)) {
 			cmdList->Dispatch(batchCount, 1, 1);

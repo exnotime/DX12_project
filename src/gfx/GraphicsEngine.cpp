@@ -211,15 +211,14 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	CreateSwapChain(hWnd, screenSize);
 
 	m_DepthProgram.Init(&m_Context, m_ScreenSize);
-
 	m_HiZProgram.Init(&m_Context, m_ScreenSize);
-	m_FullscreenPass.Init(&m_Context);
-	m_FullscreenPass.CreateSRV(&m_Context, m_HiZProgram.GetResource(), DXGI_FORMAT_R32_FLOAT, m_HiZProgram.GetMipCount());
+	m_HiZProgram.CreateDescriptors(m_Context.Device.Get(), m_DepthProgram.GetDepthTexture());
+	//m_FullscreenPass.Init(&m_Context);
+	//m_FullscreenPass.CreateSRV(&m_Context, m_HiZProgram.GetResource(), DXGI_FORMAT_R32_FLOAT, m_HiZProgram.GetMipCount());
 	
 	g_BufferManager.Init(m_Context.Device.Get());
 	g_BufferManager.CreateConstBuffer("cbPerFrame", sizeof(cbPerFrame));
 	g_BufferManager.CreateConstBuffer("cbPerFrame2", sizeof(cbPerFrame));
-	g_BufferManager.CreateConstBuffer("testBuffer", sizeof(IndirectDrawCall) * 100);
 
 	CommandBuffer* cmdBuffer = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_GRAPHICS);
 	InitGeometryState(&m_ProgramState, &m_Context, cmdBuffer->CmdList());
@@ -295,9 +294,11 @@ void GraphicsEngine::ClearScreen(ID3D12GraphicsCommandList* cmdList) {
 }
 
 void GraphicsEngine::Render() {
-	//culling test stuff
+	//reset culling settings
 	if (g_TestParams.Reset) {
 		WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
+		if (g_TestParams.CurrentTest.FrameBufferSize != m_ScreenSize)
+			ResizeFrameBuffer(g_TestParams.CurrentTest.FrameBufferSize);
 
 		m_Profiler.Reset();
 		m_FilterContext.Reset(m_Context.Device.Get());
@@ -337,77 +338,32 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame2");
 
-	//m_Profiler.Step(cmdbuffer->CmdList(), "DepthRender");
-	//m_DepthProgram.Render(cmdbuffer->CmdList(), &m_RenderQueue);
-	//m_HiZProgram.Disbatch(cmdbuffer->CmdList(), m_DepthProgram.GetDepthTexture());
+	m_Profiler.Step(cmdbuffer->CmdList(), "DepthRender");
+	m_DepthProgram.Render(cmdbuffer->CmdList(), &m_RenderQueue);
+	m_HiZProgram.Disbatch(cmdbuffer->CmdList());
 
 	g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
 	cmdbuffer->ResetCommandList(m_Context.FrameIndex);
+
 	if (g_TestParams.CurrentTest.Culling) {
-		
-		if(g_TestParams.CurrentTest.AsyncCompute){
-			//async compute
-			int listIndex = 0;
-			//async
-			CommandBuffer* computeList = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_COMPUTE);
-			CommandBuffer* graphicsList = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_GRAPHICS);
-
-			bool geometryLeft = true;
-			int it = 32;
-			while (geometryLeft) {
-
-				geometryLeft = m_TriangleCullingProgram.Disbatch(computeList->CmdList(), &m_RenderQueue, &m_FilterContext);
-				m_CullingProgram.Disbatch(computeList->CmdList(), &m_FilterContext);
-
-				g_CommandBufferManager.ExecuteCommandBuffer(computeList, CMD_BUFFER_TYPE_COMPUTE);
-				computeList->ResetCommandList(m_Context.FrameIndex);
-
-				g_CommandBufferManager.SignalFence(it, CMD_BUFFER_TYPE_COMPUTE, CMD_BUFFER_TYPE_GRAPHICS);
-				g_CommandBufferManager.WaitOnFenceSignal(it++, CMD_BUFFER_TYPE_GRAPHICS);
-				//render
-				SetRenderTarget(graphicsList->CmdList());
-				RenderGeometry(graphicsList->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
-				//wait until culling is done then execute render
-				
-				g_CommandBufferManager.ExecuteCommandBuffer(graphicsList, CMD_BUFFER_TYPE_GRAPHICS);
-				graphicsList->ResetCommandList(m_Context.FrameIndex);
-
-				WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
-
-				//signal compute when done rendering so it can resume culling
-				g_CommandBufferManager.SignalFence(it, CMD_BUFFER_TYPE_GRAPHICS, CMD_BUFFER_TYPE_COMPUTE);
-				g_CommandBufferManager.WaitOnFenceSignal(it++, CMD_BUFFER_TYPE_COMPUTE);
-			}
-		} else {
-			//sync compute
-			m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
-			while (m_TriangleCullingProgram.Disbatch(cmdbuffer->CmdList(), &m_RenderQueue, &m_FilterContext)) {
-				cmdbuffer->CmdList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(nullptr));
-
-				m_Profiler.Step(cmdbuffer->CmdList(), "DrawCulling");
-				m_CullingProgram.Disbatch(cmdbuffer->CmdList(), &m_FilterContext);
-				cmdbuffer->CmdList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(nullptr));
-				m_Profiler.Step(cmdbuffer->CmdList(), "Render");
-				SetRenderTarget(cmdbuffer->CmdList());
-				RenderGeometry(cmdbuffer->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
-
-				//m_FilterContext.CopyTriangleStats(cmdbuffer->CmdList()); //hijacking this to debug the culling
-
-				g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
-				cmdbuffer->ResetCommandList(m_Context.FrameIndex);
-				m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
-				//WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
-				//m_FilterContext.Debug();
-			}
-			cmdbuffer->CmdList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(nullptr));
+		m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
+		while (m_TriangleCullingProgram.Disbatch(cmdbuffer->CmdList(), &m_RenderQueue, &m_FilterContext)) {
 			m_Profiler.Step(cmdbuffer->CmdList(), "DrawCulling");
 			m_CullingProgram.Disbatch(cmdbuffer->CmdList(), &m_FilterContext);
 			m_Profiler.Step(cmdbuffer->CmdList(), "Render");
 			SetRenderTarget(cmdbuffer->CmdList());
 			RenderGeometry(cmdbuffer->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
+
+			g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
+			cmdbuffer->ResetCommandList(m_Context.FrameIndex);
+			m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
 		}
-	}
-	else {
+		m_Profiler.Step(cmdbuffer->CmdList(), "DrawCulling");
+		m_CullingProgram.Disbatch(cmdbuffer->CmdList(), &m_FilterContext);
+		m_Profiler.Step(cmdbuffer->CmdList(), "Render");
+		SetRenderTarget(cmdbuffer->CmdList());
+		RenderGeometry(cmdbuffer->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
+	} else {
 		m_Profiler.Step(cmdbuffer->CmdList(), "Render");
 		SetRenderTarget(cmdbuffer->CmdList());
 		RenderGeometryWithoutCulling(cmdbuffer->CmdList(), &m_ProgramState, &m_RenderQueue);
