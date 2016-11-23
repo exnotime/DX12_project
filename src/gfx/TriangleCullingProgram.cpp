@@ -181,7 +181,7 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 std::vector<D3D_SHADER_MACRO> TriangleCullingProgram::BuildMacros() {
 	
 	std::vector<D3D_SHADER_MACRO> macros;
-	if (g_TestParams.Instrument) {
+	if (g_TestParams.CurrentTest.Instrument) {
 		macros.push_back({ "INSTRUMENT","1" });
 	}
 	if (g_TestParams.CurrentTest.FilterBackFace) {

@@ -11,6 +11,7 @@ struct TestData {
 	int BatchSize;
 	int BatchCount;
 	int TriangleCount;
+	bool Instrument;
 	bool FilterBackFace;
 	bool FilterSmallTri;
 	bool FilterFrustum;
@@ -19,11 +20,9 @@ struct TestData {
 
  class TestParams {
  public:
-	bool Instrument = true;
-	bool LogToFile = false;
 	std::string Directory = "testdata/Default";
 	bool Reset = false;
-	bool FreeCamera = true;
+	bool FreeCamera = false;
 	int FrameCounter = 0;
 	TestData CurrentTest;
 	std::queue<TestData> Tests;
@@ -32,19 +31,21 @@ struct TestData {
 
 	TestParams() {
 		CurrentTest.Culling = true;
+		CurrentTest.Instrument = true;
 		CurrentTest.Duration = 10000;
-		CurrentTest.TestName = "testdata/DefaultDir";
+		CurrentTest.TestName = "testdata/Default";
 		CurrentTest.BatchSize = 1024;
 		CurrentTest.BatchCount = 1024;
 		CurrentTest.TriangleCount = 1;
 		CurrentTest.FilterBackFace = true;
 		CurrentTest.FilterSmallTri = true;
 		CurrentTest.FilterFrustum = true;
-		CurrentTest.FilterOcclusion = false;
+		CurrentTest.FilterOcclusion = true;
 		CurrentTest.FrameBufferSize = glm::vec2(1600, 900);
 	}
  };
 
+#define DO_TESTING
 #define PRINT_TO_FILE
 #define BATCH_COUNT g_TestParams.CurrentTest.BatchCount
 #define BATCH_SIZE g_TestParams.CurrentTest.BatchSize

@@ -31,9 +31,9 @@ void SSCameraSpline::Update(const double deltaTime) {
 					cc->Camera = Camera(); // reset camera
 				}
 				float t = g_TestParams.FrameCounter / (float)g_TestParams.CurrentTest.Duration;
-				//glm::vec3 pos = m_Spline.GetPointAtT(t);
-				cc->Camera.LookAt(m_Spline.GetPointAtT(t + 0.01f));
-				cc->Camera.SetPosition(m_Spline.GetPointAtT(t));
+				glm::vec3 pos = m_Spline.GetPointAtT(t);
+				cc->Camera.LookAt(pos);
+				cc->Camera.SetPosition(pos);
 				cc->Camera.CalculateViewProjection();
 
 

@@ -1,15 +1,15 @@
 #include "SSCullingTest.h"
 #include <core/Input/Input.h>
-
 #include <core/script/ScriptEngine.h>
 
-void AddTest(std::string name, bool culling, int duration, int batchSize, int batchCount, glm::vec2 framebuffersize) {
+void AddTest(std::string name, bool culling, int duration,int triangleCount, int batchSize, int batchCount, glm::vec2 framebuffersize) {
 	TestData td;
 	td.Culling = culling;
 	td.BatchCount = batchCount;
 	td.BatchSize = batchSize;
 	td.Duration = duration;
 	td.TestName = name;
+	td.TriangleCount = triangleCount;
 	td.FrameBufferSize = framebuffersize;
 	g_TestParams.Tests.push(td);
 }
@@ -26,7 +26,7 @@ void SSCullingTest::Startup() {
 	g_TestParams.CurrentTest.Culling = true;
 
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
-		"void AddTest(string name, bool culling, int duration, int batchSize, int batchCount, vec2 framebuffersize)",
+		"void AddTest(string name, bool culling, int duration, int triangleCount, int batchSize, int batchCount, vec2 framebuffersize)",
 		AngelScript::asFUNCTION(AddTest),
 		AngelScript::asCALL_CDECL);
 
@@ -91,6 +91,7 @@ void SSCullingTest::GetNextTest() {
 #endif
 
 	if (g_TestParams.Tests.empty()) {
+		//quiting like this will leak a bunch of memory, but since it is a lot easier to just let mommy os clean up after us we will allow it
 		exit(0); // no more tests either quit or just idle
 		//m_CurrentTest.Duration = INT_MAX;
 		return;

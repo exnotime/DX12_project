@@ -9,7 +9,6 @@ ModelBank::ModelBank() {
 
 ModelBank::~ModelBank() {
 	
-
 }
 
 ModelBank& ModelBank::GetInstance() {
@@ -50,7 +49,7 @@ ModelHandle ModelBank::LoadModel(const char* filename) {
 		printf("error loading model: %s\n ASSIMP Error: %s \n", filename, m_Importer.GetErrorString());
 		return -1;
 	}
-	printf("Loaded Model %s\n", filename);
+	printf("Finished loading Model %s\n", filename);
 	ModelHandle handle = ++m_Numerator;
 	m_Models[handle] = model;
 	return handle;
@@ -349,10 +348,6 @@ void ModelBank::BuildBuffers(ID3D12Device* device, ID3D12GraphicsCommandList* cm
 	CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vboSize);
 	HR(device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
 		&vertexBufferDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_VertexBufferResource)), L"Error creating Vertex buffer resource");
-
-	//perform multiple uploads if the size is too big
-	const int maxUploadSize = 256 * 1024 * 1024;
-	size_t uploadSize = (vboSize < maxUploadSize) ? vboSize : maxUploadSize;
 
 	CD3DX12_RESOURCE_DESC vertexBufferUploadDesc = CD3DX12_RESOURCE_DESC::Buffer(vboSize);
 	HR(device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,

@@ -53,5 +53,5 @@ private:
 	UINT m_CounterOffset = 0;
 	UINT m_DrawCounter = 0;
 
-	FILE* m_Files[4]; //files for writing out triangle stats to file
+	FILE* m_Files[6]; //files for writing out triangle stats to files
 };

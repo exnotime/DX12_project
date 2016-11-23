@@ -24,10 +24,10 @@ StructuredBuffer<ShaderInput> g_InputBuffer : register(t3);
 Texture2D g_HIZBuffer : register(t4);
 SamplerState g_Sampler : register(s0);
 
-globallycoherent RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
+RWStructuredBuffer<DrawCallArgs> g_OutDrawArgs : register(u0);
 RWStructuredBuffer<uint> g_OutTriangleIndices : register(u1);
 globallycoherent RWByteAddressBuffer g_CullingStats : register(u2);
-globallycoherent RWByteAddressBuffer g_Counters : register(u3);
+RWByteAddressBuffer g_Counters : register(u3);
 
 cbuffer cbPerFrame : register(b0){
 	float4x4 g_ViewProj;
@@ -140,12 +140,6 @@ void CSMain(uint groupIndex : SV_GroupIndex, uint3 disbatchThreadID : SV_Dispatc
 	if(groupIndex == 0){
 		g_WorkGroupCount = 0;
 		g_GroupSlot = 0;
-
-		if(groupID.x == 0){
-			g_OutDrawArgs[g_BatchOutDrawId] = g_DrawArgsBuffer[g_BatchDrawId];
-			g_OutDrawArgs[g_BatchOutDrawId].IndexCount = 0;
-			g_OutDrawArgs[g_BatchOutDrawId].IndexOffset = g_BatchIndex * BATCH_SIZE * TRIANGLE_SIZE;
-		}
 	}
 GroupMemoryBarrierWithGroupSync();
 	const uint laneId = LaneId();
@@ -187,25 +181,27 @@ GroupMemoryBarrierWithGroupSync();
 		}
 		
 		waveSlot = ReadFirstLaneUInt(waveSlot);
+
+		if(laneActive){
+			//write out triangles
+			const uint outputIndex = ((g_BatchIndex + groupID.x) * BATCH_SIZE * TRIANGLE_SIZE) + (localSlot + waveSlot) * TRIANGLE_SIZE;
+			[unroll]
+			for(int i = 0; i < TRIANGLE_COUNT; ++i){
+				g_OutTriangleIndices[outputIndex + i * 3] = indices[i][0];
+				g_OutTriangleIndices[outputIndex + i * 3 + 1] = indices[i][1];
+				g_OutTriangleIndices[outputIndex  + i * 3+ 2] = indices[i][2];
+			}
+		}
 	}
 GroupMemoryBarrierWithGroupSync();
 	if(groupIndex == 0){
-		g_Counters.InterlockedAdd(g_BatchOutDrawId * 4, g_WorkGroupCount, g_GroupSlot);
-		InterlockedAdd(g_OutDrawArgs[g_BatchOutDrawId].IndexCount, g_WorkGroupCount * TRIANGLE_SIZE);
-	#ifdef INSTRUMENT
-		g_CullingStats.InterlockedAdd(20, g_WorkGroupCount);
-	#endif
+		const uint outDrawIndex = g_BatchIndex + groupID.x;
+		g_OutDrawArgs[outDrawIndex] = g_DrawArgsBuffer[g_BatchDrawId];
+		g_OutDrawArgs[outDrawIndex].IndexOffset = (g_BatchIndex + groupID.x) * BATCH_SIZE * TRIANGLE_SIZE;
+		g_OutDrawArgs[outDrawIndex].IndexCount = g_WorkGroupCount * TRIANGLE_SIZE;
+		#ifdef INSTRUMENT
+			g_CullingStats.InterlockedAdd(20, g_WorkGroupCount);
+		#endif
 	}
 
-AllMemoryBarrierWithGroupSync();
-	if(laneActive){
-		//write out triangles
-		const uint outputIndex = (g_BatchIndex * BATCH_SIZE * TRIANGLE_SIZE) + (localSlot + waveSlot + g_GroupSlot) * TRIANGLE_SIZE;
-		[unroll]
-		for(int i = 0; i < TRIANGLE_COUNT; ++i){
-			g_OutTriangleIndices[outputIndex] = indices[i][0];
-			g_OutTriangleIndices[outputIndex + 1] = indices[i][1];
-			g_OutTriangleIndices[outputIndex + 2] = indices[i][2];
-		}
-	}
 }

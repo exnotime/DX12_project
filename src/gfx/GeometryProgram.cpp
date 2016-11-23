@@ -164,7 +164,7 @@ void RenderGeometry(ID3D12GraphicsCommandList*cmdList, GeometryProgram::Geometry
 	//cmdList->ExecuteIndirect(state->CommandSignature.Get(), filterContext->GetDrawCounter(),
 	//	filterContext->GetDrawArgsResource(filterContext->GetRenderIndex()), 0,
 	//	nullptr, 0);
-	cmdList->ExecuteIndirect(state->CommandSignature.Get(), filterContext->GetDrawCounter(),
+	cmdList->ExecuteIndirect(state->CommandSignature.Get(), filterContext->GetBatchCount(),
 		cullingProgram->GetDrawArgsBuffer(filterContext->GetRenderIndex()), 0,
 		cullingProgram->GetCounterBuffer(), filterContext->GetCounterOffset());
 }

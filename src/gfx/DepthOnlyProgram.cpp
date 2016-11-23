@@ -14,7 +14,7 @@ DepthOnlyProgram::~DepthOnlyProgram() {
 }
 
 void DepthOnlyProgram::Init(DX12Context* context, glm::vec2 screenSize) {
-	m_ScreenSize = screenSize * 0.125f;
+	m_ScreenSize = screenSize * 0.5f;
 
 	m_Viewport.TopLeftX = 0;
 	m_Viewport.TopLeftY = 0;

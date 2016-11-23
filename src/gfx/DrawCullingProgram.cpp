@@ -166,12 +166,16 @@ void DrawCullingProgram::ClearCounters(ID3D12GraphicsCommandList* cmdList) {
 
 void DrawCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, FilterContext* filterContext) {
 
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(filterContext->GetDrawArgsResource(filterContext->GetFilterIndex()),
-		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_OutputBuffer[filterContext->GetFilterIndex()].Get(),
-		D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_CounterBuffer.Get(),
-		D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+	CD3DX12_RESOURCE_BARRIER barriers[] = {
+		CD3DX12_RESOURCE_BARRIER::Transition(filterContext->GetDrawArgsResource(filterContext->GetFilterIndex()),
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE),
+		CD3DX12_RESOURCE_BARRIER::Transition(m_OutputBuffer[filterContext->GetFilterIndex()].Get(),
+		D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+		CD3DX12_RESOURCE_BARRIER::Transition(m_CounterBuffer.Get(),
+		D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+	};
+
+	cmdList->ResourceBarrier(_countof(barriers), barriers);
 
 	cmdList->SetPipelineState(m_PipelineState.Get());
 	cmdList->SetComputeRootSignature(m_RootSignature.Get());
@@ -182,12 +186,12 @@ void DrawCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, FilterCont
 	cmdList->SetComputeRootDescriptorTable(INPUT_DESC, CD3DX12_GPU_DESCRIPTOR_HANDLE(
 		m_DescHeap->GetGPUDescriptorHandleForHeapStart(), m_HeapDescIncSize * filterContext->GetFilterIndex() * DESC_HEAP_SIZE));
 
-	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, filterContext->GetDrawCounter(), 0);
+	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, filterContext->GetBatchCount(), 0);
 	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, filterContext->GetCounterOffset(), 1);
 
 	//extensions
 	cmdList->SetComputeRootDescriptorTable(EXTENSIONS_DESC, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), EXTENSION_DESC_OFFSET * m_HeapDescIncSize));
 
-	UINT disbatchCount = (filterContext->GetDrawCounter() + m_WaveSize - 1) / m_WaveSize;
+	UINT disbatchCount = (filterContext->GetBatchCount() + m_WaveSize - 1) / m_WaveSize;
 	cmdList->Dispatch(disbatchCount, 1, 1);
 }
