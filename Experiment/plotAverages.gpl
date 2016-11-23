@@ -1,0 +1,12 @@
+set term png size 1280, 960
+set output "Averages.png"
+set style fill solid 1.00 border lt -1
+set title "Average Frame Time"
+set boxwidth 64 
+set xlabel "BatchSize/Count"
+
+set ylabel "Time(ms)"
+set multiplot
+plot 	"Averages.dat" using 1:2:xtic(2) with boxes title "",\
+	"Averages.dat" using 1:2 with lines smooth bezier title ""
+unset multiplot

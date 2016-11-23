@@ -1,0 +1,13 @@
+set term png size 1280, 960
+set output "plot.png"
+#set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5   # --- blue
+#set style line 2 lc rgb '#ff6000' lt 1 lw 2 pt 7 ps 1.5   # --- red
+set title "FrameTimes(SanMiguel)"
+set xlabel "Frame"
+set yrange [0:*]
+set ylabel "Time(ms)"
+
+set multiplot
+plot 	"Culling.dat" using 1:2 smooth bezier with lines title "Culling",\
+ "NoCulling.dat" smooth bezier using 1:2 with lines title "No Culling"
+unset multiplot

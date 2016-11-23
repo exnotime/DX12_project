@@ -2,6 +2,8 @@ bin/
 solution/
 AS_DEBUG/
 testdata/*.dat
+big_assets/
+
 
 # Compiled Object files
 *.slo
