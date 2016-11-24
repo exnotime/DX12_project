@@ -21,6 +21,7 @@ struct TestData {
  class TestParams {
  public:
 	std::string Directory = "testdata/Default";
+	std::string Level = "SPONZA";
 	bool Reset = false;
 	bool FreeCamera = false;
 	int FrameCounter = 0;
@@ -47,6 +48,7 @@ struct TestData {
 
 #define DO_TESTING
 #define PRINT_TO_FILE
+#define SILENT_LOG
 #define BATCH_COUNT g_TestParams.CurrentTest.BatchCount
 #define BATCH_SIZE g_TestParams.CurrentTest.BatchSize
 #define TRI_COUNT g_TestParams.CurrentTest.TriangleCount

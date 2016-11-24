@@ -62,7 +62,7 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 	m_ResultBuffer->Map(0, &range, (void**)&result);
 	
 	UINT64 a, b;
-#ifndef SILENT_PROFILING
+#ifndef SILENT_LOG
 	std::map<std::string, double> joinedTimes;
 	for (int i = 0; i < m_LastFrameSteps - 1; i++) {
  		a = result[index + i];
@@ -87,7 +87,7 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 	UINT64 delta = b - a;
 	double res = (delta / (double)m_TimerFreqs) * 1000.0;
 
-#ifndef SILENT_PROFILING
+#ifndef SILENT_LOG
 	printf("Entire frame: %4.4f ms\n", res);
 #endif
 
@@ -104,7 +104,7 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 
 void GPUProfiler::Reset() {
 #ifdef PRINT_TO_FILE
-	fclose(m_File);
+	if(m_File) fclose(m_File); 
 	std::string file = g_TestParams.Directory + "/Frametimes.dat";
 	m_File = fopen(file.c_str(), "w");
 	m_LogCounter = 0;

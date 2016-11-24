@@ -2,11 +2,25 @@
 #define CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+#include <gfx/TestParams.h>
 
-int main(int argc, char** args){
+void ProcessCmdLineArgs(int argc, char** argv) {
+	printf("print all input args\n");
+	for (int i = 0; i < argc; i++) {
+		printf("%s\n", argv[i]);
+	}
+	
+	if (argc < 2) {
+		printf("No level name argument set, defaulting to Sponza\n");
+		g_TestParams.Level = "SPONZA";
+		return;
+	}
+	g_TestParams.Level = std::string(argv[1]);
+}
+
+int main(int argc, char** argv){
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(115440);
-
+	ProcessCmdLineArgs(argc, argv);
 	core::Engine engine;
 	engine.Init();
 	engine.Run();

@@ -256,19 +256,21 @@ void FilterContext::PrintTriangleStats() {
 		UINT* stats;
 		D3D12_RANGE range = { 0, sizeof(UINT) * 6 };
 		m_CopyBuffer->Map(0, &range, (void**)&stats);
+#ifndef SILENT_LOG
 		printf("\nTotal Triangle Count: %d\n", stats[0]);
 		printf("Backface Count: %d\n", stats[1]);
 		printf("Small triangle Count: %d\n", stats[2]);
 		printf("Frustum Count: %d\n", stats[3]);
 		printf("Occlusion Count: %d\n", stats[4]);
 		printf("Total surviving triangles %d\n\n", stats[5]);
+#endif
 		//print to file
-		fprintf(m_Files[0], "%d\n", stats[0]);
-		fprintf(m_Files[1], "%d\n", stats[1]);
-		fprintf(m_Files[2], "%d\n", stats[2]);
-		fprintf(m_Files[3], "%d\n", stats[3]);
-		fprintf(m_Files[4], "%d\n", stats[4]);
-		fprintf(m_Files[5], "%d\n", stats[5]);
+		fprintf(m_Files[0], "%d\n", stats[0] * TRI_COUNT);
+		fprintf(m_Files[1], "%d\n", stats[1] * TRI_COUNT);
+		fprintf(m_Files[2], "%d\n", stats[2] * TRI_COUNT);
+		fprintf(m_Files[3], "%d\n", stats[3] * TRI_COUNT);
+		fprintf(m_Files[4], "%d\n", stats[4] * TRI_COUNT);
+		fprintf(m_Files[5], "%d\n", stats[5] * TRI_COUNT);
 
 		range.End = 0;
 		m_CopyBuffer->Unmap(0, &range);

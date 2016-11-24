@@ -54,6 +54,34 @@ void ScriptEngine::CompileScript(const std::string& scriptname) {
 	printf("Compiled script :%s\n", scriptname.c_str());
 }
 
+void ScriptEngine::CompileScriptWithWord(const std::string& scriptname, const std::string& word) {
+	AngelScript::CScriptBuilder scriptBuilder;
+	int r;
+	r = scriptBuilder.StartNewModule(m_Engine, scriptname.c_str()); assert(r >= 0);
+
+	scriptBuilder.DefineWord(word.c_str());
+
+	r = scriptBuilder.AddSectionFromFile(scriptname.c_str()); assert(r >= 0);
+	r = scriptBuilder.BuildModule(); assert(r >= 0);
+	m_Scripts.push_back(scriptname);
+	printf("Compiled script :%s\n", scriptname.c_str());
+}
+
+void ScriptEngine::CompileScriptWithDefines(const std::string& scriptname, const std::vector<std::string>& words) {
+	AngelScript::CScriptBuilder scriptBuilder;
+	int r;
+	r = scriptBuilder.StartNewModule(m_Engine, scriptname.c_str()); assert(r >= 0);
+
+	for (auto& word : words) {
+		scriptBuilder.DefineWord(word.c_str());
+	}
+
+	r = scriptBuilder.AddSectionFromFile(scriptname.c_str()); assert(r >= 0);
+	r = scriptBuilder.BuildModule(); assert(r >= 0);
+	m_Scripts.push_back(scriptname);
+	printf("Compiled script :%s\n", scriptname.c_str());
+}
+
 void ScriptEngine::RunScript(const std::string& scriptname) {
 	AngelScript::asIScriptModule* module = m_Engine->GetModule(scriptname.c_str());
 	AngelScript::asIScriptFunction* func = module->GetFunctionByDecl("void main()");

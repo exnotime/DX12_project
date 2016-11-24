@@ -2,7 +2,7 @@
 #include <core/Input/Input.h>
 #include <core/script/ScriptEngine.h>
 
-void AddTest(std::string name, bool culling, int duration,int triangleCount, int batchSize, int batchCount, glm::vec2 framebuffersize) {
+void AddTest(std::string name, bool culling, int duration,int triangleCount, int batchSize, int batchCount, glm::vec2 framebuffersize, bool instrument, glm::bvec4 filters) {
 	TestData td;
 	td.Culling = culling;
 	td.BatchCount = batchCount;
@@ -11,6 +11,11 @@ void AddTest(std::string name, bool culling, int duration,int triangleCount, int
 	td.TestName = name;
 	td.TriangleCount = triangleCount;
 	td.FrameBufferSize = framebuffersize;
+	td.Instrument = instrument;
+	td.FilterBackFace = filters[0];
+	td.FilterSmallTri = filters[1];
+	td.FilterFrustum = filters[2];
+	td.FilterOcclusion = filters[3];
 	g_TestParams.Tests.push(td);
 }
 
@@ -26,7 +31,7 @@ void SSCullingTest::Startup() {
 	g_TestParams.CurrentTest.Culling = true;
 
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
-		"void AddTest(string name, bool culling, int duration, int triangleCount, int batchSize, int batchCount, vec2 framebuffersize)",
+		"void AddTest(string name, bool culling, int duration, int triangleCount, int batchSize, int batchCount, vec2 framebuffersize, bool instrument, bvec4 filters)",
 		AngelScript::asFUNCTION(AddTest),
 		AngelScript::asCALL_CDECL);
 

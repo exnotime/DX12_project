@@ -10,6 +10,8 @@ public:
 	static ScriptEngine& GetInstance();
 	void Init();
 	void CompileScript(const std::string& scriptname);
+	void CompileScriptWithWord(const std::string& scriptname, const std::string& word);
+	void CompileScriptWithDefines(const std::string& scriptname, const std::vector<std::string>& words);
 	void RunScript(const std::string& scriptname);
 	AngelScript::asIScriptEngine* GetEngine() { return m_Engine; }
 	void RecompileScript(const std::string& scriptname);

@@ -12,7 +12,7 @@ void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes, Extens
 
 	m_ShaderTypes = shaderTypes;
 #ifdef _DEBUG
-	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_WARNINGS_ARE_ERRORS;
+	UINT compileFlags = D3DCOMPILE_DEBUG;
 #else
 	UINT compileFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3 | D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
 #endif
@@ -25,7 +25,7 @@ void Shader::LoadFromFile(const std::wstring& filename, UINT shaderTypes, Extens
 	if (extensions) {
 		//AMD
 		if (extensions->Vendor == AMD_VENDOR_ID) {
-			compileFlags &= ~D3DCOMPILE_SKIP_OPTIMIZATION; //cant skip optimizations with amd
+			compileFlags &= ~D3DCOMPILE_SKIP_OPTIMIZATION;
 			shaderMacros.push_back({"AMD_USE_SHADER_INTRINSICS", "1"});
 			shaderMacros.push_back({ nullptr, nullptr });
 		} //NVIDIA

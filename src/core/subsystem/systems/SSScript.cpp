@@ -2,6 +2,7 @@
 #include "../../script/ScriptEngine.h"
 #include "../../input/Input.h"
 #include "../../entity/EntityManager.h"
+#include <gfx/TestParams.h>
 SSScript::SSScript(){
 
 }
@@ -12,7 +13,7 @@ SSScript::~SSScript(){
 
 void SSScript::Startup() {
 	//printf("Loading all scripts\n");
-	g_ScriptEngine.CompileScript("script/spawnLevel.as");
+	g_ScriptEngine.CompileScriptWithWord("script/spawnLevel.as", g_TestParams.Level );
 	g_ScriptEngine.RunScript("script/spawnLevel.as");
 }
 
