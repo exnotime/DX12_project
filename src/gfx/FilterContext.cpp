@@ -137,6 +137,7 @@ void FilterContext::Reset(ID3D12Device* device) {
 		m_DrawArgsBuffers[i].Reset();
 		m_FilterDescriptorHeaps[i].Reset();
 	}
+#ifdef PRINT_TO_FILE
 	for(int i = 0; i < 6; ++i)
 		fclose(m_Files[i]);
 	std::string file;
@@ -152,7 +153,7 @@ void FilterContext::Reset(ID3D12Device* device) {
 	m_Files[4] = fopen(file.c_str(), "w");
 	file = g_TestParams.Directory + "/SurvivingTris.dat";
 	m_Files[5] = fopen(file.c_str(), "w");
-
+#endif
 	m_CounterBuffer.Reset();
 	Init(device);
 }
@@ -264,14 +265,15 @@ void FilterContext::PrintTriangleStats() {
 		printf("Occlusion Count: %d\n", stats[4]);
 		printf("Total surviving triangles %d\n\n", stats[5]);
 #endif
+#ifdef PRINT_TO_FILE
 		//print to file
-		fprintf(m_Files[0], "%d\n", stats[0] * TRI_COUNT);
-		fprintf(m_Files[1], "%d\n", stats[1] * TRI_COUNT);
-		fprintf(m_Files[2], "%d\n", stats[2] * TRI_COUNT);
-		fprintf(m_Files[3], "%d\n", stats[3] * TRI_COUNT);
-		fprintf(m_Files[4], "%d\n", stats[4] * TRI_COUNT);
-		fprintf(m_Files[5], "%d\n", stats[5] * TRI_COUNT);
-
+		fprintf(m_Files[0], "%d\n", stats[0] );
+		fprintf(m_Files[1], "%d\n", stats[1] );
+		fprintf(m_Files[2], "%d\n", stats[2] );
+		fprintf(m_Files[3], "%d\n", stats[3] );
+		fprintf(m_Files[4], "%d\n", stats[4] );
+		fprintf(m_Files[5], "%d\n", stats[5] );
+#endif
 		range.End = 0;
 		m_CopyBuffer->Unmap(0, &range);
 	}

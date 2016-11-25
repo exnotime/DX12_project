@@ -21,10 +21,7 @@ void SSCamera::Startup() {
 }
 
 void SSCamera::Update(const double deltaTime) {
-	if (!g_TestParams.FreeCamera) {
-		return;
-	}
-
+#ifdef FREE_CAMERA
 	int flag = CameraComponent::Flag;
 	CameraData cd;
 	for (auto& entity : g_EntityManager.GetEntityList()) {
@@ -70,6 +67,7 @@ void SSCamera::Update(const double deltaTime) {
 			cc->Camera.CalculateViewProjection();
 		}
 	}
+#endif
 }
 
 void SSCamera::Shutdown() {

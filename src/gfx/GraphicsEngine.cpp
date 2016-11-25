@@ -252,6 +252,12 @@ void GraphicsEngine::ResizeFrameBuffer(const glm::vec2& screenSize) {
 	m_DSVHeap.Reset();
 	//create swapchain
 	CreateSwapChain(hWnd, screenSize);
+
+	m_Context.FrameIndex = m_SwapChain.SwapChain->GetCurrentBackBufferIndex();
+	for (int i = 0; i < g_FrameCount; ++i) {
+		m_Fence.FenceValues[i] = 0;
+	}
+
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
 }
 

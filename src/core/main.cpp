@@ -5,11 +5,6 @@
 #include <gfx/TestParams.h>
 
 void ProcessCmdLineArgs(int argc, char** argv) {
-	printf("print all input args\n");
-	for (int i = 0; i < argc; i++) {
-		printf("%s\n", argv[i]);
-	}
-	
 	if (argc < 2) {
 		printf("No level name argument set, defaulting to Sponza\n");
 		g_TestParams.Level = "SPONZA";

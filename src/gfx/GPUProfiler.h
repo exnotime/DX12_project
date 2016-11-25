@@ -24,7 +24,6 @@ private:
 	std::vector<std::string> m_StepNames;
 	std::vector<std::string> m_LastFrameNames;
 #ifdef PRINT_TO_FILE
-	int m_LogCounter = 0;
 	FILE* m_File;
 #endif
 };

@@ -14,7 +14,7 @@ void GPUProfiler::Init(DX12Context* context) {
 	queryHeapDesc.Count = MAX_PROFILER_STEPS * g_FrameCount;
 	queryHeapDesc.NodeMask = 0;
 	queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
-	//context->Device->SetStablePowerState(true);
+
 	context->Device->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&m_QueryHeap));
 
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK), D3D12_HEAP_FLAG_NONE,
@@ -92,8 +92,7 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 #endif
 
 #ifdef PRINT_TO_FILE
-	m_LogCounter++;
-	fprintf(m_File, "%d %f\n", m_LogCounter, res);
+	fprintf(m_File, "%f\n", res);
 #endif
 
 	range.End = 0;
@@ -107,7 +106,6 @@ void GPUProfiler::Reset() {
 	if(m_File) fclose(m_File); 
 	std::string file = g_TestParams.Directory + "/Frametimes.dat";
 	m_File = fopen(file.c_str(), "w");
-	m_LogCounter = 0;
 #endif
 	m_LastFrameSteps = 1;
 	m_LastFrameNames.clear();

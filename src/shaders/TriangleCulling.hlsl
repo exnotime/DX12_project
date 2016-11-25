@@ -74,14 +74,14 @@ bool CullTriangle(float4 vertices[3], uint3 indices){
 	for(int i = 0; i < 3; ++i){
 		//perspective divide
 		vertices[i].xyz /= vertices[i].w;
-		vertices[i].xy /= 2;
+		vertices[i].xy *= 0.5;
 		vertices[i].xy += float2(0.5, 0.5);
 		if(vertices[i].w < 0)
 			verticesInFrontOfNearPlane++;
 	}
 
-	float4 vertexMax = max(vertices[0].xyzw, max(vertices[1].xyzw,vertices[2].xyzw));
-	float4 vertexMin = min(vertices[0].xyzw, min(vertices[1].xyzw,vertices[2].xyzw));
+	float2 vertexMax = max(vertices[0].xy, max(vertices[1].xy,vertices[2].xy));
+	float3 vertexMin = min(vertices[0].xyz, min(vertices[1].xyz,vertices[2].xyz)); //vertexmin.z is used for occlusion
 
 #ifdef FILTER_SMALL_TRIANGLE
 	//small triangle
@@ -125,7 +125,7 @@ bool CullTriangle(float4 vertices[3], uint3 indices){
 		float depth3 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMax.y), mip).r;
 		float depth4 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMax.y), mip).r;
 		float maxDepth = max(max(depth1, depth2), max(depth3, depth4));
-		culled = (vertexMin.z > maxDepth);
+		culled = (vertexMin.z > (maxDepth + 0.001)); //epsilon added to avoid the worst of depth artifacts
 
 		#ifdef INSTRUMENT
 		if(culled)
@@ -163,9 +163,9 @@ GroupMemoryBarrierWithGroupSync();
 			indices[i][2] = g_TriangleIndices[k + 2];
 
 			float4 vertices[] = {
-			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][0]], 1))),
-			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][1]], 1))),
-			mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][2]], 1)))};
+				mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][0]], 1))),
+				mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][1]], 1))),
+				mul(g_ViewProj, mul( w, float4(g_VertexPositions[indices[i][2]], 1)))};
 
 			culledTris[i] = !CullTriangle(vertices, indices[i]);
 		}
@@ -200,8 +200,7 @@ GroupMemoryBarrierWithGroupSync();
 		g_OutDrawArgs[outDrawIndex].IndexOffset = (g_BatchIndex + groupID.x) * BATCH_SIZE * TRIANGLE_SIZE;
 		g_OutDrawArgs[outDrawIndex].IndexCount = g_WorkGroupCount * TRIANGLE_SIZE;
 		#ifdef INSTRUMENT
-			g_CullingStats.InterlockedAdd(20, g_WorkGroupCount);
+			g_CullingStats.InterlockedAdd(20, g_WorkGroupCount * TRIANGLE_COUNT);
 		#endif
 	}
-
 }

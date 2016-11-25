@@ -1,11 +1,15 @@
 #this script will run the experiment for each of the scenes
+echo "Starting test" 
+date
 #create directories
 mkdir -p "testdata";
 sponza="testdata/Sponza";
 san_miguel="testdata/SanMiguel";
 rungholt="testdata/Rungholt";
 #this list should match the testnames in Tests.as or it will not work
-declare -a tests=("WarmUp" "Culling" "NoCulling" "2Tri" "3Tri" "4Tri");
+declare -a tests=("WarmUp" "Culling" "NoCulling" "1Tri" "2Tri" "3Tri" "4Tri" "Backface" "SmallTris" "Frustum" "Occlusion" "AllFilters" "BatchSize128" "BatchSize256" \
+	"BatchSize512" "BatchSize1024" "BatchCount128" "BatchCount256" "BatchCount512" "BatchCount1024" "BatchCount2048" "BatchCount4096" "Resolution270" \
+	"Resolution540" "Resolution1080" "Resolution2160");
 
 mkdir -p "$sponza";
 mkdir -p "$san_miguel";
@@ -31,3 +35,6 @@ sed -i -e "s|#REPLACE_THIS_DIR|$rungholt|g" ./script/Tests.as;
 
 cp ./script/Tests.as.b ./script/Tests.as;
 rm ./script/Tests.as.b;
+echo "Ending test"
+date
+read -n 1 -p "Press any key to quit"

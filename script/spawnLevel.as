@@ -9,7 +9,7 @@ void main(){
 	int teapot = LoadModel("assets/models/teapot/teapot.obj");
 	SpawnLevelObjectWithOccluder(level, occluder, vec3(0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(1));
 	SpawnLevelObject(bunny, vec3(0, 1.5f, 2), quat(0.0f, 0.0f, 1.0f, 0.0f), vec3(0.05f), vec4(0.2f, 0.6f, 0.5f, 1));
-	SpawnLevelObject(dragon, vec3(0, 1.5f, -5), quat(0.0f, 0.0f, 1.0f, 0.0f), vec3(1.0f), vec4(0.7f, 0.2f, 0.3f, 1));
+	SpawnLevelObject(dragon, vec3(0, 1.5f, -5), quat(0.0f, 0.0f, 1.0f, 0.0f), vec3(1.0f), vec4(0.9f, 0.0f, 0.1f, 1));
 	SpawnLevelObject(teapot, vec3(-10, 1.5f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.5f), vec4(0.5f, 0.9f, 0.3f, 1));
 	AddSplinePoint(vec3( 50.678, 7.215 ,  0.239));
 	AddSplinePoint(vec3( 1.131 , 4.717 ,  0.998));

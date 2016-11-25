@@ -49,15 +49,18 @@ void SSCullingTest::Update(const double deltaTime) {
 		g_TestParams.CurrentTest.BatchCount = 128;
 		g_TestParams.CurrentTest.BatchSize = 128;
 		g_TestParams.Reset = true;
-	}else if (g_Input.IsKeyPushed(GLFW_KEY_F2)) {
+	}
+	else if (g_Input.IsKeyPushed(GLFW_KEY_F2)) {
 		g_TestParams.CurrentTest.BatchCount = 256;
 		g_TestParams.CurrentTest.BatchSize = 256;
 		g_TestParams.Reset = true;
-	}else if (g_Input.IsKeyPushed(GLFW_KEY_F3)) {
+	}
+	else if (g_Input.IsKeyPushed(GLFW_KEY_F3)) {
 		g_TestParams.CurrentTest.BatchCount = 512;
 		g_TestParams.CurrentTest.BatchSize = 512;
 		g_TestParams.Reset = true;
-	}else if (g_Input.IsKeyPushed(GLFW_KEY_F4)) {
+	}
+	else if (g_Input.IsKeyPushed(GLFW_KEY_F4)) {
 		g_TestParams.CurrentTest.BatchCount = 1024;
 		g_TestParams.CurrentTest.BatchSize = 1024;
 		g_TestParams.Reset = true;
@@ -76,6 +79,23 @@ void SSCullingTest::Update(const double deltaTime) {
 	}
 	else if (g_Input.IsKeyPushed(GLFW_KEY_F8)) {
 		g_TestParams.CurrentTest.FilterOcclusion = !g_TestParams.CurrentTest.FilterOcclusion;
+		g_TestParams.Reset = true;
+	}
+
+	if (g_Input.IsKeyPushed(GLFW_KEY_U)) {
+		g_TestParams.CurrentTest.FrameBufferSize = glm::vec2(480, 270);
+		g_TestParams.Reset = true;
+	}
+	else if (g_Input.IsKeyPushed(GLFW_KEY_I)) {
+		g_TestParams.CurrentTest.FrameBufferSize = glm::vec2(960, 540);
+		g_TestParams.Reset = true;
+	}
+	else if (g_Input.IsKeyPushed(GLFW_KEY_O)) {
+		g_TestParams.CurrentTest.FrameBufferSize = glm::vec2(1920, 1080);
+		g_TestParams.Reset = true;
+	}
+	else if (g_Input.IsKeyPushed(GLFW_KEY_P)) {
+		g_TestParams.CurrentTest.FrameBufferSize = glm::vec2(3840, 2160);
 		g_TestParams.Reset = true;
 	}
 	

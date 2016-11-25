@@ -52,6 +52,7 @@ CommandBuffer* CommandBufferManager::GetNextCommandBuffer(COMMAND_BUFFER_TYPE ty
 		return &m_CopyBuffers[m_BufferCounters[type]++];
 		break;
 	}
+	return nullptr;
 }
 
 void CommandBufferManager::ResetAllCommandBuffers() {

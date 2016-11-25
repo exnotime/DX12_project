@@ -41,7 +41,7 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 	}
 	rootSignFact.AddExtensions(&context->Extensions);
 	D3D12_STATIC_SAMPLER_DESC sampDesc = {};
-	sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
