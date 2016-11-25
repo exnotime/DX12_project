@@ -3,7 +3,7 @@ solution/
 AS_DEBUG/
 testdata/*.dat
 big_assets/
-
+portable/
 
 # Compiled Object files
 *.slo
