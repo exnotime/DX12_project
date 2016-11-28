@@ -49,9 +49,9 @@ solution "Exjobb_GPU_Culling"
 		systemversion "10.0.14393.0"
 		links { "glfw3", "d3d12", "dxgi", "d3dcompiler", "assimp", "amd_ags_x64", "nvapi64" }
 	configuration { "Release" }
-		links {"DirectXTex", "BulletCollision", "BulletDynamics", "BulletLinearMath", "angelscript64", "as_integration"}
+		links {"DirectXTex", "angelscript64", "as_integration"}
     configuration { "Dev" }
-        links {"DirectXTex", "BulletCollision", "BulletDynamics", "BulletLinearMath", "angelscript64", "as_integration"}
+        links {"DirectXTex", "angelscript64", "as_integration"}
 	configuration {"Debug"}
-		links {"DirectXTexD", "BulletCollision_Debug", "BulletDynamics_Debug", "BulletLinearMath_Debug", "angelscript64d", "as_integrationD"}
+		links {"DirectXTexD", "angelscript64d", "as_integrationD"}
       	
