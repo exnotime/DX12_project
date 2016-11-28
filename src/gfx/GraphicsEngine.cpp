@@ -226,7 +226,7 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	g_BufferManager.Init(m_Context.Device.Get());
 	g_BufferManager.CreateConstBuffer("cbPerFrame", sizeof(cbPerFrame));
 	g_BufferManager.CreateConstBuffer("cbPerFrame2", sizeof(cbPerFrame));
-
+	m_LineRenderer.Init(&m_Context);
 	CommandBuffer* cmdBuffer = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_GRAPHICS);
 	InitGeometryState(&m_ProgramState, &m_Context, cmdBuffer->CmdList());
 	g_MaterialBank.Initialize(m_Context.Device.Get(), cmdBuffer->CmdList());
@@ -382,6 +382,8 @@ void GraphicsEngine::Render() {
 		SetRenderTarget(cmdbuffer->CmdList());
 		RenderGeometryWithoutCulling(cmdbuffer->CmdList(), &m_ProgramState, &m_RenderQueue);
 	}
+
+	m_LineRenderer.Render(cmdbuffer->CmdList(), &m_RenderQueue);
 
 	m_Profiler.End(cmdbuffer->CmdList(), m_Context.FrameIndex);
 	m_FilterContext.CopyTriangleStats(cmdbuffer->CmdList());

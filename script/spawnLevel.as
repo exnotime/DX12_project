@@ -26,8 +26,8 @@ void main(){
 	//San miguel scene
 #if SAN_MIGUEL
 	SpawnPlayer(vec3(-4.47f, 3.02f, -17.73f), vec3(0.5f, 1.8f, 0.3f), quat(-0.93f, 0.05f, -0.37f, -0.02f));
-	int level = LoadModel("D:/san_miguel/sanMiguel.obj");
-	int occluder = LoadModel("D:/san_miguel/sanMiguelOcc.obj");
+	int level = LoadModel("big_assets/san_miguel/sanMiguel.obj");
+	int occluder = LoadModel("big_assets/san_miguel/sanMiguelOcc.obj");
 	SpawnLevelObjectWithOccluder(level,occluder, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	AddSplinePoint(vec3(-4.5f, 2.8f, -18.0f));
 	AddSplinePoint(vec3(-22.0f, 2.8f,-18.0f));

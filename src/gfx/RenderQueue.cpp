@@ -101,7 +101,8 @@ void RenderQueue::EnqueueOccluder(ModelHandle occluderModel) {
 void RenderQueue::Clear() {
 	m_DrawCalls.clear();
 	m_OccluderDrawCalls.clear();
-
+	m_LinePoints.clear();
+	m_Lines.clear();
 	m_ShaderInputBuffer.clear();
 	m_Views.clear();
 	m_InstanceCounter = 0;
@@ -111,8 +112,12 @@ void RenderQueue::AddLine(const std::vector<glm::vec3>& points,const glm::vec4& 
 	if (points.size() <= 1) {
 		return;
 	}
-
-
+	Line l;
+	l.Start = m_LinePoints.size();
+	l.End = l.Start + points.size();
+	l.Color = color;
+	m_Lines.push_back(l);
+	m_LinePoints.insert(m_LinePoints.end(), points.begin(), points.end());
 }
 
 void RenderQueue::AddView(const View& v) {

@@ -49,31 +49,19 @@ class RenderQueue {
 	void Init();
 	void Enqueue(ModelHandle model, const std::vector<ShaderInput>& inputs);
 	void Enqueue(ModelHandle model, const ShaderInput& input);
-
 	void EnqueueOccluder(ModelHandle occluderModel);
-
-	void AddLine(const std::vector<glm::vec3>& points,const glm::vec4& color);
-
+	void AddLine(const std::vector<glm::vec3>& points, const glm::vec4& color);
 	void Clear();
 	void UpdateBuffer(ID3D12GraphicsCommandList* cmdList);
-
 	void AddView(const View& v);
 
-	const std::vector<View>& GetViews() const {
-		return m_Views;
-	}
+	const std::vector<View>& GetViews() const { return m_Views; }
+	UINT GetDrawCount() const { return m_DrawCalls.size(); }
+	UINT GetOccluderCount() const { return m_OccluderDrawCalls.size(); }
+	std::vector<IndirectDrawCall>& GetDrawList() { return m_DrawCalls; }
 
-	UINT GetDrawCount() const {
-		return m_DrawCalls.size();
-	}
-
-	UINT GetOccluderCount() const {
-		return m_OccluderDrawCalls.size();
-	}
-	std::vector<IndirectDrawCall>& GetDrawList() {
-		return m_DrawCalls;
-	}
-
+	std::vector<glm::vec3>& GetLinePoints() { return m_LinePoints; }
+	std::vector<Line>& GetLines() { return m_Lines; }
   private:
 	  bool AABBvsFrustum(const glm::vec4& max, const glm::vec4& min);
 	  bool SpherevsFrustum(const glm::vec4& pos, const float radius);
