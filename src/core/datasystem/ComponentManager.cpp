@@ -1,7 +1,6 @@
 #include "ComponentManager.h"
 #include "../components/CameraComponent.h"
 #include "../components/TransformComponent.h"
-#include "../components/RigidBodyComponent.h"
 #include "../components/ModelComponent.h"
 #include <cmath>
 ComponentManager::ComponentManager() {
@@ -23,7 +22,6 @@ ComponentManager& ComponentManager::GetInstance() {
 void ComponentManager::Init() {
 	CreateComponentBuffer(1, sizeof(CameraComponent), CameraComponent::Flag, "CameraComponent");
 	CreateComponentBuffer(100, sizeof(TransformComponent), TransformComponent::Flag, "TransformComponent");
-	CreateComponentBuffer(100, sizeof(RigidBodyComponent), RigidBodyComponent::Flag, "RigidBodyComponent");
 	CreateComponentBuffer(100, sizeof(ModelComponent), ModelComponent::Flag, "ModelComponent");
 }
 

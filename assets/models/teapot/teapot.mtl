@@ -11,5 +11,5 @@ Ni 1.000000
 d 1.000000
 illum 2
 map_Kd default.png
-map_Ka  metal.png
+map_Ns  metal.png
 map_Ks  spec.png

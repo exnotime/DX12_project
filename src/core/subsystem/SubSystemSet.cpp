@@ -6,7 +6,6 @@ SubSystemSet::SubSystemSet() {
 }
 
 SubSystemSet::~SubSystemSet() {
-	//clean up entrys if there is any lefts
 }
 
 void SubSystemSet::AddSubSystem( SubSystem* ss, uint32_t startUpPrio, uint32_t updatePrio, uint32_t shutdownPrio) {

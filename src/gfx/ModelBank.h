@@ -26,8 +26,6 @@ class ModelBank {
 	void ApplyVertexBuffers(ID3D12GraphicsCommandList* cmdList);
 	void ApplyIndexBuffers(ID3D12GraphicsCommandList* cmdList);
 	void Clear();
-
-	float GetScaledRadius(ModelHandle model, const glm::vec3& scale);
 	void FreeUploadHeaps();
 
 	UINT GetVertexCount() {
@@ -46,9 +44,6 @@ class ModelBank {
   private:
 	ModelBank();
 	void LoadMeshes(Model& model, const aiScene* scene);
-	void LoadRiggedMeshes(Model& model, const aiScene* scene);
-	void LoadAnimations(Model& model, const aiScene* scene);
-	Skelleton LoadSkelleton(const aiScene* scene);
 
 	Assimp::Importer				m_Importer;
 	ModelHandle						m_Numerator;
@@ -61,10 +56,6 @@ class ModelBank {
 
 	//indices
 	std::vector<UINT>				m_Indices;
-
-	std::vector<AnimatedVertex>		m_AnimatedVertices;
-	std::vector<UINT>				m_AnimatedIndices;
-	std::vector<Bone>				m_Bones;
 
 	D3D12_INDEX_BUFFER_VIEW			m_IndexBufferView;
 	ComPtr<ID3D12Resource>			m_IndexBufferResource;

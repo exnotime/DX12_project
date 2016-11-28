@@ -4,29 +4,3 @@ AS_DEBUG/
 testdata/*.dat
 big_assets/
 portable/
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-
-# Executables
-*.out
-*.app

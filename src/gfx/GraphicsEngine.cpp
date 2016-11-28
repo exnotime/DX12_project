@@ -77,12 +77,19 @@ void GraphicsEngine::CheckExtensions() {
 		bool supported;
 		NvAPI_D3D12_IsNvShaderExtnOpCodeSupported(m_Context.Device.Get(), NV_EXTN_OP_VOTE_BALLOT, &supported);
 		if(!supported) {
-			HR(E_FAIL, L"The GPU doesn not support the extentions this application needs");
+			HR(E_FAIL, L"The GPU doesn not support the ShaderBallot extentions this application needs");
 			exit(0);
 		}
-		CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(1024 * 8, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-		m_Context.Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-			&resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&m_Context.Extensions.NvExtResource));
+		NvAPI_D3D12_IsNvShaderExtnOpCodeSupported(m_Context.Device.Get(), NV_EXTN_OP_GET_LANE_ID, &supported);
+		if (!supported) {
+			HR(E_FAIL, L"The GPU doesn not support the GetLaneId extentions this application needs");
+			exit(0);
+		}
+		NvAPI_D3D12_IsNvShaderExtnOpCodeSupported(m_Context.Device.Get(), NV_EXTN_OP_SHFL , &supported);
+		if (!supported) {
+			HR(E_FAIL, L"The GPU doesn not support the Shuffle extentions this application needs");
+			exit(0);
+		}
 	}
 }
 
@@ -264,7 +271,7 @@ void GraphicsEngine::ResizeFrameBuffer(const glm::vec2& screenSize) {
 void GraphicsEngine::PrepareForRender() {
 
 	CommandBuffer* cmdbuffer = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_GRAPHICS);
-	//this will transfer textures/models etc to gpu
+	//this will transfer textures/models etc to the gpu
 	g_ModelBank.BuildBuffers(m_Context.Device.Get(), cmdbuffer->CmdList());
 	g_MaterialBank.CopyMaterialDescriptors(CD3DX12_CPU_DESCRIPTOR_HANDLE(m_ProgramState.RenderDescHeap->GetCPUDescriptorHandleForHeapStart()).Offset(3, m_ProgramState.DescHeapIncSize));
 
@@ -336,7 +343,7 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	perFrame->ScreenSize = m_ScreenSize;
 	g_BufferManager.UnMapBuffer("cbPerFrame");
-	m_Profiler.Start();
+	
 	v = m_RenderQueue.GetViews().at(0);
 	perFrame = (cbPerFrame*)g_BufferManager.MapBuffer("cbPerFrame2");
 	perFrame->CamPos = v.Camera.Position;
@@ -344,6 +351,7 @@ void GraphicsEngine::Render() {
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame2");
 
+	m_Profiler.Start();
 	m_Profiler.Step(cmdbuffer->CmdList(), "DepthRender");
 	m_DepthProgram.Render(cmdbuffer->CmdList(), &m_RenderQueue);
 	m_HiZProgram.Disbatch(cmdbuffer->CmdList());

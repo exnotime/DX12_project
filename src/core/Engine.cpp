@@ -10,7 +10,6 @@
 #include "Window.h"
 #include "subsystem/systems/SSCamera.h"
 #include "subsystem/systems/SSGraphics.h"
-#include "subsystem/systems/SSPhysics.h"
 #include "subsystem/systems/SSScript.h"
 #include "subsystem/systems/SSCullingTest.h"
 #include "subsystem/systems/SSCameraSpline.h"
@@ -49,7 +48,6 @@ void Engine::Init() {
 	
 	m_SubSystemSet.AddSubSystem( new SSCullingTest() );
 	m_SubSystemSet.AddSubSystem( new SSCameraSpline() );
-	m_SubSystemSet.AddSubSystem( new SSPhysics() );
 	m_SubSystemSet.AddSubSystem( new SSGraphics() );
 	m_SubSystemSet.AddSubSystem( new SSCamera() );
 	m_SubSystemSet.AddSubSystem( new SSScript() );

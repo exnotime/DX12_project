@@ -103,9 +103,9 @@ void MaterialBank::LoadMaterials(Model& model, std::string filename, const aiSce
 			m_Textures[m_DefaultRoughness]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));
 		}
 		//Metal map
-		if (mat->GetTextureCount(aiTextureType_DISPLACEMENT) > 0) { //use displacment texture as metal map for now
+		if (mat->GetTextureCount(aiTextureType_SHININESS) > 0) { //use shiny texture as metal map for now
 			aiString path;
-			if (mat->GetTexture(aiTextureType_DISPLACEMENT, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+			if (mat->GetTexture(aiTextureType_SHININESS, 0, &path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
 				std::string fullpath = GetDirectoryFromFilePath(filename) + "/" + path.data;
 				TextureHandle m = LoadTexture(fullpath.c_str());
 				m_Textures[m]->CreateSRV(m_Device, m_MaterialHandle.Offset(1, m_DescSize));

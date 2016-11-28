@@ -139,7 +139,7 @@ void FilterContext::Reset(ID3D12Device* device) {
 	}
 #ifdef PRINT_TO_FILE
 	for(int i = 0; i < 6; ++i)
-		fclose(m_Files[i]);
+		if(m_Files[i])fclose(m_Files[i]);
 	std::string file;
 	file = g_TestParams.Directory + "/TriangleCount.dat";
 	m_Files[0] = fopen(file.c_str(), "w");

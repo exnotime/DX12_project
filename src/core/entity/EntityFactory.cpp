@@ -2,12 +2,11 @@
 #include "EntityManager.h"
 #include "../components/TransformComponent.h"
 #include "../components/ModelComponent.h"
-#include "../components/RigidBodyComponent.h"
 #include "../components/CameraComponent.h"
 #include "../datasystem/ComponentManager.h"
-#include <gfx/ModelBank.h>
-#include <physics/PhysicsEngine.h>
 #include "../script/ScriptEngine.h"
+#include <gfx/ModelBank.h>
+
 
 void SpawnPlayer(const glm::vec3& position, const glm::vec3& size, const glm::quat& orientation) {
 	Entity& e = g_EntityManager.CreateEntity();
@@ -90,89 +89,6 @@ void SpawnLevelObjectS(int shape, const glm::vec3& position, const glm::quat& or
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
 }
 
-void SpawnPhysicsObject(const std::string modelFilename, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color, float mass) {
-	Entity& e = g_EntityManager.CreateEntity();
-	TransformComponent tc;
-	tc.Position = position;
-	tc.Orientation = orientation;
-	tc.Scale = scale;
-	tc.World = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
-	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
-
-	ModelComponent mc;
-	mc.Model = g_ModelBank.LoadModel(modelFilename.c_str());
-	mc.Color = color;
-	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
-
-	RigidBodyComponent rbc;
-	rbc.Body = g_PhysicsEngine.AddPhysicsObject(mass, position, scale);
-	g_ComponentManager.CreateComponent(&rbc, e, RigidBodyComponent::Flag);
-}
-
-void SpawnPhysicsObjectM(int model, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color, float mass) {
-	Entity& e = g_EntityManager.CreateEntity();
-	TransformComponent tc;
-	tc.Position = position;
-	tc.Orientation = orientation;
-	tc.Scale = scale;
-	tc.World = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
-	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
-
-	ModelComponent mc;
-	mc.Model = model;
-	mc.Color = color;
-	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
-
-	RigidBodyComponent rbc;
-	rbc.Body = g_PhysicsEngine.AddPhysicsObject(mass, position, scale);
-	g_ComponentManager.CreateComponent(&rbc, e, RigidBodyComponent::Flag);
-}
-
-void SpawnPhysicsObjectS(int shape, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color, float mass) {
-	Entity& e = g_EntityManager.CreateEntity();
-	TransformComponent tc;
-	tc.Position = position;
-	tc.Orientation = orientation;
-	tc.Scale = scale;
-	tc.World = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
-	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
-
-	ModelComponent mc;
-	mc.Model = g_ShapeGenerator.GenerateModel((BASIC_SHAPE)shape);
-	mc.Color = color;
-	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
-
-	RigidBodyComponent rbc;
-	//special special case for special shapes that need special treatment
-	glm::vec3 objectscale = scale;
-	if (shape == CAPSULE) {
-		objectscale = glm::vec3(2, 2.0f, 0);
-	}
-	rbc.Body = g_PhysicsEngine.AddPhysicsObjectS((BASIC_SHAPE)shape, mass, position, objectscale);
-	g_ComponentManager.CreateComponent(&rbc, e, RigidBodyComponent::Flag);
-}
-
-void SpawnPhysicsObjectWithForce(int model, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color, float mass, const glm::vec3& force) {
-	Entity& e = g_EntityManager.CreateEntity();
-	TransformComponent tc;
-	tc.Position = position;
-	tc.Orientation = orientation;
-	tc.Scale = scale;
-	tc.World = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
-	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
-
-	ModelComponent mc;
-	mc.Model = model;
-	mc.Color = color;
-	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
-
-	RigidBodyComponent rbc;
-	rbc.Body = g_PhysicsEngine.AddPhysicsObject(mass, position, scale);
-	rbc.Body->applyForce(btVector3(force.x, force.y, force.z), btVector3(0,0,0));
-	g_ComponentManager.CreateComponent(&rbc, e, RigidBodyComponent::Flag);
-}
-
-
 static int LoadModel(const std::string file) {
 	return g_ModelBank.LoadModel(file.c_str());
 }
@@ -181,11 +97,6 @@ void RegisterScriptFunctions() {
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
 		"void SpawnLevelObject(const string filename, vec3 pos, quat orientation, vec3 scale, vec4 color)",
 		AngelScript::asFUNCTION(SpawnLevelObject),
-		AngelScript::asCALL_CDECL);
-
-	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
-		"void SpawnPhysicsObject(const string filename, vec3 pos, quat orientation, vec3 scale, vec4 color, float mass)",
-		AngelScript::asFUNCTION(SpawnPhysicsObject),
 		AngelScript::asCALL_CDECL);
 
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
@@ -201,21 +112,6 @@ void RegisterScriptFunctions() {
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
 		"void SpawnShape(int model, vec3 pos, quat orientation, vec3 scale, vec4 color)",
 		AngelScript::asFUNCTION(SpawnLevelObjectS),
-		AngelScript::asCALL_CDECL);
-
-	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
-		"void SpawnPhysicsObject(int model, vec3 pos, quat orientation, vec3 scale, vec4 color, float mass)",
-		AngelScript::asFUNCTION(SpawnPhysicsObjectM),
-		AngelScript::asCALL_CDECL);
-
-	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
-		"void SpawnPhysicsShape(int shape, vec3 pos, quat orientation, vec3 scale, vec4 color, float mass)",
-		AngelScript::asFUNCTION(SpawnPhysicsObjectS),
-		AngelScript::asCALL_CDECL);
-
-	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(
-		"void SpawnPhysicsObject(int model, vec3 pos, quat orientation, vec3 scale, vec4 color, float mass, vec3 force)",
-		AngelScript::asFUNCTION(SpawnPhysicsObjectWithForce),
 		AngelScript::asCALL_CDECL);
 
 	g_ScriptEngine.GetEngine()->RegisterGlobalFunction(

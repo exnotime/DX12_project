@@ -1,7 +1,5 @@
 #include "ModelBank.h"
 #include "MaterialBank.h"
-#include "Animation.h"
-#include <functional>
 
 ModelBank::ModelBank() {
 	m_Numerator	= 0;
@@ -28,24 +26,12 @@ ModelHandle ModelBank::LoadModel(const char* filename) {
 	Model model;
 	const aiScene* scene = m_Importer.ReadFile( filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals | aiProcess_GenUVCoords | aiProcess_CalcTangentSpace | aiProcess_MakeLeftHanded | aiProcess_FlipUVs );
 	if (scene && scene->HasMeshes()) {
-		//model.VertexHandle = (int)m_Vertices.size();
-		if (scene->HasAnimations()) {
-			LoadRiggedMeshes(model, scene);
-			Animation anim;
-			Skelleton skel = LoadSkelleton(scene);
-			anim.Load(scene->mAnimations[0], skel);
-			anim.CalcPose(1.2f);
-		} else {
-			model.VertexHandle = m_VertexPositions.size();
-			LoadMeshes(model, scene);
-			model.Radius = glm::max(model.Max.x, glm::max(model.Max.y, model.Max.z));
-			model.Radius = glm::max(model.Radius, glm::abs(glm::min(model.Min.x, glm::min(model.Min.y, model.Min.z))));
-		}
+		model.VertexHandle = m_VertexPositions.size();
+		LoadMeshes(model, scene);
 		model.MaterialHandle = g_MaterialBank.GetMaterialCount();
 		model.Name = std::string(filename);
 		g_MaterialBank.LoadMaterials(model, filename, scene);
 	} else if (!scene) {
-		
 		printf("error loading model: %s\n ASSIMP Error: %s \n", filename, m_Importer.GetErrorString());
 		return -1;
 	}
@@ -134,150 +120,10 @@ void ModelBank::LoadMeshes(Model& model, const aiScene* scene) {
 	model.NumIndices = indexCount;
 }
 
-void ModelBank::LoadRiggedMeshes(Model& model, const aiScene* scene) {
-	int vertexCount = 0;
-	int indexCount = 0;
-	int boneCount = 0;
-	Mesh modelMesh;
-	for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-		const aiMesh* mesh = scene->mMeshes[i];
-		std::vector<AnimatedVertex> vertices;
-		std::vector<unsigned int> indices;
-		std::vector<Bone> bones;
-		//modelMesh.VertexBufferOffset = vertexCount;
-		unsigned int numVertices = 0;
-		unsigned int numIndices = 0;
-		//foreach vertice
-		for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
-			AnimatedVertex vertex;
-			vertex.Position.x = mesh->mVertices[v].x;
-			vertex.Position.y = mesh->mVertices[v].y;
-			vertex.Position.z = mesh->mVertices[v].z;
-			if (mesh->HasNormals()) {
-				vertex.Normal.x = mesh->mNormals[v].x;
-				vertex.Normal.y = mesh->mNormals[v].y;
-				vertex.Normal.z = mesh->mNormals[v].z;
-			}
-			if (mesh->HasTangentsAndBitangents()) {
-				vertex.Tangent.x = mesh->mTangents[v].x;
-				vertex.Tangent.y = mesh->mTangents[v].y;
-				vertex.Tangent.z = mesh->mTangents[v].z;
-			}
-			if (mesh->mTextureCoords[0] != NULL) {
-				vertex.TexCoord.x = mesh->mTextureCoords[0][v].x;
-				vertex.TexCoord.y = mesh->mTextureCoords[0][v].y;
-			}
-			vertex.Weights = glm::vec4(-1);
-			vertex.Bones = glm::uvec4(-1);
-			numVertices++;
-			vertices.push_back(vertex);
-		}//end foreach vertice
-		 //Indices
-		for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
-			//index = (Num vertices from the already loaded models) + (Size of all the already loaded meshes + mesh->faceindices)
-			indices.push_back(model.VertexHandle + vertexCount + mesh->mFaces[f].mIndices[0]);
-			indices.push_back(model.VertexHandle + vertexCount + mesh->mFaces[f].mIndices[1]);
-			indices.push_back(model.VertexHandle + vertexCount + mesh->mFaces[f].mIndices[2]);
-			numIndices += 3;
-		}
-		//bones
-		Bone meshBone;
-		for (unsigned b = 0; b < mesh->mNumBones; b++) {
-			aiBone* bone = mesh->mBones[b];
-			//add weight to vertices
-			for (unsigned w = 0; w < bone->mNumWeights; w++) {
-				int id = bone->mWeights[w].mVertexId;
-				for (int i = 0; i < 4; i++) {
-					if (vertices[id].Weights[i] == -1) {
-						vertices[id].Weights[i] = bone->mWeights[w].mWeight;
-						vertices[id].Bones[i] = boneCount + b;
-						break;
-					}
-				}
-			}
-			boneCount++;
-			bones.push_back(meshBone);
-		}
-		modelMesh.MaterialOffset = mesh->mMaterialIndex;
-		modelMesh.IndexBufferOffset = indexCount;
-		vertexCount += numVertices;
-		indexCount += numIndices;
-		modelMesh.VertexCount = numVertices;
-		modelMesh.IndexCount = numIndices;
 
-		m_AnimatedVertices.insert(m_AnimatedVertices.end(), vertices.begin(), vertices.end());
-		m_AnimatedIndices.insert(m_AnimatedIndices.end(), indices.begin(), indices.end());
-		model.Meshes.push_back(modelMesh);
-	}//end foreach mesh
-	model.NumVertices = vertexCount;
-	model.NumIndices = indexCount;
-}
-
-Skelleton ModelBank::LoadSkelleton(const aiScene* scene) {
-	Skelleton skel;
-	skel.GlobalInvTransform = glm::inverse(glm::mat4(scene->mRootNode->mTransformation[0][0]));
-
-	for (unsigned m = 0; m < scene->mNumMeshes; m++) {
-		aiMesh* mesh = scene->mMeshes[m];
-		Bone meshBone;
-
-		for (unsigned b = 0; b < mesh->mNumBones; b++) {
-			aiBone* bone = mesh->mBones[b];
-			unsigned index;
-			std::string name = bone->mName.data;
-			if (skel.BoneMapping.find(name) == skel.BoneMapping.end()) {
-				index = (unsigned)skel.Bones.size();
-				skel.BoneMapping[name] = index;
-				meshBone.Name = bone->mName.data;
-				meshBone.Offset = glm::mat4(bone->mOffsetMatrix[0][0]);
-				skel.Bones.push_back(meshBone);
-			}
-			else {
-				index = skel.BoneMapping[name];
-				skel.BoneMapping[name] = index;
-				skel.Bones[index].Offset = glm::mat4(bone->mOffsetMatrix[0][0]);
-			}
-			
-		}
-	}
-
-	//load node hierarchy
-	std::function<void (const aiNode*, glm::mat4&)> readNode = [&](const aiNode* node, glm::mat4& parentTransform ) {
-		if (!node)
-			return;
-		std::string nodeName = node->mName.data;
-		const aiAnimation* anim = scene->mAnimations[0];
-		glm::mat4 nodeTransform = glm::mat4(node->mTransformation[0][0]);
-		int boneIndex = skel.BoneMapping[nodeName];
-		Bone* bone = &skel.Bones[boneIndex];
-		bone->FinalTransform = skel.GlobalInvTransform * parentTransform * nodeTransform * bone->Offset;
-		//find parent index
-		if (node->mParent)
-			bone->Parent = skel.BoneMapping[node->mParent->mName.data];
-		else
-			bone->Parent = -1;
-		//find children
-		for (unsigned c = 0; c < node->mNumChildren; c++) {
-			const aiNode* child = node->mChildren[c];
-			bone->Children.push_back(skel.BoneMapping[child->mName.data]);
-			readNode(child, bone->FinalTransform);
-		}
-	};
-
-	readNode(scene->mRootNode, glm::mat4(1));
-	return skel;
-
-}
-
-void ModelBank::LoadAnimations(Model& model, const aiScene* scene) {
-	aiAnimation* animation = scene->mAnimations[0];
-	aiNodeAnim* node = animation->mChannels[11];
-	int i = 0;
-}
 
 ModelHandle ModelBank::AddModel( Model& TheModel ) {
 	ModelHandle id = ++m_Numerator;
-	//ModelHandle id = ++m_Numerators[TheModel.Type];
 	m_Models[id] = TheModel;
 	return id;
 }
@@ -476,11 +322,6 @@ void ModelBank::ApplyVertexBuffers(ID3D12GraphicsCommandList* cmdList) {
 
 void ModelBank::ApplyIndexBuffers(ID3D12GraphicsCommandList* cmdList) {
 	cmdList->IASetIndexBuffer(&m_IndexBufferView);
-}
-
-float ModelBank::GetScaledRadius(ModelHandle model, const glm::vec3& scale) {
-	float radius = m_Models[model].Radius;
-	return radius * glm::max(scale.x, glm::max(scale.y, scale.z));
 }
 
 void ModelBank::FreeUploadHeaps(){
