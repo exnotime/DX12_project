@@ -4,3 +4,4 @@ AS_DEBUG/
 testdata/*.dat
 big_assets/
 portable/
+plotting/*.png
