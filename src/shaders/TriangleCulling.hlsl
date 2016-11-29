@@ -114,11 +114,10 @@ bool CullTriangle(float4 vertices[3], uint3 indices){
 		float mipcount;
 		float2 texDim;
 		g_HIZBuffer.GetDimensions(0, texDim.x, texDim.y, mipcount);
-		float2 edge1 = (vertices[0].xy - vertices[1].xy) * texDim;
-		float2 edge2 = (vertices[1].xy - vertices[2].xy) * texDim;
-		float2 edge3 = (vertices[0].xy - vertices[2].xy) * texDim;
-		float longestEdge = max(length(edge1), max(length(edge2), length(edge3)));
-		int mip = min(ceil(log2(max(longestEdge, 1))), mipcount - 1);
+
+		float2 edgeLength = (vertexMax.xy - vertexMin.xy) * texDim;
+		float longestEdge = max(edgeLength.x, edgeLength.y);
+		int mip = min(ceil(log2(max(longestEdge, 1))) - 1, mipcount - 1);
 
 		float depth1 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMin.x, 1.0 - vertexMin.y), mip).r;
 		float depth2 = g_HIZBuffer.SampleLevel(g_Sampler, float2(vertexMax.x, 1.0 - vertexMin.y), mip).r;

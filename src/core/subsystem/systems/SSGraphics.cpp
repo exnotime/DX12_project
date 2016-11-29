@@ -82,9 +82,6 @@ void SSGraphics::Update(const double deltaTime) {
 		}
 	}
 
-	std::vector<glm::vec3> line;
-	m_RenderQueue->AddLine(line, glm::vec4(1, 0, 0, 1));
-
 	m_Graphics->Render();
 	m_Graphics->Swap();
 }

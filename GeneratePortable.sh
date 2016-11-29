@@ -7,6 +7,7 @@ cp -v externals/assimp.dll portable/
 cp -v runExperiment.sh portable/
 
 cp -v -r script portable/
+cp -v -r plotting portable/
 mkdir -p "portable/src"
 cp -v -r src/shaders portable/src/
 cp -v -r assets portable/

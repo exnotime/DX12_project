@@ -8,7 +8,7 @@ CRSpline::~CRSpline() {
 
 }
 
-void CRSpline::AddPoint(const glm::vec3& point) {
+void CRSpline::AddPoint(glm::vec3 point) {
 	m_Points.push_back(point);
 	if (m_Points.size() > 1) {
 		m_DeltaT = 1.0f / (m_Points.size() - 1);

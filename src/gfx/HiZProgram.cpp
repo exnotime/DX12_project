@@ -22,7 +22,7 @@ void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 	range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 0); //0
 	ranges.push_back(range);
 	rootSignFact.AddDescriptorTable(ranges);
-	rootSignFact.AddConstant(2, 0);
+
 	m_RootSignature = rootSignFact.CreateSignture(context->Device.Get());
 
 	D3D12_COMPUTE_PIPELINE_STATE_DESC pipeDesc = {};
@@ -35,7 +35,7 @@ void HiZProgram::Init(DX12Context* context, glm::vec2 screenSize) {
 
 	D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
 	descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	descHeapDesc.NumDescriptors = m_MipCount;
+	descHeapDesc.NumDescriptors = m_MipCount * 2;
 	descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	context->Device->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&m_DescHeap));
 
@@ -145,7 +145,6 @@ void HiZProgram::Disbatch(ID3D12GraphicsCommandList* cmdList) {
 	glm::ivec2 targetsize = m_ScreenSize;
 	for (int i = 0; i < m_MipCount - 1; ++i) {
 		cmdList->SetComputeRootDescriptorTable(0, handle);
-		cmdList->SetComputeRoot32BitConstants(1, 2, &targetsize[0], 0);
 		targetsize /= 2;
 		x = (targetsize.x + workGroupSize - 1) / workGroupSize;
 		y = (targetsize.y + workGroupSize - 1) / workGroupSize;

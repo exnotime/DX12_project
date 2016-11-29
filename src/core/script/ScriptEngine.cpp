@@ -20,9 +20,11 @@ void Print(const std::string& msg) {
 }
 
 ScriptEngine::ScriptEngine() {
+
 }
 
 ScriptEngine::~ScriptEngine() {
+	m_Engine->GarbageCollect();
 	m_Context->Release();
 	m_Engine->ShutDownAndRelease();
 }

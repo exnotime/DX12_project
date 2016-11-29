@@ -7,6 +7,8 @@
 #include <gfx/TestParams.h>
 
 #define MOVE_SPEED 10.0f
+#define SPEED_UP 4.0f
+#define SPEED_DOWN 0.25f
 #define TURN_SPEED 0.004f
 SSCamera::SSCamera() {
 
@@ -59,10 +61,13 @@ void SSCamera::Update(const double deltaTime) {
 			if (g_Input.IsKeyDown(GLFW_KEY_C)) {
 				velocity += glm::vec3(0, MOVE_SPEED * -1, 0);
 			}
-			if (g_Input.IsKeyPushed(GLFW_KEY_E)) {
-				glm::vec3 pos = cc->Camera.GetPosition();
-				printf("Camera Position: %3.3f %3.3f %3.3f\n", pos.x, pos.y, pos.z);
+			if (g_Input.IsKeyDown(GLFW_KEY_LEFT_CONTROL)) {
+				velocity *= SPEED_DOWN;
 			}
+			if (g_Input.IsKeyDown(GLFW_KEY_LEFT_SHIFT)) {
+				velocity *= SPEED_UP;
+			}
+
 			cc->Camera.MoveWorld(velocity * (float)deltaTime);
 			cc->Camera.CalculateViewProjection();
 		}

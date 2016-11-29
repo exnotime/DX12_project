@@ -18,9 +18,9 @@ void SpawnPlayer(const glm::vec3& position, const glm::vec3& size, const glm::qu
 	g_ComponentManager.CreateComponent(&tc, e, TransformComponent::Flag);
 
 	CameraComponent cc;
-	cc.Camera.GetEditableData().Fov = (35.0f / 360.0f) * glm::pi<float>() * 2;
-	cc.Camera.GetEditableData().Far = 200.0f;
-	cc.Camera.GetEditableData().Near = 0.1f;
+	cc.Camera.GetEditableData().Fov = (45.0f / 360.0f) * glm::pi<float>() * 2;
+	cc.Camera.GetEditableData().Far = 150.0f;
+	cc.Camera.GetEditableData().Near = 1.0f;
 	cc.Camera.SetOrientation(tc.Orientation);
 	cc.Camera.SetPosition(tc.Position);
 	g_ComponentManager.CreateComponent(&cc, e, CameraComponent::Flag);
@@ -39,7 +39,6 @@ void SpawnLevelObject(const std::string modelFilename, const glm::vec3& position
 	mc.Model = g_ModelBank.LoadModel(modelFilename.c_str());
 	mc.Color = color;
 	g_ComponentManager.CreateComponent(&mc, e, ModelComponent::Flag);
-
 }
 
 void SpawnLevelObjectM(int model, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const glm::vec4& color) {

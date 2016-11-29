@@ -18,7 +18,7 @@ SSCameraSpline::~SSCameraSpline(){
 }
 
 void SSCameraSpline::Startup() {
-	g_ScriptEngine.GetEngine()->RegisterGlobalFunction("void AddSplinePoint(vec3 point)", asMETHOD(SSCameraSpline, AddPointToSpline), asCALL_THISCALL_ASGLOBAL, this);
+	g_ScriptEngine.GetEngine()->RegisterGlobalFunction("void AddSplinePoint(vec3 point)", asMETHOD(CRSpline, CRSpline::AddPoint), asCALL_THISCALL_ASGLOBAL, &m_Spline);
 }
 
 void SSCameraSpline::Update(const double deltaTime) {
@@ -35,8 +35,6 @@ void SSCameraSpline::Update(const double deltaTime) {
 			cc->Camera.LookAt(pos);
 			cc->Camera.SetPosition(pos);
 			cc->Camera.CalculateViewProjection();
-
-
 		}
 	}
 #endif

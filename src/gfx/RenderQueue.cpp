@@ -138,7 +138,7 @@ void RenderQueue::AddView(const View& v) {
 		m_FrustumPlanes[i] = glm::normalize(m_FrustumPlanes[i]);
 	}
 	glm::mat4 invProj = glm::inverse(v.Camera.ProjView);
-	m_FrustumCorners[0] = invProj * glm::vec4(1, 1, 1, 1); m_FrustumCorners[0] /= m_FrustumCorners[0].w;
+	m_FrustumCorners[0] = invProj * glm::vec4( 1,  1,  1, 1); m_FrustumCorners[0] /= m_FrustumCorners[0].w;
 	m_FrustumCorners[1] = invProj * glm::vec4(-1,  1,  1, 1); m_FrustumCorners[1] /= m_FrustumCorners[1].w;
 	m_FrustumCorners[2] = invProj * glm::vec4( 1, -1,  1, 1); m_FrustumCorners[2] /= m_FrustumCorners[2].w;
 	m_FrustumCorners[3] = invProj * glm::vec4( 1,  1, -1, 1); m_FrustumCorners[3] /= m_FrustumCorners[3].w;
@@ -146,6 +146,33 @@ void RenderQueue::AddView(const View& v) {
 	m_FrustumCorners[5] = invProj * glm::vec4( 1, -1, -1, 1); m_FrustumCorners[5] /= m_FrustumCorners[5].w;
 	m_FrustumCorners[6] = invProj * glm::vec4(-1,  1, -1, 1); m_FrustumCorners[6] /= m_FrustumCorners[6].w;
 	m_FrustumCorners[7] = invProj * glm::vec4(-1, -1, -1, 1); m_FrustumCorners[7] /= m_FrustumCorners[7].w;
+
+	std::vector<glm::vec3> lines;
+	//far plane
+	lines.push_back(glm::vec3(m_FrustumCorners[0]));
+	lines.push_back(glm::vec3(m_FrustumCorners[1]));
+	lines.push_back(glm::vec3(m_FrustumCorners[4]));
+	lines.push_back(glm::vec3(m_FrustumCorners[2]));
+	lines.push_back(glm::vec3(m_FrustumCorners[0]));
+	//near plane
+	lines.push_back(glm::vec3(m_FrustumCorners[3]));
+	lines.push_back(glm::vec3(m_FrustumCorners[5]));
+	lines.push_back(glm::vec3(m_FrustumCorners[7]));
+	lines.push_back(glm::vec3(m_FrustumCorners[6]));
+	lines.push_back(glm::vec3(m_FrustumCorners[3]));
+	//the rest
+	lines.push_back(glm::vec3(m_FrustumCorners[5]));
+	lines.push_back(glm::vec3(m_FrustumCorners[2]));
+	lines.push_back(glm::vec3(m_FrustumCorners[4]));
+	lines.push_back(glm::vec3(m_FrustumCorners[7]));
+	lines.push_back(glm::vec3(m_FrustumCorners[6]));
+	lines.push_back(glm::vec3(m_FrustumCorners[1]));
+
+	if (m_Views.size() == 2) {
+		glm::vec4 color = glm::vec4(0, 0.5f, 1, 1);
+		AddLine(lines, color);
+	}
+	
 
 }
 

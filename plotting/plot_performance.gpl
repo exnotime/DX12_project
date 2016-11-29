@@ -1,0 +1,32 @@
+set term png size 1280, 960
+
+set xlabel "Frame"
+set yrange [0:*]
+set ylabel "Frametime (ms)"
+
+file1='../testdata/Sponza/Culling/Frametimes.dat'
+file2='../testdata/Sponza/NoCulling/Frametimes.dat'
+set title "Frametimes(Sponza)"
+set output "Performance_sponza.png"
+
+set multiplot
+plot file1 smooth acsplines with lines title 'Culling', file2 smooth acsplines  with lines title 'NoCulling'
+unset multiplot
+
+file1='../testdata/Rungholt/Culling/Frametimes.dat'
+file2='../testdata/Rungholt/NoCulling/Frametimes.dat'
+set title "Frametimes(Rungholt)"
+set output "Performance_rungholt.png"
+
+set multiplot
+plot file1 smooth acsplines  with lines title 'Culling', file2 smooth acsplines  with lines title 'NoCulling'
+unset multiplot
+
+file1='../testdata/SanMiguel/Culling/Frametimes.dat'
+file2='../testdata/SanMiguel/NoCulling/Frametimes.dat'
+set title "Frametimes(SanMiguel)"
+set output "Performance_san_miguel.png"
+
+set multiplot
+plot file1 smooth acsplines  with lines title 'Culling', file2 smooth acsplines  with lines title 'NoCulling'
+unset multiplot
