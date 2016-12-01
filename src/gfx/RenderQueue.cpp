@@ -44,18 +44,12 @@ void RenderQueue::Enqueue(ModelHandle model, const std::vector<ShaderInput>& inp
 
 void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 	IndirectDrawCall drawCall;
-	Model mod = g_ModelBank.FetchModel(model);
+	Model& mod = g_ModelBank.FetchModel(model);
 
 	for (auto& mesh : mod.Meshes) {
 		glm::vec4 max = input.World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);
 		glm::vec4 min = input.World * glm::vec4(mesh.Min + mesh.Offset, 1.0f);
 		bool boxfrustum = AABBvsFrustum(max, min);
-
-		//glm::vec4 minToMax = (max - min);
-		//float rad = glm::length(minToMax) * 0.5f;
-		//glm::vec4 center = (min + minToMax * 0.5f);// +glm::vec4(m_Views[1].Camera.Position, 0);
-		//center = m_Views[1].Camera.View * center;
-		//bool spherefrustum = SpherevsFrustum(center,rad);
 
 		if (boxfrustum) {
 			drawCall.DrawIndex = m_ShaderInputBuffer.size();
@@ -76,7 +70,7 @@ void RenderQueue::Enqueue(ModelHandle model, const ShaderInput& input) {
 void RenderQueue::EnqueueOccluder(ModelHandle occluderModel) {
 	//occluders always comes directly after the other model
 	IndirectDrawCall drawCall;
-	Model mod = g_ModelBank.FetchModel(occluderModel);
+	Model& mod = g_ModelBank.FetchModel(occluderModel);
 	for (auto& mesh : mod.Meshes) {
 
 		glm::vec4 max = m_ShaderInputBuffer.back().World * glm::vec4(mesh.Max + mesh.Offset, 1.0f);

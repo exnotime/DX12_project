@@ -30,8 +30,8 @@ struct TestData {
 	static TestParams& GetInstance();
 
 	TestParams() {
-		CurrentTest.Culling = true;
-		CurrentTest.Instrument = true;
+		CurrentTest.Culling = false;
+		CurrentTest.Instrument = false;
 		CurrentTest.Duration = 10000;
 		CurrentTest.TestName = "testdata/Default";
 		CurrentTest.BatchSize = 1024;
@@ -49,6 +49,7 @@ struct TestData {
 #define PRINT_TO_FILE
 //#define FREE_CAMERA
 #define SILENT_LOG
+
 #define BATCH_COUNT g_TestParams.CurrentTest.BatchCount
 #define BATCH_SIZE g_TestParams.CurrentTest.BatchSize
 #define TRI_COUNT g_TestParams.CurrentTest.TriangleCount

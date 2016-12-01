@@ -1,5 +1,4 @@
 #include "Camera.h"
-
 #include <glm/gtx/transform2.hpp>	// lookAt, and perspectiveFov
 Camera::Camera() {
 	m_CamData.View = glm::mat4(1);
@@ -117,7 +116,7 @@ CameraData& Camera::GetEditableData() {
 }
 
 void Camera::LookAt(const glm::vec3& position) {
-	m_Orientation = glm::quat_cast(glm::lookAt(position, m_CamData.Position, glm::vec3(0,1,0)));
+	m_Orientation = glm::conjugate(glm::quat_cast(glm::lookAt(m_CamData.Position, position, glm::vec3(0,1,0))));
 }
 
 void Camera::SetPosition(const glm::vec3& newPosition) {

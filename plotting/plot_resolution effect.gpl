@@ -1,0 +1,42 @@
+set term png size 2048, 1536
+
+set xlabel "Frame"
+set yrange [0:*]
+set xrange [0:2000]
+set ylabel "Triangles"
+
+file1='../testdata/Sponza/Resolution270/SmallTris.dat'
+file2='../testdata/Sponza/Resolution540/SmallTris.dat'
+file3='../testdata/Sponza/Resolution1080/SmallTris.dat'
+file4='../testdata/Sponza/Resolution2160/SmallTris.dat'
+
+set title "Resolution(Sponza)"
+set output "Resolution_sponza.png"
+
+set multiplot
+plot file1 with lines title '270p', file2 with lines title '540p', file4 with lines title '1080p',file3 with lines title '2160p'
+unset multiplot
+
+file1='../testdata/Rungholt/Resolution270/SmallTris.dat'
+file2='../testdata/Rungholt/Resolution540/SmallTris.dat'
+file3='../testdata/Rungholt/Resolution1080/SmallTris.dat'
+file4='../testdata/Rungholt/Resolution2160/SmallTris.dat'
+
+set title "Resolution(Rungholt)"
+set output "Resolution_rungholt.png"
+
+set multiplot
+plot file1 with lines title '270p', file2 with lines title '540p', file4 with lines title '1080p',file3 with lines title '2160p'
+unset multiplot
+
+file1='../testdata/SanMiguel/Resolution270/SmallTris.dat'
+file2='../testdata/SanMiguel/Resolution540/SmallTris.dat'
+file3='../testdata/SanMiguel/Resolution1080/SmallTris.dat'
+file4='../testdata/SanMiguel/Resolution2160/SmallTris.dat'
+
+set title "Resolution(SanMiguel)"
+set output "Resolution_SanMiguel.png"
+
+set multiplot
+plot file1 with lines title '270p', file2 with lines title '540p', file4 with lines title '1080p',file3 with lines title '2160p'
+unset multiplot

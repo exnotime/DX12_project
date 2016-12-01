@@ -41,18 +41,20 @@ void CommandBufferManager::Init(DX12Context* context, UINT graphicsCount, UINT c
 }
 
 CommandBuffer* CommandBufferManager::GetNextCommandBuffer(COMMAND_BUFFER_TYPE type) {
+	CommandBuffer* cmdBuffer = nullptr;
 	switch (type) {
 	case CMD_BUFFER_TYPE_GRAPHICS:
-		return &m_GraphicsBuffers[m_BufferCounters[type]++];
+		cmdBuffer = &m_GraphicsBuffers[m_BufferCounters[type]++];
 		break;
 	case CMD_BUFFER_TYPE_COMPUTE:
-		return &m_ComputeBuffers[m_BufferCounters[type]++];
+		cmdBuffer = &m_ComputeBuffers[m_BufferCounters[type]++];
 		break;
 	case CMD_BUFFER_TYPE_COPY:
-		return &m_CopyBuffers[m_BufferCounters[type]++];
+		cmdBuffer = &m_CopyBuffers[m_BufferCounters[type]++];
 		break;
 	}
-	return nullptr;
+	if (cmdBuffer) cmdBuffer->Activate();
+	return cmdBuffer;
 }
 
 void CommandBufferManager::ResetAllCommandBuffers() {

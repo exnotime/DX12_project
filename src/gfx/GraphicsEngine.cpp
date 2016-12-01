@@ -94,7 +94,7 @@ void GraphicsEngine::CheckExtensions() {
 }
 
 void GraphicsEngine::CreateContext() {
-#if defined(_DEBUG) || defined(DEV)
+#if defined(_DEBUG)
 	ComPtr<ID3D12Debug> debugController;
 	HR(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), L"debug controller");
 	debugController->EnableDebugLayer();
@@ -356,13 +356,9 @@ void GraphicsEngine::Render() {
 	m_DepthProgram.Render(cmdbuffer->CmdList(), &m_RenderQueue);
 	m_HiZProgram.Disbatch(cmdbuffer->CmdList());
 
-	g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
-	cmdbuffer->ResetCommandList(m_Context.FrameIndex);
-
 	if (g_TestParams.CurrentTest.Culling) {
 		m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
 		while (m_TriangleCullingProgram.Disbatch(cmdbuffer->CmdList(), &m_RenderQueue, &m_FilterContext)) {
-			m_Profiler.Step(cmdbuffer->CmdList(), "DrawCulling");
 			m_CullingProgram.Disbatch(cmdbuffer->CmdList(), &m_FilterContext);
 			m_Profiler.Step(cmdbuffer->CmdList(), "Render");
 			SetRenderTarget(cmdbuffer->CmdList());
@@ -372,10 +368,9 @@ void GraphicsEngine::Render() {
 			cmdbuffer->ResetCommandList(m_Context.FrameIndex);
 			m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
 		}
-		m_Profiler.Step(cmdbuffer->CmdList(), "DrawCulling");
 		m_CullingProgram.Disbatch(cmdbuffer->CmdList(), &m_FilterContext);
-		m_Profiler.Step(cmdbuffer->CmdList(), "Render");
 		SetRenderTarget(cmdbuffer->CmdList());
+		m_Profiler.Step(cmdbuffer->CmdList(), "Render");
 		RenderGeometry(cmdbuffer->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
 	} else {
 		m_Profiler.Step(cmdbuffer->CmdList(), "Render");

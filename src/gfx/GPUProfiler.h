@@ -2,7 +2,6 @@
 #include "DX12Common.h"
 #include "TestParams.h"
 #include <stdio.h>
-#define SILENT_LOG
 #define MAX_PROFILER_STEPS 8192
 class GPUProfiler{
 public:
@@ -24,6 +23,6 @@ private:
 	std::vector<std::string> m_StepNames;
 	std::vector<std::string> m_LastFrameNames;
 #ifdef PRINT_TO_FILE
-	FILE* m_File;
+	FILE* m_Files[3];
 #endif
 };

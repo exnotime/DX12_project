@@ -173,7 +173,7 @@ void ModelBank::DeleteModel( ) {
 	// tbh its much easier and less cumbersome to just delete all models and load them in again.
 }
 
-const Model& ModelBank::FetchModel(ModelHandle handle) {
+Model& ModelBank::FetchModel(ModelHandle handle) {
 	return m_Models[handle];
 }
 

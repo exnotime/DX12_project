@@ -132,7 +132,7 @@ float3 CalcDirLight(float3 albedo, float3 normal, float3 toEye, float roughness,
 	}
 	diff = lerp(diff, float3(0.0,0.0,0.0), metallic);
 	spec = lerp(spec, spec * albedo, metallic);
-	return (diff + spec) * 0.5;
+	return (diff + spec);
 }
 
 float3 AproximateIBLSpecular(float3 F0 , float roughness, float3 normal, float3 toeye){
@@ -209,6 +209,7 @@ float4 PSMain(PSIn input) : SV_TARGET {
 	float4 color = float4(0,0,0,1);
 	float4 albedo = float4(input.color,1) * pow(g_Materials[NonUniformResourceIndex(g_MaterialIndex)].Sample(g_sampler, input.uv), GAMMA);
 	clip( albedo.a < 0.1f ? -1:1 );
+	
 	float r = 1.0 - pow(g_Materials[NonUniformResourceIndex(g_MaterialIndex+2)].Sample(g_sampler, input.uv).r, GAMMA);
 	float m = pow(g_Materials[NonUniformResourceIndex(g_MaterialIndex+3)].Sample(g_sampler, input.uv).r, GAMMA);
 	float3 normal = normalize(input.normal);// CalcBumpedNormal(input.normal, input.tangent, input.uv);

@@ -188,7 +188,7 @@ GroupMemoryBarrierWithGroupSync();
 			for(int i = 0; i < TRIANGLE_COUNT; ++i){
 				g_OutTriangleIndices[outputIndex + i * 3] = indices[i][0];
 				g_OutTriangleIndices[outputIndex + i * 3 + 1] = indices[i][1];
-				g_OutTriangleIndices[outputIndex  + i * 3+ 2] = indices[i][2];
+				g_OutTriangleIndices[outputIndex + i * 3 + 2] = indices[i][2];
 			}
 		}
 	}

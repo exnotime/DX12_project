@@ -1,0 +1,49 @@
+set term png size 2048, 1536
+
+set xlabel "Frame"
+set yrange [0:*]
+set xrange [0:2000]
+set ylabel "Triangles"
+set boxwidth 0.5
+
+file1='../testdata/Sponza/AllFilters/TriangleCount.dat'
+file2='../testdata/Sponza/AllFilters/Backface.dat'
+file3='../testdata/Sponza/AllFilters/SmallTris.dat'
+file4='../testdata/Sponza/AllFilters/Frustum.dat'
+file5='../testdata/Sponza/AllFilters/Occlusion.dat'
+file6='../testdata/Sponza/AllFilters/SurvivingTris.dat'
+
+set title "FilterEfficiency(Sponza)"
+set output "FilterEfficiency_sponza.png"
+
+set multiplot
+plot file1 with histogram title 'Total', file2 with histogram title 'Backface', file4 with histogram title 'Frustum',file3 with histogram title 'SmallTriangle', file5 with histogram title 'Occlusion'#, file6 with boxes title 'Surviving'
+unset multiplot
+
+file1='../testdata/Rungholt/AllFilters/TriangleCount.dat'
+file2='../testdata/Rungholt/AllFilters/Backface.dat'
+file3='../testdata/Rungholt/AllFilters/SmallTris.dat'
+file4='../testdata/Rungholt/AllFilters/Frustum.dat'
+file5='../testdata/Rungholt/AllFilters/Occlusion.dat'
+file6='../testdata/Rungholt/AllFilters/SurvivingTris.dat'
+
+set title "FilterEfficiency(Rungholt)"
+set output "FilterEfficiency_rungholt.png"
+
+set multiplot
+plot file1 with histogram title 'Total', file2 with histogram title 'Backface', file4 with histogram title 'Frustum',file3 with histogram title 'SmallTriangle', file5 with histogram title 'Occlusion'#, file6 with boxes title 'Surviving'
+unset multiplot
+
+file1='../testdata/SanMiguel/AllFilters/TriangleCount.dat'
+file2='../testdata/SanMiguel/AllFilters/Backface.dat'
+file3='../testdata/SanMiguel/AllFilters/SmallTris.dat'
+file4='../testdata/SanMiguel/AllFilters/Frustum.dat'
+file5='../testdata/SanMiguel/AllFilters/Occlusion.dat'
+file6='../testdata/SanMiguel/AllFilters/SurvivingTris.dat'
+
+set title "FilterEfficiency(SanMiguel)"
+set output "FilterEfficiency_san_miguel.png"
+
+set multiplot
+plot file1 with histogram title 'Total', file2 with histogram title 'Backface', file4 with histogram title 'Frustum',file3 with histogram title 'SmallTriangle', file5 with histogram title 'Occlusion'#, file6 with boxes title 'Surviving'
+unset multiplot

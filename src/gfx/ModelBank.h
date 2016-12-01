@@ -15,7 +15,7 @@ class ModelBank {
 	~ModelBank();
 	static ModelBank& GetInstance();
 	void Init();
-	const Model& FetchModel(ModelHandle handle);
+	Model& FetchModel(ModelHandle handle);
 	ModelHandle LoadModel(const char* filename);
 	ModelHandle AddModel(Model& TheModel);
 	ModelHandle CreateCustomModel(std::vector<Vertex>* vertices, std::vector<UINT>* indices);

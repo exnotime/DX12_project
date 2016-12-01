@@ -20,7 +20,7 @@ void SpawnPlayer(const glm::vec3& position, const glm::vec3& size, const glm::qu
 	CameraComponent cc;
 	cc.Camera.GetEditableData().Fov = (45.0f / 360.0f) * glm::pi<float>() * 2;
 	cc.Camera.GetEditableData().Far = 150.0f;
-	cc.Camera.GetEditableData().Near = 1.0f;
+	cc.Camera.GetEditableData().Near = 0.5f;
 	cc.Camera.SetOrientation(tc.Orientation);
 	cc.Camera.SetPosition(tc.Position);
 	g_ComponentManager.CreateComponent(&cc, e, CameraComponent::Flag);

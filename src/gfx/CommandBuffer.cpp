@@ -28,13 +28,15 @@ void CommandBuffer::Init(ID3D12Device* device, COMMAND_BUFFER_TYPE type) {
 }
 
 void CommandBuffer::ResetBuffer(int frameIndex) {
-	if (m_Open) {
-		Close();
+	if (m_Active) {
+		if (m_Open) {
+			Close();
+		}
+		m_CommandAllocators[frameIndex]->Reset();
+		m_CmdList->Reset(m_CommandAllocators[frameIndex].Get(), nullptr);
+		m_Open = true;
+		m_Active = false;
 	}
-	m_CommandAllocators[frameIndex]->Reset();
-	m_CmdList->Reset(m_CommandAllocators[frameIndex].Get(), nullptr);
-	m_Open = true;
-	
 }
 
 void CommandBuffer::ResetCommandList(int frameIndex) {

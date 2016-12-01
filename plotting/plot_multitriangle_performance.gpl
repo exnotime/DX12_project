@@ -1,0 +1,42 @@
+set term png size 2048, 1536
+
+set xlabel "Frame"
+set yrange [0:*]
+set xrange [0:*]
+set ylabel "Frametime(ms)"
+
+file1='../testdata/Sponza/1Tri/Frametimes.dat'
+file2='../testdata/Sponza/2Tri/Frametimes.dat'
+file3='../testdata/Sponza/3Tri/Frametimes.dat'
+file4='../testdata/Sponza/4Tri/Frametimes.dat'
+
+set title "MultiTriangle(Sponza)"
+set output "MultiTriangle_sponza.png"
+
+set multiplot
+plot file1 smooth bezier with lines title '1 triangle', file2 smooth bezier with lines title '2 triangle', file3 smooth bezier with lines title '3 triangle',file4 smooth bezier with lines title '4 triangle'
+unset multiplot
+
+file1='../testdata/Rungholt/1Tri/Frametimes.dat'
+file2='../testdata/Rungholt/2Tri/Frametimes.dat'
+file3='../testdata/Rungholt/3Tri/Frametimes.dat'
+file4='../testdata/Rungholt/4Tri/Frametimes.dat'
+
+set title "MultiTriangle(Rungholt)"
+set output "MultiTriangle_rungholt.png"
+
+set multiplot
+plot file1 smooth bezier with lines title '1 triangle', file2 smooth bezier with lines title '2 triangle', file3 smooth bezier with lines title '3 triangle',file4 smooth bezier with lines title '4 triangle'
+unset multiplot
+
+file1='../testdata/SanMiguel/1Tri/Frametimes.dat'
+file2='../testdata/SanMiguel/2Tri/Frametimes.dat'
+file3='../testdata/SanMiguel/3Tri/Frametimes.dat'
+file4='../testdata/SanMiguel/4Tri/Frametimes.dat'
+
+set title "MultiTriangle(SanMiguel)"
+set output "MultiTriangle_SanMiguel.png"
+
+set multiplot
+plot file1 smooth bezier with lines title '1 triangle', file2 smooth bezier with lines title '2 triangle', file3 smooth bezier with lines title '3 triangle',file4 smooth bezier with lines title '4 triangle'
+unset multiplot

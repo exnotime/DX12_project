@@ -12,6 +12,7 @@ public:
 	CommandBuffer();
 	~CommandBuffer();
 	void Init(ID3D12Device* device, COMMAND_BUFFER_TYPE type);
+	void Activate() { m_Active = true; }
 	void Close();
 	void ResetBuffer(int frameIndex);
 	void ResetCommandList(int frameIndex);
@@ -22,4 +23,5 @@ private:
 	ComPtr<ID3D12GraphicsCommandList> m_CmdList;
 	COMMAND_BUFFER_TYPE m_Type;
 	bool m_Open;
+	bool m_Active;
 };
