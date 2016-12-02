@@ -47,8 +47,10 @@ struct TestData {
 
 #define DO_TESTING
 #define PRINT_TO_FILE
-//#define FREE_CAMERA
 #define SILENT_LOG
+
+//#define FREE_CAMERA
+
 
 #define BATCH_COUNT g_TestParams.CurrentTest.BatchCount
 #define BATCH_SIZE g_TestParams.CurrentTest.BatchSize

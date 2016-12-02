@@ -1,0 +1,32 @@
+set term png size 1280, 960
+
+set xlabel "Frame"
+set yrange [0:*]
+set ylabel "time (ms)"
+
+file1='../testdata/Sponza/Culling/CPU_Timings.dat'
+file2='../testdata/Sponza/NoCulling/CPU_Timings.dat'
+set title "CPU time(Sponza)"
+set output "CPU_Performance_sponza.png"
+
+set multiplot
+plot file1 smooth acsplines with lines title 'Culling', file2 smooth acsplines  with lines title 'NoCulling'
+unset multiplot
+
+file1='../testdata/Rungholt/Culling/CPU_Timings.dat'
+file2='../testdata/Rungholt/NoCulling/CPU_Timings.dat'
+set title "CPU time(Rungholt)"
+set output "CPU_Performance_rungholt.png"
+
+set multiplot
+plot file1 smooth acsplines  with lines title 'Culling', file2 smooth acsplines  with lines title 'NoCulling'
+unset multiplot
+
+file1='../testdata/SanMiguel/Culling/CPU_Timings.dat'
+file2='../testdata/SanMiguel/NoCulling/CPU_Timings.dat'
+set title "CPU time(SanMiguel)"
+set output "CPU_Performance_san_miguel.png"
+
+set multiplot
+plot file1 smooth acsplines  with lines title 'Culling', file2 smooth acsplines  with lines title 'NoCulling'
+unset multiplot

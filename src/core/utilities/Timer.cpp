@@ -21,5 +21,6 @@ double Timer::Reset() {
 	uint64_t time = glfwGetTimerValue();
 	uint64_t t = time - m_Start;
 	m_Start = time;
+	m_LastTick = time;
 	return t / (double)m_TimerFreq;
 }

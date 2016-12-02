@@ -12,7 +12,7 @@
 #include "TriangleCullingProgram.h"
 #include "FilterContext.h"
 #include "LineRenderProgram.h"
-#include <core/Timer.h>
+#include <core/utilities/Profiler.h>
 #define SIGNAL_BEGIN_COPY 0
 #define SIGNAL_END_COPY 1
 
@@ -60,16 +60,16 @@ private:
 	ComPtr<ID3D12Resource> m_DSResource;
 	ComPtr<ID3D12DescriptorHeap> m_DSVHeap;
 
+	GPUProfiler m_Profiler;
+	Profiler m_CPUProfiler;
+
 	RenderQueue m_RenderQueue;
 	GeometryProgram::GeometryProgramState m_ProgramState;
 	DepthOnlyProgram m_DepthProgram;
-	GPUProfiler m_Profiler;
-
 	FullscreenPass m_FullscreenPass;
 	HiZProgram m_HiZProgram;
 	DrawCullingProgram m_CullingProgram;
 	TriangleCullingProgram m_TriangleCullingProgram;
 	FilterContext m_FilterContext;
 	LineRenderProgram m_LineRenderer;
-	Timer m_CullingTimer;
 };

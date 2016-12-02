@@ -6,7 +6,7 @@
 #include "entity/EntityManager.h"
 #include "datasystem/ComponentManager.h"
 #include "Input/Input.h"
-#include "Timer.h"
+#include "utilities/Timer.h"
 #include "Window.h"
 #include "subsystem/systems/SSCamera.h"
 #include "subsystem/systems/SSGraphics.h"
@@ -37,9 +37,11 @@ void Engine::Init() {
 	RegisterScriptFunctions();
 
 	WindowSettings ws;
-	ws.Width = 1600;
-	ws.Height = 900;
-	ws.Title = "A DX12 Window";
+	ws.Width = 1920;
+	ws.Height = 1080;
+	ws.X = 0;
+	ws.Y = 0;
+	ws.Title = "Triangle Filtering Test";
 	ws.Vsync = false;
 	ws.BorderLess = false;
 	ws.Fullscreen = false;
@@ -80,7 +82,7 @@ void Engine::Run() {
 		counter++;
 		if (counter == 50) {
 			std::stringstream ss;
-			ss << "FPS : " << 1.0 / (dt / counter);
+			ss << "FPS: " << 1.0 / (dt / counter) << "  CurrentTest: " << g_TestParams.CurrentTest.TestName;
 			glfwSetWindowTitle(g_Window.GetWindow(), ss.str().c_str());
 			counter = 0;
 			dt = 0;

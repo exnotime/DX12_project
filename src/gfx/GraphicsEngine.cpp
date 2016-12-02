@@ -292,6 +292,7 @@ void GraphicsEngine::TransferFrame() {
 	m_RenderQueue.UpdateBuffer(cmdbuffer->CmdList());
 	g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
 	WaitForGPU(m_Fence, m_Context, m_Context.FrameIndex);
+	
 }
 
 void GraphicsEngine::ClearScreen(ID3D12GraphicsCommandList* cmdList) {
@@ -314,6 +315,7 @@ void GraphicsEngine::Render() {
 			ResizeFrameBuffer(g_TestParams.CurrentTest.FrameBufferSize);
 
 		m_Profiler.Reset();
+		m_CPUProfiler.Reset();
 		m_FilterContext.Reset(m_Context.Device.Get());
 		m_TriangleCullingProgram.Reset(&m_Context);
 		m_CullingProgram.Reset(&m_Context, &m_FilterContext);
@@ -321,9 +323,11 @@ void GraphicsEngine::Render() {
 		g_TestParams.Reset = false;
 		return;
 	}
+	
 	g_CommandBufferManager.ResetAllCommandBuffers();
 	TransferFrame();
 
+	m_CPUProfiler.StartFrame();
 	CommandBuffer* cmdbuffer = g_CommandBufferManager.GetNextCommandBuffer(CMD_BUFFER_TYPE_GRAPHICS);
 
 	ClearScreen(cmdbuffer->CmdList());
@@ -350,32 +354,48 @@ void GraphicsEngine::Render() {
 	perFrame->LightDir = glm::vec3(0.0f, -1.0f, 0.2f);
 	perFrame->ViewProj = v.Camera.ProjView;
 	g_BufferManager.UnMapBuffer("cbPerFrame2");
+	m_CPUProfiler.Step("Frame setup");
 
 	m_Profiler.Start();
 	m_Profiler.Step(cmdbuffer->CmdList(), "DepthRender");
+
+	g_BufferManager.SwitchState(cmdbuffer->CmdList(), "ShaderInputBuffer", D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
 	m_DepthProgram.Render(cmdbuffer->CmdList(), &m_RenderQueue);
 	m_HiZProgram.Disbatch(cmdbuffer->CmdList());
+
+	g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
+	cmdbuffer->ResetCommandList(m_Context.FrameIndex);
+
+	m_CPUProfiler.Step("DepthRender");
 
 	if (g_TestParams.CurrentTest.Culling) {
 		m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
 		while (m_TriangleCullingProgram.Disbatch(cmdbuffer->CmdList(), &m_RenderQueue, &m_FilterContext)) {
 			m_CullingProgram.Disbatch(cmdbuffer->CmdList(), &m_FilterContext);
+			m_CPUProfiler.Step("Triangle Filter");
+
 			m_Profiler.Step(cmdbuffer->CmdList(), "Render");
+
 			SetRenderTarget(cmdbuffer->CmdList());
 			RenderGeometry(cmdbuffer->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
-
+			m_CPUProfiler.Step("Render geometry");
 			g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
 			cmdbuffer->ResetCommandList(m_Context.FrameIndex);
 			m_Profiler.Step(cmdbuffer->CmdList(), "TriangleFilter");
 		}
 		m_CullingProgram.Disbatch(cmdbuffer->CmdList(), &m_FilterContext);
+		m_CPUProfiler.Step("Triangle Filter");
+
 		SetRenderTarget(cmdbuffer->CmdList());
 		m_Profiler.Step(cmdbuffer->CmdList(), "Render");
 		RenderGeometry(cmdbuffer->CmdList(), &m_ProgramState, &m_FilterContext, &m_CullingProgram);
+		m_CPUProfiler.Step("Render geometry");
 	} else {
 		m_Profiler.Step(cmdbuffer->CmdList(), "Render");
 		SetRenderTarget(cmdbuffer->CmdList());
 		RenderGeometryWithoutCulling(cmdbuffer->CmdList(), &m_ProgramState, &m_RenderQueue);
+		m_CPUProfiler.Step("Render geometry");
 	}
 
 	m_LineRenderer.Render(cmdbuffer->CmdList(), &m_RenderQueue);
@@ -386,7 +406,12 @@ void GraphicsEngine::Render() {
 	cmdbuffer->CmdList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_SwapChain.RenderTargets[m_Context.FrameIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	
+	g_BufferManager.SwitchState(cmdbuffer->CmdList(), "ShaderInputBuffer", D3D12_RESOURCE_STATE_COPY_DEST);
+	g_BufferManager.SwitchState(cmdbuffer->CmdList(), "IndirectBuffer", D3D12_RESOURCE_STATE_COPY_DEST);
+	g_BufferManager.SwitchState(cmdbuffer->CmdList(), "IndirectOccluderBuffer", D3D12_RESOURCE_STATE_COPY_DEST);
+
 	g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
+	m_CPUProfiler.EndFrame();
 }
 
 void GraphicsEngine::Swap() {
@@ -409,6 +434,7 @@ void GraphicsEngine::Swap() {
 	m_Fence.FenceValues[m_Context.FrameIndex] = currentFenceValue + 1;
 	m_FilterContext.PrintTriangleStats();
 	m_Profiler.PrintResults(m_Context.FrameIndex);
+	m_CPUProfiler.Print();
 	
 }
 

@@ -21,6 +21,7 @@ do
 	mkdir -p "$san_miguel/$t";
 	mkdir -p "$rungholt/$t";
 done
+
 #copy and original so we can run the test multiple times without having to worry about editing the angelscript file every time
 cp ./script/Tests.as ./script/Tests.as.b;
 #replace the directory that testdata are placed in so we have the scenes seperated
@@ -35,6 +36,8 @@ sed -i -e "s|#REPLACE_THIS_DIR|$rungholt|g" ./script/Tests.as;
 
 cp ./script/Tests.as.b ./script/Tests.as;
 rm ./script/Tests.as.b;
+
+./scrubData.sh
 echo "Ending test"
 date
 read -n 1 -p "Press any key to quit"

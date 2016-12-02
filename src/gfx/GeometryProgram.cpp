@@ -153,7 +153,7 @@ void RenderGeometry(ID3D12GraphicsCommandList*cmdList, GeometryProgram::Geometry
 	cmdList->SetGraphicsRootDescriptorTable(MATERIAL_DESC_TABLE, gpuHandle.Offset(ENVIRONMENT_MATERIAL_SIZE * state->DescHeapIncSize));
 
 	CD3DX12_RESOURCE_BARRIER barriers[] = {
-		CD3DX12_RESOURCE_BARRIER::Transition(filterContext->GetDrawArgsResource(filterContext->GetRenderIndex()),
+		CD3DX12_RESOURCE_BARRIER::Transition(cullingProgram->GetDrawArgsBuffer(filterContext->GetRenderIndex()),
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT),
 		CD3DX12_RESOURCE_BARRIER::Transition(cullingProgram->GetCounterBuffer(),
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT)

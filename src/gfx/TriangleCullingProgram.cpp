@@ -4,7 +4,6 @@
 #include "BufferManager.h"
 #include "ModelBank.h"
 #include "TestParams.h"
-#include <core/Timer.h>
 #include <sstream>
 TriangleCullingProgram::TriangleCullingProgram() {
 

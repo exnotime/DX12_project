@@ -30,9 +30,9 @@ void CommandBufferManager::Init(DX12Context* context, UINT graphicsCount, UINT c
 		m_CopyBuffers[i].Init(device, CMD_BUFFER_TYPE_COPY);
 	}
 
-	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[CMD_BUFFER_TYPE_GRAPHICS])), L"Error creating fence");
-	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[CMD_BUFFER_TYPE_COMPUTE])), L"Error creating fence");
-	HR(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fences[CMD_BUFFER_TYPE_COPY])), L"Error creating fence");
+	HR(device->CreateFence(0, D3D12_FENCE_FLAG_SHARED, IID_PPV_ARGS(&m_Fences[CMD_BUFFER_TYPE_GRAPHICS])), L"Error creating fence");
+	HR(device->CreateFence(0, D3D12_FENCE_FLAG_SHARED, IID_PPV_ARGS(&m_Fences[CMD_BUFFER_TYPE_COMPUTE])), L"Error creating fence");
+	HR(device->CreateFence(0, D3D12_FENCE_FLAG_SHARED, IID_PPV_ARGS(&m_Fences[CMD_BUFFER_TYPE_COPY])), L"Error creating fence");
 
 	m_BufferCounters[CMD_BUFFER_TYPE_GRAPHICS] = 0;
 	m_BufferCounters[CMD_BUFFER_TYPE_COMPUTE] = 0;
