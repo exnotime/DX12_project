@@ -37,7 +37,6 @@ sed -i -e "s|#REPLACE_THIS_DIR|$rungholt|g" ./script/Tests.as;
 cp ./script/Tests.as.b ./script/Tests.as;
 rm ./script/Tests.as.b;
 
-./scrubData.sh
 echo "Ending test"
 date
 read -n 1 -p "Press any key to quit"

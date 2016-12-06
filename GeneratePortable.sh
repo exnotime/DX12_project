@@ -5,6 +5,8 @@ cp -v bin/release/Engine.exe portable/
 cp -v externals/amd_ags_x64.dll portable/
 cp -v externals/assimp.dll portable/
 cp -v runExperiment.sh portable/
+cp -v CalcAverages.sh portable/
+cp -v scrubData.sh portable/
 
 cp -v -r script portable/
 cp -v -r plotting portable/
@@ -13,4 +15,3 @@ cp -v -r src/shaders portable/src/
 cp -v -r assets portable/
 cp -v -r big_assets portable/
 cp -v -r experiment portable/
-

@@ -42,7 +42,6 @@ cbuffer constants : register(b1){
 	uint g_BatchIndex; //what batch this dispatch starts with
 	uint g_BatchDrawId; //what draw id this dispatch is culling
 	uint g_BatchIndexOffset; //where in the index buffer it should start reading
-	uint g_BatchOutDrawId;
 };
 
 groupshared uint g_WorkGroupCount;

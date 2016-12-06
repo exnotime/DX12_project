@@ -45,11 +45,11 @@ struct TestData {
 	}
  };
 
-#define DO_TESTING
-#define PRINT_TO_FILE
-#define SILENT_LOG
+//#define DO_TESTING
+//#define PRINT_TO_FILE
+//#define SILENT_LOG
 
-//#define FREE_CAMERA
+#define FREE_CAMERA
 
 
 #define BATCH_COUNT g_TestParams.CurrentTest.BatchCount

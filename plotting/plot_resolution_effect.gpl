@@ -14,7 +14,7 @@ set title "Resolution(Sponza)"
 set output "Resolution_sponza.png"
 
 set multiplot
-plot file1 with lines title '270p', file2 with lines title '540p', file4 with lines title '1080p',file3 with lines title '2160p'
+plot file1 with lines title '270p', file2 with lines title '540p', file3 with lines title '1080p',file4 with lines title '2160p'
 unset multiplot
 
 file1='../testdata/Rungholt/Resolution270/SmallTris.dat'
@@ -26,7 +26,7 @@ set title "Resolution(Rungholt)"
 set output "Resolution_rungholt.png"
 
 set multiplot
-plot file1 with lines title '270p', file2 with lines title '540p', file4 with lines title '1080p',file3 with lines title '2160p'
+plot file1 with lines title '270p', file2 with lines title '540p', file3 with lines title '1080p',file4 with lines title '2160p'
 unset multiplot
 
 file1='../testdata/SanMiguel/Resolution270/SmallTris.dat'
@@ -38,5 +38,5 @@ set title "Resolution(SanMiguel)"
 set output "Resolution_SanMiguel.png"
 
 set multiplot
-plot file1 with lines title '270p', file2 with lines title '540p', file4 with lines title '1080p',file3 with lines title '2160p'
+plot file1 with lines title '270p', file2 with lines title '540p', file3 with lines title '1080p',file4 with lines title '2160p'
 unset multiplot

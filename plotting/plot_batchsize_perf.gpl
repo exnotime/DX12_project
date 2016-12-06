@@ -1,0 +1,42 @@
+set term png size 2048, 1536
+
+set xlabel "Frame"
+set yrange [0:*]
+set xrange [0:*]
+set ylabel "Frametime(ms)"
+
+file1='../testdata/Sponza/BatchSize128/Frametimes.dat'
+file2='../testdata/Sponza/BatchSize256/Frametimes.dat'
+file3='../testdata/Sponza/BatchSize512/Frametimes.dat'
+file4='../testdata/Sponza/BatchSize1024/Frametimes.dat'
+
+set title "BatchSize(Sponza)"
+set output "BatchSize_sponza.png"
+
+set multiplot
+plot file1 smooth bezier with lines title '128', file2 smooth bezier with lines title '256', file3 smooth bezier with lines title '512',file4 smooth bezier with lines title '1024'
+unset multiplot
+
+file1='../testdata/Rungholt/BatchSize128/Frametimes.dat'
+file2='../testdata/Rungholt/BatchSize256/Frametimes.dat'
+file3='../testdata/Rungholt/BatchSize512/Frametimes.dat'
+file4='../testdata/Rungholt/BatchSize1024/Frametimes.dat'
+
+set title "BatchSize(Rungholt)"
+set output "BatchSize_rungholt.png"
+
+set multiplot
+plot file1 smooth bezier with lines title '128', file2 smooth bezier with lines title '256', file3 smooth bezier with lines title '512',file4 smooth bezier with lines title '1024'
+unset multiplot
+
+file1='../testdata/SanMiguel/BatchSize128/Frametimes.dat'
+file2='../testdata/SanMiguel/BatchSize256/Frametimes.dat'
+file3='../testdata/SanMiguel/BatchSize512/Frametimes.dat'
+file4='../testdata/SanMiguel/BatchSize1024/Frametimes.dat'
+
+set title "BatchSize(SanMiguel)"
+set output "BatchSize_SanMiguel.png"
+
+set multiplot
+plot file1 smooth bezier with lines title '128', file2 smooth bezier with lines title '256', file3 smooth bezier with lines title '512',file4 smooth bezier with lines title '1024'
+unset multiplot

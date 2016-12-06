@@ -220,8 +220,8 @@ void GraphicsEngine::Init(HWND hWnd, const glm::vec2& screenSize) {
 	m_DepthProgram.Init(&m_Context, m_ScreenSize);
 	m_HiZProgram.Init(&m_Context, m_ScreenSize);
 	m_HiZProgram.CreateDescriptors(m_Context.Device.Get(), m_DepthProgram.GetDepthTexture());
-	//m_FullscreenPass.Init(&m_Context);
-	//m_FullscreenPass.CreateSRV(&m_Context, m_HiZProgram.GetResource(), DXGI_FORMAT_R32_FLOAT, m_HiZProgram.GetMipCount());
+	m_FullscreenPass.Init(&m_Context);
+	m_FullscreenPass.CreateSRV(&m_Context, m_DepthProgram.GetDepthTexture(), DXGI_FORMAT_R32_FLOAT, 1);
 	
 	g_BufferManager.Init(m_Context.Device.Get());
 	g_BufferManager.CreateConstBuffer("cbPerFrame", sizeof(cbPerFrame));
@@ -399,6 +399,8 @@ void GraphicsEngine::Render() {
 	}
 
 	m_LineRenderer.Render(cmdbuffer->CmdList(), &m_RenderQueue);
+
+	//m_FullscreenPass.Render(cmdbuffer->CmdList());
 
 	m_Profiler.End(cmdbuffer->CmdList(), m_Context.FrameIndex);
 	m_FilterContext.CopyTriangleStats(cmdbuffer->CmdList());

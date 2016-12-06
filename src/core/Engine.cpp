@@ -31,14 +31,13 @@ Engine::~Engine() {
 }
 
 void Engine::Init() {
-	//g_JobManager.Init(3);
 	g_ComponentManager.Init();
 	g_ScriptEngine.Init();
 	RegisterScriptFunctions();
 
 	WindowSettings ws;
-	ws.Width = 1920;
-	ws.Height = 1080;
+	ws.Width = 1280;
+	ws.Height = 720;
 	ws.X = 0;
 	ws.Y = 0;
 	ws.Title = "Triangle Filtering Test";

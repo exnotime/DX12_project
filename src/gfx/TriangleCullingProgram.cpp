@@ -26,7 +26,7 @@ void TriangleCullingProgram::Init(DX12Context* context) {
 			rootSignFact.AddConstantBufferView(0);
 			break;
 		case CONSTANTS_C:
-			rootSignFact.AddConstant(4, 1);
+			rootSignFact.AddConstant(3, 1);
 			break;
 		case INPUT_DT:
 			inputRanges.push_back(CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 0));
@@ -156,13 +156,8 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, i, 1); // draw id
 
 		UINT batchCount = ((queue->GetDrawList()[i].DrawArgs.IndexCountPerInstance / (TRI_COUNT * 3)) + BATCH_SIZE - 1) / BATCH_SIZE;
-
-		if(filterContext->GetRemainder() > 0)
-			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, (batchCount - filterContext->GetRemainder()), 2); // batch offset
-		else
-			cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, 0, 2);
-
-		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, filterContext->GetDrawCounter(), 3); //batch output 
+		UINT batchOffset = filterContext->GetRemainder() > 0 ? batchCount - filterContext->GetRemainder() : 0;
+		cmdList->SetComputeRoot32BitConstant(CONSTANTS_C, batchOffset, 2);
 
 		//if we have filled up on batches break and switch to rendering
 		if (filterContext->AddBatches(batchCount, batchCount)) {

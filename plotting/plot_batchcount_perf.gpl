@@ -1,0 +1,48 @@
+set term png size 2048, 1536
+
+set xlabel "Frame"
+set yrange [0:*]
+set xrange [0:*]
+set ylabel "Frametime(ms)"
+
+file1='../testdata/Sponza/BatchCount128/Frametimes.dat'
+file2='../testdata/Sponza/BatchCount256/Frametimes.dat'
+file3='../testdata/Sponza/BatchCount512/Frametimes.dat'
+file4='../testdata/Sponza/BatchCount1024/Frametimes.dat'
+file5='../testdata/Sponza/BatchCount2048/Frametimes.dat'
+file6='../testdata/Sponza/BatchCount4096/Frametimes.dat'
+
+set title "BatchCount(Sponza)"
+set output "BatchCount_sponza.png"
+
+set multiplot
+plot file1 smooth bezier with lines title '128', file2 smooth bezier with lines title '256', file3 smooth bezier with lines title '512',file4 smooth bezier with lines title '1024',file5 smooth bezier with lines title '2048',file6 smooth bezier with lines title '4096'
+unset multiplot
+
+file1='../testdata/Rungholt/BatchCount128/Frametimes.dat'
+file2='../testdata/Rungholt/BatchCount256/Frametimes.dat'
+file3='../testdata/Rungholt/BatchCount512/Frametimes.dat'
+file4='../testdata/Rungholt/BatchCount1024/Frametimes.dat'
+file5='../testdata/Rungholt/BatchCount2048/Frametimes.dat'
+file6='../testdata/Rungholt/BatchCount4096/Frametimes.dat'
+
+set title "BatchCount(Rungholt)"
+set output "BatchCount_rungholt.png"
+
+set multiplot
+plot file1 smooth bezier with lines title '128', file2 smooth bezier with lines title '256', file3 smooth bezier with lines title '512',file4 smooth bezier with lines title '1024',file5 smooth bezier with lines title '2048',file6 smooth bezier with lines title '4096'
+unset multiplot
+
+file1='../testdata/SanMiguel/BatchCount128/Frametimes.dat'
+file2='../testdata/SanMiguel/BatchCount256/Frametimes.dat'
+file3='../testdata/SanMiguel/BatchCount512/Frametimes.dat'
+file4='../testdata/SanMiguel/BatchCount1024/Frametimes.dat'
+file5='../testdata/SanMiguel/BatchCount2048/Frametimes.dat'
+file6='../testdata/SanMiguel/BatchCount4096/Frametimes.dat'
+
+set title "BatchCount(SanMiguel)"
+set output "BatchCount_SanMiguel.png"
+
+set multiplot
+plot file1 smooth bezier with lines title '128', file2 smooth bezier with lines title '256', file3 smooth bezier with lines title '512',file4 smooth bezier with lines title '1024',file5 smooth bezier with lines title '2048',file6 smooth bezier with lines title '4096'
+unset multiplot

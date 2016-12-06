@@ -1,5 +1,5 @@
 void main(){
-	float NaN = 0x7fc00000; //used to set the lookat to follow the spline instead of position
+	float NaN = 0x7fc00000; //used to set the lookat to follow the spline instead of looking at the look at position
 	//Sponza scene with bunny, teapot and dragon
 #if SPONZA
 	SpawnPlayer(vec3(28.75f, 42.03f, -3.47f), vec3(0.5f, 1.8f, 0.3f), quat(-0.627f, 0.187f, -0.724f, -0.216f));
@@ -8,10 +8,10 @@ void main(){
 	int occluder = LoadModel("big_assets/sponza/SponzaOccluder.obj");
 	int dragon = LoadModel("assets/models/dragon/dragon.obj");
 	int teapot = LoadModel("assets/models/teapot/teapot.obj");
-	SpawnLevelObjectWithOccluder(level, occluder, vec3(0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(1));
-	SpawnLevelObjectWithOccluder(bunny,bunny, vec3(0, 1.9f, 2), quat(0.0f, 0.0f, 1.0f, 0.0f), vec3(0.05f), vec4(0.2f, 0.6f, 0.5f, 1));
+	//SpawnLevelObjectWithOccluder(level, occluder, vec3(0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(1));
+	//SpawnLevelObjectWithOccluder(bunny,bunny, vec3(0, 1.9f, 2), quat(0.0f, 0.0f, 1.0f, 0.0f), vec3(0.05f), vec4(0.2f, 0.6f, 0.5f, 1));
 	SpawnLevelObjectWithOccluder(dragon,dragon, vec3(0, 0.2f, -5), quat(0.0f, 0.0f, 1.0f, 0.0f), vec3(1.0f), vec4(0.7f, 0.2f, 0.1f, 1));
-	SpawnLevelObjectWithOccluder(teapot,teapot, vec3(-10, 0.2f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.5f), vec4(0.5f, 0.9f, 0.3f, 1));
+	//SpawnLevelObjectWithOccluder(teapot,teapot, vec3(-10, 0.2f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.5f), vec4(0.5f, 0.9f, 0.3f, 1));
 	AddSplinePoint(vec3( 50.678, 7.215 ,  0.239));
 	AddSplinePoint(vec3( 1.131 , 8.717 ,  2.998));
 	AddSplinePoint(vec3(-50.093, 8.442 ,  0.995));
@@ -29,7 +29,7 @@ void main(){
 	//San miguel scene
 #if SAN_MIGUEL
 	SpawnPlayer(vec3(-4.47f, 3.02f, -17.73f), vec3(0.5f, 1.8f, 0.3f), quat(-0.93f, 0.05f, -0.37f, -0.02f));
-	int level = LoadModel("big_assets/san_miguel/sanMiguel.obj");
+	int level = LoadModel("big_assets/san_miguel/sanMiguelTest.obj");
 	int occluder = LoadModel("big_assets/san_miguel/sanMiguelOcc.obj");
 	SpawnLevelObjectWithOccluder(level,occluder, vec3(0, 0, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(2.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	AddSplinePoint(vec3(-4.5f, 2.8f, -18.0f));
