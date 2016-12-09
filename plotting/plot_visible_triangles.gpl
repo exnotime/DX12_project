@@ -2,19 +2,21 @@ set term png size 1280, 960
 
 set xlabel "Frame"
 set yrange [0:*]
+set xrange [0:*]
 set ylabel "Visible triangles"
+set style fill solid
 
 file='../testdata/Sponza/1Tri/SurvivingTris.dat'
 set title "Visible Triangles(Sponza)"
 set output "visible_triangles_sponza.png"
-plot file with lines title ''
+plot file with boxes title ''
 
 file='../testdata/Rungholt/1Tri/SurvivingTris.dat'
 set title "Visible Triangles(Rungholt)"
 set output "visible_triangles_rungholt.png"
-plot file with lines title ''
+plot file with boxes title ''
 
 file='../testdata/SanMiguel/1Tri/SurvivingTris.dat'
 set title "Visible Triangles(SanMiguel)"
 set output "visible_triangles_san_miguel.png"
-plot file with lines title ''
+plot file with boxes title ''

@@ -8,3 +8,4 @@ gnuplot ./plot_multitriangle_performance.gpl
 gnuplot ./plot_performance.gpl
 gnuplot ./plot_resolution_effect.gpl
 gnuplot ./plot_visible_triangles.gpl
+gnuplot ./plot_filter_histo.gpl.gpl

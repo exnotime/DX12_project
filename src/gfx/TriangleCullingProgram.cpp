@@ -147,7 +147,9 @@ bool TriangleCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, Render
 	cmdList->SetComputeRootDescriptorTable(OUTPUT_DT, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), m_DescHeapIncSize * ( 5 + 4 * filterContext->GetFilterIndex())));
 
 	//extensions
-	cmdList->SetComputeRootDescriptorTable(EXTENSIONS_DESC, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), 13 * m_DescHeapIncSize));
+	if (m_Context->Extensions.Vendor == NVIDIA_VENDOR_ID) {
+		cmdList->SetComputeRootDescriptorTable(EXTENSIONS_DESC, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), 13 * m_DescHeapIncSize));
+	}
 
 	UINT batchCounter = 0;
 	for (int i = filterContext->GetCurrentDraw(); i < queue->GetDrawCount(); i++) {

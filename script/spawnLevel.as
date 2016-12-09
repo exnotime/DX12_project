@@ -8,10 +8,10 @@ void main(){
 	int occluder = LoadModel("big_assets/sponza/SponzaOccluder.obj");
 	int dragon = LoadModel("assets/models/dragon/dragon.obj");
 	int teapot = LoadModel("assets/models/teapot/teapot.obj");
-	//SpawnLevelObjectWithOccluder(level, occluder, vec3(0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(1));
-	//SpawnLevelObjectWithOccluder(bunny,bunny, vec3(0, 1.9f, 2), quat(0.0f, 0.0f, 1.0f, 0.0f), vec3(0.05f), vec4(0.2f, 0.6f, 0.5f, 1));
+	SpawnLevelObjectWithOccluder(level, occluder, vec3(0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(0.05f), vec4(1));
+	SpawnLevelObjectWithOccluder(bunny,bunny, vec3(0, 1.9f, 2), quat(0.0f, 0.0f, 1.0f, 0.0f), vec3(0.05f), vec4(0.2f, 0.6f, 0.5f, 1));
 	SpawnLevelObjectWithOccluder(dragon,dragon, vec3(0, 0.2f, -5), quat(0.0f, 0.0f, 1.0f, 0.0f), vec3(1.0f), vec4(0.7f, 0.2f, 0.1f, 1));
-	//SpawnLevelObjectWithOccluder(teapot,teapot, vec3(-10, 0.2f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.5f), vec4(0.5f, 0.9f, 0.3f, 1));
+	SpawnLevelObjectWithOccluder(teapot,teapot, vec3(-10, 0.2f, 0), quat(1.0f, 0.0f, 0.0f, 0.0f), vec3(1.5f), vec4(0.5f, 0.9f, 0.3f, 1));
 	AddSplinePoint(vec3( 50.678, 7.215 ,  0.239));
 	AddSplinePoint(vec3( 1.131 , 8.717 ,  2.998));
 	AddSplinePoint(vec3(-50.093, 8.442 ,  0.995));
@@ -21,10 +21,9 @@ void main(){
 	AddSplinePoint(vec3(-50.501, 11.631,  25.242));
 	AddSplinePoint(vec3(-50.469, 8.995 ,  -1.860));
 	AddSplinePoint(vec3( 14.201, 34.598,  3.302));
-	AddSplinePoint(vec3( 50.118, 32.442,  21.352));	
+	AddSplinePoint(vec3( 50.118, 32.442,  21.352));
 	AddSplinePoint(vec3(-50.885, 31.746,  26.149));
 	SetLookatPos(vec3(0, 8, -2));
-	//SetLookatPos(vec3(NaN));
 #endif
 	//San miguel scene
 #if SAN_MIGUEL

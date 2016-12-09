@@ -51,7 +51,6 @@ struct TestData {
 
 #define FREE_CAMERA
 
-
 #define BATCH_COUNT g_TestParams.CurrentTest.BatchCount
 #define BATCH_SIZE g_TestParams.CurrentTest.BatchSize
 #define TRI_COUNT g_TestParams.CurrentTest.TriangleCount

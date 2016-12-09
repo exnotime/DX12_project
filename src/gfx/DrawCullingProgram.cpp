@@ -13,6 +13,7 @@ DrawCullingProgram::~DrawCullingProgram() {
 }
 
 void DrawCullingProgram::Init(DX12Context* context, FilterContext* filterContext) {
+	m_Context = context;
 	m_WaveSize = context->Extensions.WaveSize;
 	m_Shader.LoadFromFile(L"src/shaders/ComputeCulling.hlsl", COMPUTE_SHADER_BIT, &context->Extensions);
 	//root signature
@@ -190,8 +191,9 @@ void DrawCullingProgram::Disbatch(ID3D12GraphicsCommandList* cmdList, FilterCont
 	cmdList->SetComputeRoot32BitConstant(INPUT_COUNT_C, filterContext->GetCounterOffset(), 1);
 
 	//extensions
-	cmdList->SetComputeRootDescriptorTable(EXTENSIONS_DESC, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), EXTENSION_DESC_OFFSET * m_HeapDescIncSize));
-
+	if (m_Context->Extensions.Vendor == NVIDIA_VENDOR_ID) {
+		cmdList->SetComputeRootDescriptorTable(EXTENSIONS_DESC, CD3DX12_GPU_DESCRIPTOR_HANDLE(m_DescHeap->GetGPUDescriptorHandleForHeapStart(), EXTENSION_DESC_OFFSET * m_HeapDescIncSize));
+	}
 	UINT disbatchCount = (filterContext->GetBatchCount() + m_WaveSize - 1) / m_WaveSize;
 	cmdList->Dispatch(disbatchCount, 1, 1);
 }

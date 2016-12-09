@@ -1,0 +1,43 @@
+set term png size 1280, 960
+
+set xlabel "Frame"
+set yrange [0:*]
+set xrange [0:*]
+set ylabel "Triangles"
+set style fill solid
+set style data histogram
+set style histogram rowstacked
+
+#file='../testdata/Sponza/1Tri/SurvivingTris.dat'
+file1='../testdata/Sponza/AllFilters/Backface.dat'
+file2='../testdata/Sponza/AllFilters/SmallTris.dat'
+file3='../testdata/Sponza/AllFilters/Frustum.dat'
+file4='../testdata/Sponza/AllFilters/Occlusion.dat'
+file5='../testdata/Sponza/AllFilters/SurvivingTris.dat'
+set title "Filters(Sponza)"
+set output "triangle_histo_sponza.png"
+set multiplot
+plot file1 with histogram title "Backface", file2 with histogram title "Small triangle", file3 with histogram title "Frustum", file4 with histogram title "Occlusion", file5 with histogram title "Surviving triangles"
+unset multiplot
+
+file1='../testdata/Rungholt/AllFilters/Backface.dat'
+file2='../testdata/Rungholt/AllFilters/SmallTris.dat'
+file3='../testdata/Rungholt/AllFilters/Frustum.dat'
+file4='../testdata/Rungholt/AllFilters/Occlusion.dat'
+file5='../testdata/Rungholt/AllFilters/SurvivingTris.dat'
+set title "Filters(Rungholt)"
+set output "triangle_histo_rungholt.png"
+set multiplot
+plot file1 with histogram title "Backface", file2 with histogram title "Small triangle", file3 with histogram title "Frustum", file4 with histogram title "Occlusion", file5 with histogram title "Surviving triangles"
+unset multiplot
+
+file1='../testdata/SanMiguel/AllFilters/Backface.dat'
+file2='../testdata/SanMiguel/AllFilters/SmallTris.dat'
+file3='../testdata/SanMiguel/AllFilters/Frustum.dat'
+file4='../testdata/SanMiguel/AllFilters/Occlusion.dat'
+file5='../testdata/SanMiguel/AllFilters/SurvivingTris.dat'
+set title "Filters(SanMiguel)"
+set output "triangle_histo_san_miguel.png"
+set multiplot
+plot file1 with histogram title "Backface", file2 with histogram title "Small triangle", file3 with histogram title "Frustum", file4 with histogram title "Occlusion", file5 with histogram title "Surviving triangles"
+unset multiplot

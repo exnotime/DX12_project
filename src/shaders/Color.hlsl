@@ -177,18 +177,14 @@ float3 ditherRGB(float3 c, float2 seed){
 	return c + hash32(seed) / 255.0;
 }
 
-float3 CalcBumpedNormal(Texture2D bumpMap,float3 Normal, float3 Tangent, float2 uv){
+float3 CalcBumpedNormal(float3 Bump, float3 Normal, float3 Tangent){
 	float3 normal = normalize(Normal);
 	float3 tangent = normalize(Tangent);
-	tangent = normalize(tangent - dot(tangent,normal) * normal);
-	float3 bitangent = cross(tangent,normal);
-
-	float3 bump = pow(bumpMap.Sample(g_sampler,uv).xyz, GAMMA);
-	bump = (bump * 2.0) - 1.0;
-
-	float3 newNormal;
+	//tangent = normalize(tangent - dot(tangent,normal) * normal);
+	float3 bitangent = normalize(cross(tangent,normal));
+	float3 bump = normalize((Bump * 2.0) - 1.0);
 	float3x3 TBN = float3x3(tangent,bitangent,normal);
-	newNormal = mul(TBN, bump);
+	float3 newNormal = mul(bump, TBN);
 	return normalize(newNormal);
 }
 
@@ -209,10 +205,10 @@ float4 PSMain(PSIn input) : SV_TARGET {
 	float4 color = float4(0,0,0,1);
 	float4 albedo = float4(input.color,1) * pow(g_Materials[NonUniformResourceIndex(g_MaterialIndex)].Sample(g_sampler, input.uv), GAMMA);
 	clip( albedo.a < 0.1f ? -1:1 );
-	
+
 	float r = 1.0 - pow(g_Materials[NonUniformResourceIndex(g_MaterialIndex+2)].Sample(g_sampler, input.uv).r, GAMMA);
 	float m = pow(g_Materials[NonUniformResourceIndex(g_MaterialIndex+3)].Sample(g_sampler, input.uv).r, GAMMA);
-	float3 normal = normalize(input.normal);// CalcBumpedNormal(input.normal, input.tangent, input.uv);
+	float3 normal = CalcBumpedNormal(g_Materials[NonUniformResourceIndex(g_MaterialIndex+1)].Sample(g_sampler, input.uv).xyz, input.normal, input.tangent);
 	float3 toeye = normalize( g_CamPos - input.posW );
 
 	color.rgb = CalcDirLight(albedo.rgb, normal, toeye, r, m);

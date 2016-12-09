@@ -36,6 +36,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap>	m_CounterClearHeaps[2];
 	UINT							m_HeapDescIncSize;
 	UINT							m_WaveSize;
+	DX12Context*					m_Context;
 	const UINT DESC_HEAP_SIZE = 3;
 	const UINT EXTENSION_DESC_OFFSET = DESC_HEAP_SIZE * MAX_SIMUL_PASSES;
 };

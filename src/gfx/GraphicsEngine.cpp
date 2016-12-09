@@ -397,10 +397,8 @@ void GraphicsEngine::Render() {
 		RenderGeometryWithoutCulling(cmdbuffer->CmdList(), &m_ProgramState, &m_RenderQueue);
 		m_CPUProfiler.Step("Render geometry");
 	}
-
-	m_LineRenderer.Render(cmdbuffer->CmdList(), &m_RenderQueue);
-
 	//m_FullscreenPass.Render(cmdbuffer->CmdList());
+	m_LineRenderer.Render(cmdbuffer->CmdList(), &m_RenderQueue);
 
 	m_Profiler.End(cmdbuffer->CmdList(), m_Context.FrameIndex);
 	m_FilterContext.CopyTriangleStats(cmdbuffer->CmdList());
