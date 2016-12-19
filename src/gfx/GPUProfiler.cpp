@@ -22,7 +22,6 @@ void GPUProfiler::Init(DX12Context* context) {
 	context->Device->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK), D3D12_HEAP_FLAG_NONE,
 		&CD3DX12_RESOURCE_DESC::Buffer(MAX_PROFILER_STEPS * g_FrameCount * sizeof(UINT64)), D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&m_ResultBuffer));
 	m_TimerFreqs = 0;
-	//context->Device->SetStablePowerState(true);
 	context->CommandQueue->GetTimestampFrequency(&m_TimerFreqs);
 	UINT64 gpuVal, cpuVal;
 	context->CommandQueue->GetClockCalibration(&gpuVal, &cpuVal);
@@ -70,7 +69,7 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 	D3D12_RANGE range = { index * sizeof(UINT64),index * sizeof(UINT64) + sizeof(UINT64) * m_LastFrameSteps };
 	m_ResultBuffer->Map(0, &range, (void**)&result);
 
-	std::sort(result + index, result + index + m_LastFrameSteps);
+	//std::sort(result + index, result + index + m_LastFrameSteps);
 	
 	UINT64 a, b;
 
@@ -95,7 +94,6 @@ void GPUProfiler::PrintResults(UINT frameIndex) {
 		printf("Step %s: %3.3f ms\n", time.first.c_str(), time.second);
 	}
 #endif
-
 	a = result[index];
 	b = result[index + m_LastFrameSteps - 1];
 

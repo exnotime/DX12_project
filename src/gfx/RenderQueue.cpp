@@ -132,11 +132,11 @@ void RenderQueue::AddView(const View& v) {
 		m_FrustumPlanes[i] = glm::normalize(m_FrustumPlanes[i]);
 	}
 	glm::mat4 invProj = glm::inverse(v.Camera.ProjView);
-	m_FrustumCorners[0] = invProj * glm::vec4( 1,  1,  1, 1); m_FrustumCorners[0] /= m_FrustumCorners[0].w;
-	m_FrustumCorners[1] = invProj * glm::vec4(-1,  1,  1, 1); m_FrustumCorners[1] /= m_FrustumCorners[1].w;
-	m_FrustumCorners[2] = invProj * glm::vec4( 1, -1,  1, 1); m_FrustumCorners[2] /= m_FrustumCorners[2].w;
+	m_FrustumCorners[0] = invProj * glm::vec4( 1,  1,  0.8f, 1); m_FrustumCorners[0] /= m_FrustumCorners[0].w;
+	m_FrustumCorners[1] = invProj * glm::vec4(-1,  1,  0.8f, 1); m_FrustumCorners[1] /= m_FrustumCorners[1].w;
+	m_FrustumCorners[2] = invProj * glm::vec4( 1, -1,  0.8f, 1); m_FrustumCorners[2] /= m_FrustumCorners[2].w;
 	m_FrustumCorners[3] = invProj * glm::vec4( 1,  1, -1, 1); m_FrustumCorners[3] /= m_FrustumCorners[3].w;
-	m_FrustumCorners[4] = invProj * glm::vec4(-1, -1,  1, 1); m_FrustumCorners[4] /= m_FrustumCorners[4].w;
+	m_FrustumCorners[4] = invProj * glm::vec4(-1, -1, 0.8f, 1); m_FrustumCorners[4] /= m_FrustumCorners[4].w;
 	m_FrustumCorners[5] = invProj * glm::vec4( 1, -1, -1, 1); m_FrustumCorners[5] /= m_FrustumCorners[5].w;
 	m_FrustumCorners[6] = invProj * glm::vec4(-1,  1, -1, 1); m_FrustumCorners[6] /= m_FrustumCorners[6].w;
 	m_FrustumCorners[7] = invProj * glm::vec4(-1, -1, -1, 1); m_FrustumCorners[7] /= m_FrustumCorners[7].w;

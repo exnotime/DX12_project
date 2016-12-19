@@ -37,9 +37,7 @@ private:
 	ComPtr<ID3D12Resource> m_CopyBuffer;
 
 	ComPtr<ID3D12DescriptorHeap> m_FilterDescriptorHeaps[MAX_SIMUL_PASSES];
-
 	ComPtr<ID3D12DescriptorHeap> m_CounterClearHeaps[2];
-
 	D3D12_INDEX_BUFFER_VIEW m_IndexBufferViews[MAX_SIMUL_PASSES];
 
 	UINT m_CurrentFilterIndex = 0;

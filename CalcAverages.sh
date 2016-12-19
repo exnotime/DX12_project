@@ -33,3 +33,23 @@ culling=$(cat "$rungholt/Culling/CPU_Timings.dat" | awk '{sum+=$1;n++} END {if(n
 echo "1 Culling $culling" > "$rungholt/AverageCPUTime.dat"
 nculling=$(cat "$rungholt/NoCulling/CPU_Timings.dat" | awk '{sum+=$1;n++} END {if(n>0) print sum / n}')
 echo "2 \"Without culling\" $nculling" >> "$rungholt/AverageCPUTime.dat"
+
+#Culling time
+culling=$(cat "$sponza/Culling/Cullingtimes.dat" | awk '{sum+=$1;n++} END {if(n>0) print sum / n}')
+echo "1 Culling $culling" > "$sponza/AverageCullingTime.dat"
+
+culling=$(cat "$san_miguel/Culling/Cullingtimes.dat" | awk '{sum+=$1;n++} END {if(n>0) print sum / n}')
+echo "1 Culling $culling" > "$san_miguel/AverageCullingTime.dat"
+
+culling=$(cat "$rungholt/Culling/Cullingtimes.dat" | awk '{sum+=$1;n++} END {if(n>0) print sum / n}')
+echo "1 Culling $culling" > "$rungholt/AverageCullingTime.dat"
+
+#render time
+culling=$(cat "$sponza/Culling/Rendertimes.dat" | awk '{sum+=$1;n++} END {if(n>0) print sum / n}')
+echo "1 Culling $culling" > "$sponza/AverageRenderTime.dat"
+
+culling=$(cat "$san_miguel/Culling/Rendertimes.dat" | awk '{sum+=$1;n++} END {if(n>0) print sum / n}')
+echo "1 Culling $culling" > "$san_miguel/AverageRenderTime.dat"
+
+culling=$(cat "$rungholt/Culling/Rendertimes.dat" | awk '{sum+=$1;n++} END {if(n>0) print sum / n}')
+echo "1 Culling $culling" > "$rungholt/AverageRenderTime.dat"

@@ -409,6 +409,9 @@ void GraphicsEngine::Render() {
 	g_BufferManager.SwitchState(cmdbuffer->CmdList(), "ShaderInputBuffer", D3D12_RESOURCE_STATE_COPY_DEST);
 	g_BufferManager.SwitchState(cmdbuffer->CmdList(), "IndirectBuffer", D3D12_RESOURCE_STATE_COPY_DEST);
 	g_BufferManager.SwitchState(cmdbuffer->CmdList(), "IndirectOccluderBuffer", D3D12_RESOURCE_STATE_COPY_DEST);
+	m_Profiler.Step(cmdbuffer->CmdList(), "Filler");
+	m_Profiler.Step(cmdbuffer->CmdList(), "Filler2");
+	m_Profiler.Step(cmdbuffer->CmdList(), "Filler3");
 
 	g_CommandBufferManager.ExecuteCommandBuffer(cmdbuffer, CMD_BUFFER_TYPE_GRAPHICS);
 	m_CPUProfiler.EndFrame();

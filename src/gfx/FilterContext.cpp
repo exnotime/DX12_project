@@ -87,24 +87,6 @@ void FilterContext::Init(ID3D12Device* device) {
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 	device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, clearHandle);
 	device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, clearHandle2);
-	uavDesc.Buffer.FirstElement = 64;
-	uavDesc.Buffer.NumElements = BATCH_COUNT;
-	device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, clearHandle.Offset(1, m_DescHeapIncSize));
-	device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, clearHandle2.Offset(1, m_DescHeapIncSize));
-	uavDesc.Buffer.FirstElement = 64 + BATCH_COUNT;
-	device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, clearHandle.Offset(1, m_DescHeapIncSize));
-	device->CreateUnorderedAccessView(m_CounterBuffer.Get(), nullptr, &uavDesc, clearHandle2.Offset(1, m_DescHeapIncSize));
-	uavDesc.Buffer.CounterOffsetInBytes = 0;
-	uavDesc.Buffer.FirstElement = 0;
-	uavDesc.Buffer.NumElements = BATCH_COUNT;
-	uavDesc.Buffer.StructureByteStride = sizeof(IndirectDrawCall);
-	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-	uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-	device->CreateUnorderedAccessView(m_DrawArgsBuffers[0].Get(), nullptr, &uavDesc, clearHandle.Offset(1, m_DescHeapIncSize));
-	device->CreateUnorderedAccessView(m_DrawArgsBuffers[0].Get(), nullptr, &uavDesc, clearHandle2.Offset(1, m_DescHeapIncSize));
-	device->CreateUnorderedAccessView(m_DrawArgsBuffers[1].Get(), nullptr, &uavDesc, clearHandle.Offset(1, m_DescHeapIncSize));
-	device->CreateUnorderedAccessView(m_DrawArgsBuffers[1].Get(), nullptr, &uavDesc, clearHandle2.Offset(1, m_DescHeapIncSize));
 
 	//index buffer views
 	for (int i = 0; i < MAX_SIMUL_PASSES; i++) {
@@ -201,10 +183,10 @@ void FilterContext::BeginFilter(ID3D12GraphicsCommandList* cmdList) {
 	g_BufferManager.SwitchState(cmdList, "IndirectBuffer", D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 
 	//clear counters
-	UINT vals[4] = { 0,0,0,0 };
-	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CounterClearHeaps[0]->GetCPUDescriptorHandleForHeapStart(), 1 + m_CurrentFilterIndex, m_DescHeapIncSize);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_CounterClearHeaps[1]->GetGPUDescriptorHandleForHeapStart(), 1 + m_CurrentFilterIndex, m_DescHeapIncSize);
-	cmdList->ClearUnorderedAccessViewUint(gpuHandle, cpuHandle, m_CounterBuffer.Get(), vals, 0, nullptr);
+	//UINT vals[4] = { 0,0,0,0 };
+	//CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_CounterClearHeaps[0]->GetCPUDescriptorHandleForHeapStart(), 1 + m_CurrentFilterIndex, m_DescHeapIncSize);
+	//CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(m_CounterClearHeaps[1]->GetGPUDescriptorHandleForHeapStart(), 1 + m_CurrentFilterIndex, m_DescHeapIncSize);
+	//cmdList->ClearUnorderedAccessViewUint(gpuHandle, cpuHandle, m_CounterBuffer.Get(), vals, 0, nullptr);
 }
 
 void FilterContext::BeginRender(ID3D12GraphicsCommandList* cmdList) {

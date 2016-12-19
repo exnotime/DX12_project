@@ -128,7 +128,6 @@ uint WaveMin(uint val){
 
 #define BitCount countbits
 
-//Naive MBCount think of other method later
 uint MBCount(BitMask bm){
 	BitMask laneMask = (1 << NvGetLaneId()) - 1;
 	laneMask &= bm;

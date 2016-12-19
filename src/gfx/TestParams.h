@@ -31,7 +31,7 @@ struct TestData {
 
 	TestParams() {
 		CurrentTest.Culling = false;
-		CurrentTest.Instrument = false;
+		CurrentTest.Instrument = true;
 		CurrentTest.Duration = 10000;
 		CurrentTest.TestName = "testdata/Default";
 		CurrentTest.BatchSize = 1024;

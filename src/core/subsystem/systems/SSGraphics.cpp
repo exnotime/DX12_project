@@ -5,6 +5,8 @@
 #include <gfx/ModelBank.h>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_access.hpp>
+#include <gfx/TestParams.h>
+#include <angelscript.h>
 #include "../../datasystem/ComponentManager.h"
 #include "../../Window.h"
 #include "../../components/CameraComponent.h"
@@ -13,9 +15,7 @@
 #include "../../entity/EntityManager.h"
 #include "../../entity/EntityFactory.h"
 #include "../../input/Input.h"
-#include <gfx/TestParams.h>
 #include "../../script/ScriptEngine.h"
-#include <angelscript.h>
 using AngelScript::asCALL_THISCALL_ASGLOBAL;
 using AngelScript::asSMethodPtr;
 SSGraphics::SSGraphics(){
@@ -48,7 +48,7 @@ void SSGraphics::Update(const double deltaTime) {
 			CameraComponent* cc = (CameraComponent*)g_ComponentManager.GetComponent(entity, CameraComponent::Flag);
 			cc->Camera.CalculateViewProjection();
 			View v;
-			v.Camera = cc->Camera.GetData();
+			v.Camera = cc->Camera.GetData(); //render view
 			m_RenderQueue->AddView(v);
 
 #ifndef DO_TESTING
@@ -57,7 +57,7 @@ void SSGraphics::Update(const double deltaTime) {
 #else
 			lastCam = cc->Camera.GetData();
 #endif
-			v.Camera = lastCam;
+			v.Camera = lastCam; //culling view
 			m_RenderQueue->AddView(v);
 		}
 	}
